@@ -21,6 +21,7 @@ Chờ xác nhận → Đã xác nhận → Xuất kho → Đang giao → Đã gi
 Quản lý: Phiếu xuất kho, Vận chuyển, Thanh toán
 Thống kê: Doanh thu, Sản phẩm bán chạy, Khách hàng VIP, Đơn hàng theo trạng thái
 Phân quyền: Admin (toàn quyền) vs Nhân viên (hạn chế sửa/xóa/hủy)
+
 Cấu trúc thư mục
 ├── Models/          # Các entity (SanPham, DonHang, KhachHang...)
 ├── DAL/             # Data Access Layer - Raw SQL với SqlDataReader
@@ -33,6 +34,7 @@ Cấu trúc thư mục
 │   └── Filters/     # AdminAuthFilter
 ├── wwwroot/         # CSS, JS, Images
 └── Scripts/         # SQL scripts hỗ trợ
+
 Stored Procedures chính
 sp_NV_XuatKho - Xuất kho, tạo phiếu xuất
 sp_NV_DieuPhoiGiaoHang - Điều phối vận chuyển
