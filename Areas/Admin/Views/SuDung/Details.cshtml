@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "Chi tiết sử dụng";
+    var mucDich = ViewBag.MucDich as MucDichSuDung;
+    var sanPham = ViewBag.SanPham as SanPham;
+}
+
+<h2>Chi tiết sử dụng sản phẩm</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>Mục đích sử dụng</strong></div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Mã MDSD</dt>
+                    <dd class="col-sm-8">@mucDich?.Mamdsd</dd>
+                    <dt class="col-sm-4">Tên mục đích</dt>
+                    <dd class="col-sm-8">@mucDich?.Tenmdsd</dd>
+                    <dt class="col-sm-4">Mô tả</dt>
+                    <dd class="col-sm-8">@mucDich?.Motamdsd</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>Sản phẩm</strong></div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Mã SP</dt>
+                    <dd class="col-sm-8">@sanPham?.Masp</dd>
+                    <dt class="col-sm-4">Tên SP</dt>
+                    <dd class="col-sm-8">@sanPham?.Tensp</dd>
+                    <dt class="col-sm-4">Giá bán</dt>
+                    <dd class="col-sm-8">@sanPham?.Giaban?.ToString("N0") đ</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="mt-3">
+    <a asp-action="Delete" asp-route-mamdsd="@mucDich?.Mamdsd" asp-route-masp="@sanPham?.Masp" class="btn btn-danger">Xóa liên kết</a>
+    <a asp-action="Index" asp-route-mamdsd="@mucDich?.Mamdsd" class="btn btn-secondary">Quay lại</a>
+</div>

@@ -1,0 +1,23 @@
+@model KhachHang
+@{ ViewData["Title"] = "Chi tiết khách hàng"; }
+
+<h2>Chi tiết khách hàng</h2>
+<hr />
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Mã khách hàng</dt>
+            <dd class="col-sm-9">@Model.Makh</dd>
+            <dt class="col-sm-3">Họ tên</dt>
+            <dd class="col-sm-9">@Model.Hotenkh</dd>
+            <dt class="col-sm-3">Địa chỉ</dt>
+            <dd class="col-sm-9">@Model.Diachikh</dd>
+            <dt class="col-sm-3">Số điện thoại</dt>
+            <dd class="col-sm-9">@Model.Sdtkh</dd>
+        </dl>
+    </div>
+</div>
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Makh" class="btn btn-warning">Sửa</a>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</div>

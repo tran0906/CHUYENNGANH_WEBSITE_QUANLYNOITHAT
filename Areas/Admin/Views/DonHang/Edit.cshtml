@@ -1,0 +1,39 @@
+@model DonHang
+@{ ViewData["Title"] = "Sửa đơn hàng"; }
+
+<h2>Sửa đơn hàng</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Madonhang" />
+            <div class="mb-3">
+                <label asp-for="Madonhang" class="form-label">Mã đơn hàng</label>
+                <input asp-for="Madonhang" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Makh" class="form-label">Khách hàng</label>
+                <select asp-for="Makh" class="form-select" asp-items="ViewBag.Makh">
+                    <option value="">-- Chọn khách hàng --</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Trangthai" class="form-label">Trạng thái</label>
+                <select asp-for="Trangthai" class="form-select">
+                    <option value="Chờ xử lý">Chờ xử lý</option>
+                    <option value="Đang xử lý">Đang xử lý</option>
+                    <option value="Hoàn thành">Hoàn thành</option>
+                    <option value="Đã hủy">Đã hủy</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Ghichu" class="form-label">Ghi chú</label>
+                <textarea asp-for="Ghichu" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

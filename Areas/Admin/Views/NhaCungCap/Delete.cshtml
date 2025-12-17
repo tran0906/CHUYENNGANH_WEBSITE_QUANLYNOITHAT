@@ -1,0 +1,25 @@
+@model NhaCungCap
+@{ ViewData["Title"] = "Xóa nhà cung cấp"; }
+
+<h2>Xác nhận xóa</h2>
+<hr />
+<div class="alert alert-danger">
+    <h5>Bạn có chắc chắn muốn xóa nhà cung cấp này?</h5>
+</div>
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Mã NCC</dt>
+            <dd class="col-sm-9">@Model.Mancc</dd>
+            <dt class="col-sm-3">Tên NCC</dt>
+            <dd class="col-sm-9">@Model.Tenncc</dd>
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.Emailncc</dd>
+        </dl>
+    </div>
+</div>
+<form asp-action="Delete" class="mt-3">
+    <input type="hidden" asp-for="Mancc" />
+    <button type="submit" class="btn btn-danger">Xóa</button>
+    <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+</form>

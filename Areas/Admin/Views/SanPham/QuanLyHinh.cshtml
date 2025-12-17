@@ -1,0 +1,227 @@
+@{
+    ViewData["Title"] = "Quản lý hình ảnh sản phẩm";
+    var images = ViewBag.Images as List<string> ?? new List<string>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-images"></i> Quản lý hình ảnh sản phẩm</h4>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại danh sách SP</a>
+</div>
+
+<!-- Hướng dẫn nổi bật -->
+<div class="alert alert-info mb-4">
+    <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Hướng dẫn sử dụng</h5>
+    <ol class="mb-0">
+        <li><strong>Upload hình</strong> ở bên trái (có thể chọn nhiều file cùng lúc)</li>
+        <li>Sau khi upload, hình sẽ hiển thị trong <strong>Thư viện</strong> bên phải</li>
+        <li>Click nút <span class="badge bg-primary"><i class="bi bi-clipboard"></i></span> để <strong>copy đường dẫn</strong></li>
+        <li>Dán đường dẫn vào ô <strong>"Hình ảnh"</strong> khi thêm/sửa sản phẩm</li>
+    </ol>
+    <hr>
+    <p class="mb-0"><i class="bi bi-folder"></i> <strong>Thư mục lưu trữ:</strong> <code>wwwroot/images/products/</code></p>
+</div>
+
+<div class="row">
+    <!-- Upload Form -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-cloud-upload"></i> Upload hình ảnh mới</div>
+            <div class="card-body">
+                <form asp-action="UploadNhieuHinh" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chọn file hình ảnh</label>
+                        <input type="file" name="files" class="form-control" multiple accept="image/*" id="fileInput" />
+                        <small class="text-muted">Hỗ trợ: jpg, png, gif, webp. Chọn được nhiều file.</small>
+                    </div>
+                    <div id="previewContainer" class="mb-3"></div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-upload"></i> Upload tất cả
+                    </button>
+                </form>
+                
+                <hr />
+                <div id="dropZone" class="border border-2 border-dashed rounded p-4 text-center" 
+                     style="border-color: #6366f1 !important; cursor: pointer; background: #f8fafc;">
+                    <i class="bi bi-cloud-arrow-up" style="font-size: 40px; color: #6366f1;"></i>
+                    <p class="mb-0 mt-2 text-muted">Hoặc kéo thả file vào đây</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-success text-white"><i class="bi bi-check-circle"></i> Thông tin</div>
+            <div class="card-body">
+                <p class="mb-2"><i class="bi bi-image"></i> <strong>Tổng số hình:</strong> <span class="badge bg-primary">@images.Count</span></p>
+                <p class="mb-0 text-muted small">
+                    <i class="bi bi-lightbulb"></i> <strong>Mẹo:</strong> Sau khi upload, click vào hình để xem đường dẫn đầy đủ
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Gallery -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-grid"></i> Thư viện hình ảnh (<strong>@images.Count</strong> hình)</span>
+                <input type="text" id="searchImage" class="form-control form-control-sm" style="width: 200px;" placeholder="🔍 Tìm kiếm..." />
+            </div>
+            <div class="card-body">
+                @if (images.Any())
+                {
+                    <div class="row g-3" id="imageGallery">
+                        @foreach (var img in images)
+                        {
+                            var fileName = System.IO.Path.GetFileName(img);
+                            <div class="col-6 col-md-4 col-lg-3 image-item" data-name="@fileName.ToLower()">
+                                <div class="card h-100 image-card">
+                                    <img src="@img" class="card-img-top" style="height: 100px; object-fit: cover; cursor: pointer;" 
+                                         onclick="showImageModal('@img', '@fileName')" title="Click để xem chi tiết" />
+                                    <div class="card-body p-2">
+                                        <p class="small mb-1 text-truncate fw-bold" title="@fileName">@fileName</p>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <input type="text" class="form-control form-control-sm" value="@img" readonly style="font-size: 10px;" />
+                                            <button class="btn btn-primary btn-sm" type="button" onclick="copyPath('@img')" title="Copy đường dẫn">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                        </div>
+                                        <form asp-action="XoaHinh" method="post" style="display:inline;" 
+                                              onsubmit="return confirm('Xóa hình @fileName?');">
+                                            <input type="hidden" name="imagePath" value="@img" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-image" style="font-size: 64px; color: #ddd;"></i>
+                        <p class="text-muted mt-3">Chưa có hình ảnh nào. Hãy upload hình ở bên trái!</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-image"></i> <span id="modalFileName">Hình ảnh</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <img id="modalImage" src="" class="img-fluid rounded shadow" style="max-height: 400px;" />
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <label class="form-label fw-bold"><i class="bi bi-link-45deg"></i> Đường dẫn hình ảnh (copy để dùng):</label>
+                    <div class="input-group">
+                        <input type="text" id="modalPath" class="form-control bg-light" readonly />
+                        <button class="btn btn-success" onclick="copyPath(document.getElementById('modalPath').value)">
+                            <i class="bi bi-clipboard-check"></i> Copy đường dẫn
+                        </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="bi bi-info-circle"></i> Dán đường dẫn này vào ô "Hình ảnh" khi thêm/sửa sản phẩm
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .image-card { transition: all 0.2s; }
+    .image-card:hover { transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0,0,0,0.15); }
+    .border-dashed { border-style: dashed !important; }
+    #dropZone.dragover { background: #e0e7ff !important; border-color: #4f46e5 !important; }
+</style>
+
+@section Scripts {
+<script>
+    // Preview files before upload
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const container = document.getElementById('previewContainer');
+        container.innerHTML = '';
+        const files = e.target.files;
+        
+        if (files.length > 0) {
+            const row = document.createElement('div');
+            row.className = 'row g-2';
+            
+            Array.from(files).slice(0, 6).forEach((file) => {
+                if (file.type.startsWith('image/')) {
+                    const col = document.createElement('div');
+                    col.className = 'col-4';
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        col.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" style="height:50px; width:100%; object-fit:cover;" />`;
+                    };
+                    reader.readAsDataURL(file);
+                    row.appendChild(col);
+                }
+            });
+            
+            container.appendChild(row);
+            const moreText = files.length > 6 ? ` (+${files.length - 6} file khác)` : '';
+            container.innerHTML += `<div class="alert alert-success py-2 mt-2 mb-0"><i class="bi bi-check-circle"></i> Đã chọn <strong>${files.length}</strong> file${moreText}</div>`;
+        }
+    });
+    
+    // Drag & Drop
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change'));
+    });
+    
+    // Search images
+    document.getElementById('searchImage').addEventListener('input', function() {
+        const search = this.value.toLowerCase();
+        document.querySelectorAll('.image-item').forEach(item => {
+            item.style.display = item.dataset.name.includes(search) ? '' : 'none';
+        });
+    });
+    
+    // Show image modal
+    function showImageModal(src, name) {
+        document.getElementById('modalImage').src = src;
+        document.getElementById('modalFileName').textContent = name;
+        document.getElementById('modalPath').value = src;
+        new bootstrap.Modal(document.getElementById('imageModal')).show();
+    }
+    
+    // Copy path to clipboard
+    function copyPath(path) {
+        navigator.clipboard.writeText(path).then(() => {
+            showToast('success', 'Đã copy!', 'Đường dẫn: ' + path);
+        }).catch(() => {
+            // Fallback for older browsers
+            const input = document.createElement('input');
+            input.value = path;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            showToast('success', 'Đã copy!', 'Đường dẫn: ' + path);
+        });
+    }
+</script>
+}

@@ -1,0 +1,31 @@
+@model VanChuyen
+@{ ViewData["Title"] = "Chi tiết vận chuyển"; }
+
+<h2>Chi tiết vận chuyển</h2>
+<hr />
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Mã vận đơn</dt>
+            <dd class="col-sm-9">@Model.Mavandon</dd>
+            <dt class="col-sm-3">Mã đơn hàng</dt>
+            <dd class="col-sm-9">@Model.Madonhang</dd>
+            <dt class="col-sm-3">Nhân viên</dt>
+            <dd class="col-sm-9">@Model.User?.HoTen</dd>
+            <dt class="col-sm-3">Đơn vị vận chuyển</dt>
+            <dd class="col-sm-9">@Model.Donvivanchuyen</dd>
+            <dt class="col-sm-3">Trạng thái giao</dt>
+            <dd class="col-sm-9">
+                <span class="badge @(Model.Trangthaigiao == "Đã giao" ? "bg-success" : Model.Trangthaigiao == "Đang giao" ? "bg-warning" : "bg-secondary")">
+                    @Model.Trangthaigiao
+                </span>
+            </dd>
+            <dt class="col-sm-3">NV điều phối</dt>
+            <dd class="col-sm-9">@Model.Manvdieuphoi</dd>
+        </dl>
+    </div>
+</div>
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Mavandon" class="btn btn-warning">Sửa</a>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</div>

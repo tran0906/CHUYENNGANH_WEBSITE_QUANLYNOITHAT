@@ -1,0 +1,125 @@
+@using System.Data
+@model DataTable
+@{
+    ViewData["Title"] = "Đơn hàng theo trạng thái";
+}
+
+<h2 class="mb-4">Đơn hàng theo trạng thái</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Từ ngày</label>
+                <input type="date" name="tuNgay" class="form-control" value="@ViewBag.TuNgay" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Đến ngày</label>
+                <input type="date" name="denNgay" class="form-control" value="@ViewBag.DenNgay" />
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3>@ViewBag.TongDonHang</h3>
+                <p class="mb-0">Tổng đơn hàng</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <strong>Chi tiết theo trạng thái</strong>
+                <a asp-action="Index" class="btn btn-sm btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Số lượng</th>
+                            <th class="text-end">Tỷ lệ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Rows.Count > 0)
+                        {
+                            int total = ViewBag.TongDonHang;
+                            @foreach (DataRow row in Model.Rows)
+                            {
+                                var trangThai = row["TrangThai"].ToString();
+                                var soLuong = Convert.ToInt32(row["SoLuong"]);
+                                var tyLe = total > 0 ? (soLuong * 100.0 / total) : 0;
+                                var badgeClass = trangThai switch
+                                {
+                                    "Hoàn thành" or "Đã giao" => "bg-success",
+                                    "Đang xử lý" or "Đang giao" => "bg-warning",
+                                    "Chờ xác nhận" or "Chờ xử lý" => "bg-info",
+                                    "Đã hủy" => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+                                <tr>
+                                    <td><span class="badge @badgeClass">@trangThai</span></td>
+                                    <td class="text-end fw-bold">@soLuong</td>
+                                    <td class="text-end">@tyLe.ToString("F1")%</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="3" class="text-center text-muted">Không có dữ liệu</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>Biểu đồ</strong></div>
+            <div class="card-body">
+                @if (Model != null && Model.Rows.Count > 0)
+                {
+                    int total = ViewBag.TongDonHang;
+                    @foreach (DataRow row in Model.Rows)
+                    {
+                        var trangThai = row["TrangThai"].ToString();
+                        var soLuong = Convert.ToInt32(row["SoLuong"]);
+                        var tyLe = total > 0 ? (soLuong * 100.0 / total) : 0;
+                        var barColor = trangThai switch
+                        {
+                            "Hoàn thành" or "Đã giao" => "bg-success",
+                            "Đang xử lý" or "Đang giao" => "bg-warning",
+                            "Chờ xác nhận" or "Chờ xử lý" => "bg-info",
+                            "Đã hủy" => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>@trangThai</span>
+                                <span>@soLuong (@tyLe.ToString("F1")%)</span>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar @barColor" style="width: @tyLe%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

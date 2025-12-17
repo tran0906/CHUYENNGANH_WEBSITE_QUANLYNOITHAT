@@ -1,0 +1,44 @@
+@model NhaCungCap
+@{ ViewData["Title"] = "Sửa nhà cung cấp"; }
+
+<h2>Sửa nhà cung cấp</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Mancc" />
+            <div class="mb-3">
+                <label asp-for="Mancc" class="form-label">Mã NCC</label>
+                <input asp-for="Mancc" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Tenncc" class="form-label">Tên NCC</label>
+                <input asp-for="Tenncc" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Diachincc" class="form-label">Địa chỉ</label>
+                <input asp-for="Diachincc" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Sdtncc" class="form-label">Số điện thoại</label>
+                <input asp-for="Sdtncc" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Emailncc" class="form-label">Email</label>
+                <input asp-for="Emailncc" class="form-control" type="email" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Sanpham" class="form-label">Sản phẩm cung cấp</label>
+                <input asp-for="Sanpham" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Gianhap" class="form-label">Giá nhập</label>
+                <input asp-for="Gianhap" class="form-control" type="number" />
+            </div>
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

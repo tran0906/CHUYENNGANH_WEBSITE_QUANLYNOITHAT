@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80">
+  <defs>
+    <linearGradient id="woodGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B4513"/>
+      <stop offset="50%" style="stop-color:#A0522D"/>
+      <stop offset="100%" style="stop-color:#D2691E"/>
+    </linearGradient>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#D4A574"/>
+      <stop offset="50%" style="stop-color:#E8C89E"/>
+      <stop offset="100%" style="stop-color:#D4A574"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Icon ngôi nhà/nội thất -->
+  <g transform="translate(10, 10)">
+    <!-- Mái nhà -->
+    <path d="M30 8 L5 28 L10 28 L10 50 L50 50 L50 28 L55 28 Z" fill="url(#woodGradient)" stroke="#5D2E0C" stroke-width="1.5"/>
+    <!-- Cửa -->
+    <rect x="24" y="32" width="12" height="18" fill="#5D2E0C" rx="1"/>
+    <!-- Cửa sổ trái -->
+    <rect x="14" y="32" width="8" height="8" fill="#F5DEB3" stroke="#5D2E0C" stroke-width="1"/>
+    <line x1="18" y1="32" x2="18" y2="40" stroke="#5D2E0C" stroke-width="0.5"/>
+    <line x1="14" y1="36" x2="22" y2="36" stroke="#5D2E0C" stroke-width="0.5"/>
+    <!-- Cửa sổ phải -->
+    <rect x="38" y="32" width="8" height="8" fill="#F5DEB3" stroke="#5D2E0C" stroke-width="1"/>
+    <line x1="42" y1="32" x2="42" y2="40" stroke="#5D2E0C" stroke-width="0.5"/>
+    <line x1="38" y1="36" x2="46" y2="36" stroke="#5D2E0C" stroke-width="0.5"/>
+    <!-- Ống khói -->
+    <rect x="40" y="5" width="6" height="12" fill="url(#woodGradient)" stroke="#5D2E0C" stroke-width="1"/>
+  </g>
+  
+  <!-- Text NỘI THẤT -->
+  <text x="75" y="35" font-family="Georgia, serif" font-size="24" font-weight="bold" fill="url(#woodGradient)">NỘI THẤT</text>
+  
+  <!-- Text VIỆT -->
+  <text x="75" y="60" font-family="Georgia, serif" font-size="28" font-weight="bold" fill="#D2691E">VIỆT</text>
+  
+  <!-- Đường trang trí -->
+  <line x1="75" y1="42" x2="175" y2="42" stroke="url(#goldGradient)" stroke-width="2"/>
+  
+  <!-- Tagline -->
+  <text x="180" y="58" font-family="Arial, sans-serif" font-size="9" fill="#8B7355" font-style="italic">Nâng tầm không gian sống</text>
+  
+  <!-- Họa tiết lá -->
+  <g transform="translate(270, 25)" fill="#8B4513" opacity="0.7">
+    <ellipse cx="0" cy="0" rx="8" ry="4" transform="rotate(-45)"/>
+    <ellipse cx="5" cy="8" rx="6" ry="3" transform="rotate(-30)"/>
+    <ellipse cx="-5" cy="8" rx="6" ry="3" transform="rotate(-60)"/>
+  </g>
+</svg>

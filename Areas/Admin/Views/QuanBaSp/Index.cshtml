@@ -1,0 +1,59 @@
+@model IEnumerable<QuanBaSp>
+@{ ViewData["Title"] = "Quản lý quảng bá sản phẩm"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Quản lý quảng bá sản phẩm</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm đợt quảng bá</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive-scroll">
+        <table class="table table-striped table-hover table-paginated">
+            <thead class="table-dark">
+                <tr>
+                    <th>Mã đợt</th>
+                    <th>Ngày bắt đầu</th>
+                    <th>Ngày kết thúc</th>
+                    <th>Nhân viên</th>
+                    <th>Số SP quảng bá</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    var isActive = item.Ngaybatdau <= DateTime.Now && item.Ngayketthuc >= DateTime.Now;
+                    <tr>
+                        <td>@item.Madotgiamgia</td>
+                        <td>@item.Ngaybatdau?.ToString("dd/MM/yyyy")</td>
+                        <td>@item.Ngayketthuc?.ToString("dd/MM/yyyy")</td>
+                        <td>@item.User?.HoTen</td>
+                        <td><span class="badge bg-info">@item.Masps.Count SP</span></td>
+                        <td>
+                            @if (isActive)
+                            {
+                                <span class="badge bg-success">Đang diễn ra</span>
+                            }
+                            else if (item.Ngayketthuc < DateTime.Now)
+                            {
+                                <span class="badge bg-secondary">Đã kết thúc</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning">Sắp diễn ra</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.Madotgiamgia" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                            <a asp-action="Edit" asp-route-id="@item.Madotgiamgia" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                            <a asp-action="Delete" asp-route-id="@item.Madotgiamgia" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>

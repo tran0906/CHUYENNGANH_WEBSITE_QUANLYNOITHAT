@@ -1,0 +1,210 @@
+@model IEnumerable<DonHang>
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+    var vaiTro = Context.Session.GetString("AdminVaiTro");
+    var isAdmin = vaiTro == "Admin" || vaiTro == "QuanLy" || vaiTro == "Quản trị hệ thống";
+}
+
+<style>
+    /* Màu sắc nhã nhặn cho status cards */
+    .status-card { border-radius: 12px; padding: 18px; text-align: center; cursor: pointer; transition: all 0.2s; border: 1px solid #E8DDD4; }
+    .status-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .status-card h3 { margin: 0; font-size: 28px; font-weight: 700; }
+    .status-card small { font-size: 12px; }
+    .status-card.pending { background: #FFFBEB; color: #92400E; }
+    .status-card.confirmed { background: #EFF6FF; color: #1E40AF; }
+    .status-card.processing { background: #F5F3FF; color: #5B21B6; }
+    .status-card.shipping { background: #FDF4FF; color: #86198F; }
+    .status-card.delivered { background: #ECFDF5; color: #065F46; }
+    .status-card.cancelled { background: #FEF2F2; color: #991B1B; }
+    
+    /* Badge màu nhẹ nhàng */
+    .badge-pending { background: #FEF3C7; color: #92400E; }
+    .badge-confirmed { background: #DBEAFE; color: #1E40AF; }
+    .badge-processing { background: #E0E7FF; color: #3730A3; }
+    .badge-shipping { background: #F3E8FF; color: #6B21A8; }
+    .badge-delivered { background: #D1FAE5; color: #065F46; }
+    .badge-cancelled { background: #FEE2E2; color: #991B1B; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2><i class="bi bi-receipt"></i> Quản lý đơn hàng</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+</div>
+
+<!-- Thông báo phân quyền cho nhân viên -->
+@if (!isAdmin)
+{
+    <div class="alert alert-info alert-dismissible fade show mb-3">
+        <i class="bi bi-info-circle"></i> <strong>Quyền hạn của bạn:</strong> Bạn đang đăng nhập với quyền <span class="badge bg-info">Nhân viên</span>
+        <br><small class="text-muted">Bạn có thể xem chi tiết và xử lý đơn hàng. Các thao tác Sửa, Xóa, Hủy đơn chỉ dành cho Admin.</small>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Thống kê nhanh theo trạng thái -->
+<div class="row mb-3 g-2">
+    @{
+        var choXacNhan = Model.Count(x => x.Trangthai == "Chờ xác nhận");
+        var daXacNhan = Model.Count(x => x.Trangthai == "Đã xác nhận");
+        var dangXuLy = Model.Count(x => x.Trangthai == "Đang xử lý");
+        var dangGiao = Model.Count(x => x.Trangthai == "Đang giao");
+        var daGiao = Model.Count(x => x.Trangthai == "Đã giao" || x.Trangthai == "Hoàn thành");
+        var daHuy = Model.Count(x => x.Trangthai == "Đã hủy");
+    }
+    <div class="col-md-2">
+        <a href="?trangThai=Chờ xác nhận" class="text-decoration-none">
+            <div class="status-card pending">
+                <h3>@choXacNhan</h3>
+                <small><i class="bi bi-clock"></i> Chờ xác nhận</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="?trangThai=Đã xác nhận" class="text-decoration-none">
+            <div class="status-card confirmed">
+                <h3>@daXacNhan</h3>
+                <small><i class="bi bi-check-lg"></i> Đã xác nhận</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="?trangThai=Đang xử lý" class="text-decoration-none">
+            <div class="status-card processing">
+                <h3>@dangXuLy</h3>
+                <small><i class="bi bi-box-seam"></i> Đang xử lý</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="?trangThai=Đang giao" class="text-decoration-none">
+            <div class="status-card shipping">
+                <h3>@dangGiao</h3>
+                <small><i class="bi bi-truck"></i> Đang giao</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="?trangThai=Đã giao" class="text-decoration-none">
+            <div class="status-card delivered">
+                <h3>@daGiao</h3>
+                <small><i class="bi bi-house-check"></i> Hoàn thành</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="?trangThai=Đã hủy" class="text-decoration-none">
+            <div class="status-card cancelled">
+                <h3>@daHuy</h3>
+                <small><i class="bi bi-x-circle"></i> Đã hủy</small>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Bộ lọc -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Tìm mã đơn hàng</label>
+                <input type="text" name="searchMa" class="form-control" placeholder="Nhập mã đơn hàng..." value="@ViewBag.SearchMa" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Trạng thái</label>
+                <select name="trangThai" class="form-select">
+                    <option value="">-- Tất cả --</option>
+                    <option value="Chờ xác nhận" selected="@(ViewBag.TrangThai == "Chờ xác nhận")">Chờ xác nhận</option>
+                    <option value="Đã xác nhận" selected="@(ViewBag.TrangThai == "Đã xác nhận")">Đã xác nhận</option>
+                    <option value="Đang xử lý" selected="@(ViewBag.TrangThai == "Đang xử lý")">Đang xử lý</option>
+                    <option value="Đang giao" selected="@(ViewBag.TrangThai == "Đang giao")">Đang giao</option>
+                    <option value="Đã giao" selected="@(ViewBag.TrangThai == "Đã giao")">Đã giao</option>
+                    <option value="Đã hủy" selected="@(ViewBag.TrangThai == "Đã hủy")">Đã hủy</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-list-ul"></i> Danh sách đơn hàng (@Model.Count())</span>
+        @if (!string.IsNullOrEmpty(ViewBag.TrangThai as string))
+        {
+            <span class="badge bg-secondary">Lọc: @ViewBag.TrangThai</span>
+        }
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive-scroll">
+        <table class="table table-striped table-hover table-paginated mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Mã ĐH</th>
+                    <th>Khách hàng</th>
+                    <th>Ngày đặt</th>
+                    <th>Trạng thái</th>
+                    <th class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Không có đơn hàng nào
+                        </td>
+                    </tr>
+                }
+                @foreach (var item in Model)
+                {
+                    var badgeClass = item.Trangthai switch
+                    {
+                        "Chờ xác nhận" => "badge-pending",
+                        "Đã xác nhận" => "badge-confirmed",
+                        "Đang xử lý" => "badge-processing",
+                        "Đang giao" => "badge-shipping",
+                        "Đã giao" or "Hoàn thành" => "badge-delivered",
+                        "Đã hủy" => "badge-cancelled",
+                        _ => "bg-secondary"
+                    };
+                    <tr>
+                        <td><strong>@item.Madonhang</strong></td>
+                        <td>@item.MakhNavigation?.Hotenkh</td>
+                        <td>@item.Ngaydat.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <span class="badge @badgeClass">@item.Trangthai</span>
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="Details" asp-route-id="@item.Madonhang" class="btn btn-sm btn-info" title="Xem chi tiết">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            @if (isAdmin)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Madonhang" class="btn btn-sm btn-warning" title="Sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.Madonhang" class="btn btn-sm btn-danger" title="Xóa">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>

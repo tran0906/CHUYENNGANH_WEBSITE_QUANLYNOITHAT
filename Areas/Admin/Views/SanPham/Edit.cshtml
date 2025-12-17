@@ -1,0 +1,223 @@
+@model SanPham
+@{ 
+    ViewData["Title"] = "Sửa sản phẩm"; 
+    var currentImages = string.IsNullOrEmpty(Model.Hinhanh) ? new string[0] : Model.Hinhanh.Split(';');
+}
+
+<h2>Sửa sản phẩm</h2>
+<hr />
+<div class="row">
+    <div class="col-md-10">
+        <form asp-action="Edit" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Masp" />
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Masp" class="form-label">Mã sản phẩm</label>
+                        <input value="@Model.Masp" class="form-control" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Tensp" class="form-label">Tên sản phẩm</label>
+                        <input asp-for="Tensp" class="form-control" />
+                        <span asp-validation-for="Tensp" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Manhomsp" class="form-label">Nhóm sản phẩm</label>
+                        <select asp-for="Manhomsp" class="form-select" asp-items="ViewBag.Manhomsp">
+                            <option value="">-- Chọn nhóm --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Mavl" class="form-label">Vật liệu</label>
+                        <select asp-for="Mavl" class="form-select" asp-items="ViewBag.Mavl">
+                            <option value="">-- Chọn vật liệu --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Giaban" class="form-label">Giá bán (VNĐ)</label>
+                        <input asp-for="Giaban" class="form-control" type="number" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Soluongton" class="form-label">Số lượng tồn</label>
+                        <input asp-for="Soluongton" class="form-control" type="number" />
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hình ảnh - Chọn nhiều -->
+            <div class="mb-3">
+                <label class="form-label fw-bold"><i class="bi bi-images"></i> Hình ảnh sản phẩm (có thể chọn nhiều)</label>
+                <ul class="nav nav-tabs" id="imageTab">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#current" type="button">Hình hiện tại (@currentImages.Length)</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#upload" type="button">Upload thêm</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#select" type="button">Chọn từ thư viện</button>
+                    </li>
+                </ul>
+                <div class="tab-content border border-top-0 p-3">
+                    <div class="tab-pane fade show active" id="current">
+                        @if (currentImages.Length > 0 && !string.IsNullOrEmpty(currentImages[0]))
+                        {
+                            <div class="alert alert-info py-2 mb-2">
+                                <i class="bi bi-info-circle"></i> Click nút X để xóa hình. Hình đầu tiên là hình chính.
+                            </div>
+                        }
+                    </div>
+                    <div class="tab-pane fade" id="upload">
+                        <input type="file" name="imageFiles" class="form-control" accept="image/*" multiple onchange="previewUploadImages(this)" />
+                        <small class="text-muted">Có thể chọn nhiều file cùng lúc (Ctrl+Click)</small>
+                        <div id="uploadPreview" class="row g-2 mt-2"></div>
+                    </div>
+                    <div class="tab-pane fade" id="select">
+                        <div class="alert alert-info py-2 mb-2">
+                            <i class="bi bi-info-circle"></i> Click để chọn/bỏ chọn hình từ thư viện.
+                        </div>
+                        <div class="row g-2" style="max-height: 250px; overflow-y: auto;">
+                            @if (ViewBag.ExistingImages != null)
+                            {
+                                foreach (string img in ViewBag.ExistingImages)
+                                {
+                                    var isSelected = currentImages.Contains(img);
+                                    <div class="col-2">
+                                        <div class="position-relative">
+                                            <img src="@img" class="img-thumbnail img-selectable @(isSelected ? "border-primary border-3" : "")" data-path="@img"
+                                                 style="cursor:pointer; height:80px; object-fit:cover; width:100%;" 
+                                                 onclick="toggleSelectImage(this)" title="Click để chọn" />
+                                            <span class="position-absolute top-0 end-0 badge bg-primary @(isSelected ? "" : "d-none") check-badge">
+                                                <i class="bi bi-check-lg"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hidden input để lưu danh sách hình đã chọn -->
+                <input type="hidden" asp-for="Hinhanh" id="selectedImages" />
+                
+                <!-- Hiển thị hình đã chọn -->
+                <div class="mt-3">
+                    <label class="fw-bold">Hình đã chọn: <span id="selectedCount" class="badge bg-primary">@currentImages.Length</span></label>
+                    <div id="selectedPreview" class="d-flex flex-wrap gap-2 mt-2 p-2 border rounded" style="min-height: 100px; background: #f8f9fa;"></div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Mota" class="form-label">Mô tả</label>
+                <textarea asp-for="Mota" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Cập nhật</button>
+            <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        </form>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Khởi tạo với hình hiện tại
+        let selectedImages = @Html.Raw(Json.Serialize(currentImages.Where(x => !string.IsNullOrEmpty(x)).ToArray()));
+        
+        // Hiển thị hình đã chọn khi load trang
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectedPreview();
+        });
+        
+        // Preview uploaded images
+        function previewUploadImages(input) {
+            const container = document.getElementById('uploadPreview');
+            container.innerHTML = '';
+            if (input.files && input.files.length > 0) {
+                Array.from(input.files).forEach((file, i) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const col = document.createElement('div');
+                        col.className = 'col-2';
+                        col.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" style="height:70px; width:100%; object-fit:cover;" />`;
+                        container.appendChild(col);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+        
+        // Toggle select image from gallery
+        function toggleSelectImage(img) {
+            const path = img.dataset.path;
+            const badge = img.nextElementSibling;
+            const index = selectedImages.indexOf(path);
+            
+            if (index > -1) {
+                selectedImages.splice(index, 1);
+                img.classList.remove('border-primary', 'border-3');
+                badge.classList.add('d-none');
+            } else {
+                selectedImages.push(path);
+                img.classList.add('border-primary', 'border-3');
+                badge.classList.remove('d-none');
+            }
+            
+            updateSelectedPreview();
+        }
+        
+        // Update preview of selected images
+        function updateSelectedPreview() {
+            const container = document.getElementById('selectedPreview');
+            const countBadge = document.getElementById('selectedCount');
+            const hiddenInput = document.getElementById('selectedImages');
+            
+            hiddenInput.value = selectedImages.join(';');
+            countBadge.textContent = selectedImages.length;
+            
+            if (selectedImages.length === 0) {
+                container.innerHTML = '<span class="text-muted">Chưa chọn hình nào</span>';
+                return;
+            }
+            
+            container.innerHTML = selectedImages.map((img, i) => `
+                <div class="position-relative" style="width: 90px;">
+                    <img src="${img}" class="img-thumbnail" style="height:80px; width:100%; object-fit:cover;" />
+                    ${i === 0 ? '<span class="position-absolute top-0 start-0 badge bg-success" style="font-size:10px;">Chính</span>' : ''}
+                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0" 
+                            style="padding:0 5px; font-size:11px;" onclick="removeSelectedImage('${img}')" title="Xóa hình này">×</button>
+                </div>
+            `).join('');
+        }
+        
+        // Remove image from selection
+        function removeSelectedImage(path) {
+            const index = selectedImages.indexOf(path);
+            if (index > -1) {
+                selectedImages.splice(index, 1);
+                const img = document.querySelector(`.img-selectable[data-path="${path}"]`);
+                if (img) {
+                    img.classList.remove('border-primary', 'border-3');
+                    img.nextElementSibling.classList.add('d-none');
+                }
+                updateSelectedPreview();
+            }
+        }
+    </script>
+}

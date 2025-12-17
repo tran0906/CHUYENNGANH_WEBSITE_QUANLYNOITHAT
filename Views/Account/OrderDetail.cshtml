@@ -1,0 +1,387 @@
+@model DonHang
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng #" + Model.Madonhang;
+    var tongTien = Model.CtDonhangs?.Sum(x => x.Thanhtien ?? 0) ?? 0;
+    var soSanPham = Model.CtDonhangs?.Sum(x => x.Soluong) ?? 0;
+}
+
+<!-- Breadcrumb -->
+<section class="breadcrumb-section">
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="/"><i class="fas fa-home"></i> Trang chủ</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="/Account/Orders">Đơn hàng của tôi</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>@Model.Madonhang</span>
+        </nav>
+    </div>
+</section>
+
+<div class="container" style="padding: 40px 0;">
+    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 30px;">
+        <!-- Sidebar Menu -->
+        <div>
+            <div style="background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); overflow: hidden;">
+                <div style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); padding: 30px; text-align: center; color: white;">
+                    <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                        <i class="fas fa-user" style="font-size: 36px; color: var(--primary-color);"></i>
+                    </div>
+                    <h4 style="margin-bottom: 5px;">@Context.Session.GetString("CustomerName")</h4>
+                    <small style="opacity: 0.8;">@Context.Session.GetString("CustomerPhone")</small>
+                </div>
+                <nav style="padding: 15px;">
+                    <a href="/Account/Profile" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #333; border-radius: 8px; margin-bottom: 5px; text-decoration: none;">
+                        <i class="fas fa-user-circle" style="width: 20px;"></i> Hồ sơ của tôi
+                    </a>
+                    <a href="/Account/Orders" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: var(--primary-color); background: var(--wood-light); border-radius: 8px; margin-bottom: 5px; text-decoration: none;">
+                        <i class="fas fa-shopping-bag" style="width: 20px;"></i> Đơn hàng của tôi
+                    </a>
+                    <a href="/Account/ChangePassword" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #333; border-radius: 8px; margin-bottom: 5px; text-decoration: none;">
+                        <i class="fas fa-key" style="width: 20px;"></i> Đổi mật khẩu
+                    </a>
+                    <hr style="margin: 15px 0; border-color: #eee;" />
+                    <a href="/Account/Logout" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #dc3545; border-radius: 8px; text-decoration: none;">
+                        <i class="fas fa-sign-out-alt" style="width: 20px;"></i> Đăng xuất
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div>
+            <div style="background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); padding: 30px;">
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--primary-color);">
+                    <h2 style="color: var(--primary-color); margin: 0;">
+                        <i class="fas fa-file-invoice"></i> Chi tiết đơn hàng #@Model.Madonhang
+                    </h2>
+                    @{
+                        var statusStyle = Model.Trangthai switch
+                        {
+                            "Chờ xác nhận" or "Chờ xử lý" => "background: #FFC107; color: #333;",
+                            "Đã xác nhận" or "Đang xử lý" => "background: #17A2B8; color: white;",
+                            "Đang giao" => "background: #007BFF; color: white;",
+                            "Đã giao" or "Hoàn thành" => "background: #28A745; color: white;",
+                            "Đã thanh toán" => "background: #28A745; color: white;",
+                            "Đã hủy" => "background: #DC3545; color: white;",
+                            _ => "background: #6C757D; color: white;"
+                        };
+                    }
+                    <span style="@statusStyle padding: 8px 20px; border-radius: 25px; font-weight: 600;">@Model.Trangthai</span>
+                </div>
+
+                <!-- Danh sách sản phẩm -->
+                <div style="margin-bottom: 30px;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 15px;">
+                        <i class="fas fa-shopping-cart"></i> Sản phẩm đã đặt
+                    </h4>
+                    
+                    @if (Model.CtDonhangs != null && Model.CtDonhangs.Any())
+                    {
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; border: 1px solid #eee;">
+                                <thead>
+                                    <tr style="background: #f8f9fa;">
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--primary-color);">Sản phẩm</th>
+                                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid var(--primary-color); width: 100px;">Số lượng</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--primary-color); width: 130px;">Đơn giá</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--primary-color); width: 130px;">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ct in Model.CtDonhangs)
+                                    {
+                                        <tr style="border-bottom: 1px solid #eee;">
+                                            <td style="padding: 15px;">
+                                                <div style="display: flex; align-items: center; gap: 15px;">
+                                                    @{
+                                                        var productImage = "/images/no-image.jpg";
+                                                        if (!string.IsNullOrEmpty(ct.MaspNavigation?.Hinhanh))
+                                                        {
+                                                            var images = ct.MaspNavigation.Hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                                                            foreach (var img in images)
+                                                            {
+                                                                var trimmed = img.Trim();
+                                                                if (!string.IsNullOrEmpty(trimmed) && (trimmed.StartsWith("/") || trimmed.StartsWith("http")))
+                                                                {
+                                                                    productImage = trimmed;
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    <img src="@productImage" alt="@ct.MaspNavigation?.Tensp" 
+                                                         style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
+                                                    <div>
+                                                        <strong style="color: #333;">@(ct.MaspNavigation?.Tensp ?? "Sản phẩm")</strong>
+                                                        <br><small style="color: #888;">Mã SP: @ct.Masp</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style="padding: 15px; text-align: center; font-weight: 600;">@ct.Soluong</td>
+                                            <td style="padding: 15px; text-align: right;">@ct.Dongia?.ToString("N0") ₫</td>
+                                            <td style="padding: 15px; text-align: right; font-weight: 600; color: var(--primary-color);">@ct.Thanhtien?.ToString("N0") ₫</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: #fff8e1;">
+                                        <td colspan="3" style="padding: 15px; text-align: right; font-weight: 600; font-size: 16px;">
+                                            Tổng cộng (@soSanPham sản phẩm):
+                                        </td>
+                                        <td style="padding: 15px; text-align: right; font-weight: 700; font-size: 18px; color: #dc3545;">
+                                            @tongTien.ToString("N0") ₫
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="text-align: center; padding: 40px; background: #f9f9f9; border-radius: 10px;">
+                            <i class="fas fa-box-open" style="font-size: 48px; color: #ddd; margin-bottom: 15px;"></i>
+                            <p style="color: #888; margin: 0;">Không có thông tin sản phẩm</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Thông tin chi tiết -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <!-- Thông tin đơn hàng -->
+                    <div style="background: #f8f9fa; border-radius: 10px; padding: 20px;">
+                        <h5 style="color: var(--primary-color); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ddd;">
+                            <i class="fas fa-info-circle"></i> Thông tin đơn hàng
+                        </h5>
+                        <div style="margin-bottom: 12px;">
+                            <small style="color: #888;">Mã đơn hàng</small>
+                            <p style="margin: 5px 0 0; font-weight: 600; color: var(--primary-color);">@Model.Madonhang</p>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <small style="color: #888;">Ngày đặt hàng</small>
+                            <p style="margin: 5px 0 0; font-weight: 500;">@Model.Ngaydat.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                        <div style="margin-bottom: 0;">
+                            <small style="color: #888;">Trạng thái</small>
+                            <p style="margin: 5px 0 0;">
+                                <span style="@statusStyle padding: 5px 15px; border-radius: 15px; font-size: 13px;">@Model.Trangthai</span>
+                            </p>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Ghichu))
+                        {
+                            <div style="margin-top: 12px;">
+                                <small style="color: #888;">Ghi chú</small>
+                                <p style="margin: 5px 0 0; font-style: italic; color: #666;">"@Model.Ghichu"</p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Thông tin vận chuyển -->
+                    @if (Model.VanChuyens != null && Model.VanChuyens.Any())
+                    {
+                        <div style="background: #e3f2fd; border-radius: 10px; padding: 20px;">
+                            <h5 style="color: #1976d2; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #bbdefb;">
+                                <i class="fas fa-truck"></i> Thông tin vận chuyển
+                            </h5>
+                            @foreach (var vc in Model.VanChuyens)
+                            {
+                                <div style="margin-bottom: 12px;">
+                                    <small style="color: #888;">Mã vận đơn</small>
+                                    <p style="margin: 5px 0 0; font-weight: 600; color: #1976d2;">@vc.Mavandon</p>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <small style="color: #888;">Đơn vị vận chuyển</small>
+                                    <p style="margin: 5px 0 0; font-weight: 500;">@vc.Donvivanchuyen</p>
+                                </div>
+                                <div style="margin-bottom: 0;">
+                                    <small style="color: #888;">Trạng thái giao hàng</small>
+                                    <p style="margin: 5px 0 0;">
+                                        @{
+                                            var vcStyle = vc.Trangthaigiao switch
+                                            {
+                                                "Đã giao" => "background: #28A745; color: white;",
+                                                "Đang giao" => "background: #007BFF; color: white;",
+                                                _ => "background: #6C757D; color: white;"
+                                            };
+                                        }
+                                        <span style="@vcStyle padding: 5px 15px; border-radius: 15px; font-size: 13px;">@vc.Trangthaigiao</span>
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Thông tin thanh toán -->
+                    <div style="background: #e8f5e9; border-radius: 10px; padding: 20px;">
+                        <h5 style="color: #388e3c; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #c8e6c9;">
+                            <i class="fas fa-credit-card"></i> Thanh toán
+                        </h5>
+                        @if (Model.ThanhToans != null && Model.ThanhToans.Any())
+                        {
+                            @foreach (var tt in Model.ThanhToans)
+                            {
+                                <div style="margin-bottom: 12px;">
+                                    <small style="color: #888;">Phương thức</small>
+                                    <p style="margin: 5px 0 0; font-weight: 500;">@tt.Phuongthuc</p>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <small style="color: #888;">Số tiền</small>
+                                    <p style="margin: 5px 0 0; font-weight: 700; font-size: 18px; color: #388e3c;">@tt.Sotien?.ToString("N0") ₫</p>
+                                </div>
+                                <div style="margin-bottom: 0;">
+                                    <small style="color: #888;">Ngày thanh toán</small>
+                                    <p style="margin: 5px 0 0; font-weight: 500;">@tt.Ngaythanhtoan?.ToString("dd/MM/yyyy")</p>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="fas fa-clock" style="font-size: 32px; color: #ffc107; margin-bottom: 10px;"></i>
+                                <p style="color: #888; margin: 0;">Chưa thanh toán</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Tổng tiền -->
+                <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); border-radius: 10px; text-align: center; color: white;">
+                    <small style="opacity: 0.9;">Tổng giá trị đơn hàng</small>
+                    <h2 style="margin: 10px 0 0; font-size: 28px;">@tongTien.ToString("N0") ₫</h2>
+                </div>
+
+                <!-- Nút quay lại -->
+                <div style="margin-top: 25px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                    <a href="/Account/Orders" class="btn btn-outline" style="padding: 12px 25px;">
+                        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                    </a>
+                    <a href="/" class="btn btn-primary" style="padding: 12px 25px;">
+                        <i class="fas fa-home"></i> Về trang chủ
+                    </a>
+                    @if (Model.Trangthai == "Chờ xác nhận" || Model.Trangthai == "Chờ xử lý")
+                    {
+                        var thoiGianDat = Model.Ngaydat;
+                        var thoiGianHienTai = DateTime.Now;
+                        var khoangThoiGian = thoiGianHienTai - thoiGianDat;
+                        var phutConLai = 30 - (int)khoangThoiGian.TotalMinutes;
+                        var coTheHuy = phutConLai > 0;
+                        
+                        if (coTheHuy)
+                        {
+                            <button type="button" onclick="cancelOrder('@Model.Madonhang')" class="btn" style="padding: 12px 25px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                <i class="fas fa-times-circle"></i> Hủy đơn hàng
+                            </button>
+                            <span style="background: #fff3cd; color: #856404; padding: 8px 15px; border-radius: 8px; font-size: 13px;">
+                                <i class="fas fa-clock"></i> Còn <strong id="countdown">@phutConLai</strong> phút để hủy đơn
+                            </span>
+                        }
+                        else
+                        {
+                            <span style="background: #f8d7da; color: #721c24; padding: 12px 20px; border-radius: 8px; font-size: 13px;">
+                                <i class="fas fa-ban"></i> Đã hết thời gian hủy đơn hàng (quá 30 phút). Vui lòng liên hệ hotline để được hỗ trợ.
+                            </span>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận hủy đơn -->
+<div id="cancelModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 15px; padding: 30px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+        <div style="width: 70px; height: 70px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 30px; color: #dc3545;"></i>
+        </div>
+        <h4 style="margin-bottom: 10px; color: #333;">Xác nhận hủy đơn hàng</h4>
+        <p style="color: #666; margin-bottom: 20px;">Bạn có chắc chắn muốn hủy đơn hàng <strong id="cancelOrderId"></strong> không?</p>
+        <p style="color: #888; font-size: 13px; margin-bottom: 25px;">Lưu ý: Sau khi hủy, bạn sẽ không thể khôi phục đơn hàng này.</p>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button onclick="closeCancelModal()" style="padding: 12px 30px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                Không, giữ lại
+            </button>
+            <button onclick="confirmCancelOrder()" style="padding: 12px 30px; border: none; background: #dc3545; color: white; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                Có, hủy đơn
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var orderIdToCancel = '';
+    
+    function cancelOrder(orderId) {
+        orderIdToCancel = orderId;
+        document.getElementById('cancelOrderId').textContent = '#' + orderId;
+        document.getElementById('cancelModal').style.display = 'flex';
+    }
+    
+    function closeCancelModal() {
+        document.getElementById('cancelModal').style.display = 'none';
+        orderIdToCancel = '';
+    }
+    
+    function confirmCancelOrder() {
+        if (!orderIdToCancel) return;
+        
+        fetch('/Account/CancelOrder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'orderId=' + orderIdToCancel
+        })
+        .then(response => response.json())
+        .then(data => {
+            closeCancelModal();
+            if (data.success) {
+                showToast('Đã hủy đơn hàng thành công!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.message || 'Có lỗi xảy ra!', 'error');
+            }
+        })
+        .catch(error => {
+            closeCancelModal();
+            showToast('Có lỗi xảy ra!', 'error');
+        });
+    }
+    
+    // Click outside to close
+    document.getElementById('cancelModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCancelModal();
+    });
+    
+    // Đếm ngược thời gian còn lại để hủy đơn
+    var countdownEl = document.getElementById('countdown');
+    if (countdownEl) {
+        var secondsLeft = @((Model.Trangthai == "Chờ xác nhận" || Model.Trangthai == "Chờ xử lý") ? Math.Max(0, (30 * 60) - (int)(DateTime.Now - Model.Ngaydat).TotalSeconds) : 0);
+        
+        if (secondsLeft > 0) {
+            function updateCountdown() {
+                if (secondsLeft <= 0) {
+                    location.reload();
+                    return;
+                }
+                
+                var minutes = Math.floor(secondsLeft / 60);
+                var seconds = secondsLeft % 60;
+                
+                if (countdownEl) {
+                    if (minutes > 0) {
+                        countdownEl.textContent = minutes + ' phút ' + seconds + ' giây';
+                    } else {
+                        countdownEl.textContent = seconds + ' giây';
+                    }
+                }
+                
+                secondsLeft--;
+            }
+            
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        }
+    }
+</script>
+}

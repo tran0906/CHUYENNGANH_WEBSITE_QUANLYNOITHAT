@@ -1,0 +1,102 @@
+@model DOANCHUYENNGANH_WEB_QLNOITHAT.Models.KhachHang
+@{
+    ViewData["Title"] = "Hồ sơ của tôi";
+}
+
+<!-- Breadcrumb -->
+<section class="breadcrumb-section">
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="/"><i class="fas fa-home"></i> Trang chủ</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Hồ sơ của tôi</span>
+        </nav>
+    </div>
+</section>
+
+<div class="container" style="padding: 40px 0;">
+    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 30px;">
+        <!-- Sidebar Menu -->
+        <div>
+            <div style="background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); overflow: hidden;">
+                <div style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); padding: 30px; text-align: center; color: white;">
+                    <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                        <i class="fas fa-user" style="font-size: 36px; color: var(--primary-color);"></i>
+                    </div>
+                    <h4 style="margin-bottom: 5px;">@Model.Hotenkh</h4>
+                    <small style="opacity: 0.8;">@Model.Sdtkh</small>
+                </div>
+                <nav style="padding: 15px;">
+                    <a href="/Account/Profile" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: var(--primary-color); background: var(--wood-light); border-radius: 8px; margin-bottom: 5px;">
+                        <i class="fas fa-user-circle" style="width: 20px;"></i> Hồ sơ của tôi
+                    </a>
+                    <a href="/Account/Orders" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #333; border-radius: 8px; margin-bottom: 5px;">
+                        <i class="fas fa-shopping-bag" style="width: 20px;"></i> Đơn hàng của tôi
+                    </a>
+                    <a href="/Account/ChangePassword" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #333; border-radius: 8px; margin-bottom: 5px;">
+                        <i class="fas fa-key" style="width: 20px;"></i> Đổi mật khẩu
+                    </a>
+                    <hr style="margin: 15px 0; border-color: #eee;" />
+                    <a href="/Account/Logout" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #dc3545; border-radius: 8px;">
+                        <i class="fas fa-sign-out-alt" style="width: 20px;"></i> Đăng xuất
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div>
+            <!-- Thông tin cá nhân -->
+            <div style="background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); padding: 30px; margin-bottom: 25px;">
+                <h2 style="color: var(--primary-color); margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--primary-color);">
+                    <i class="fas fa-user-edit"></i> Thông tin cá nhân
+                </h2>
+
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Success"]</div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger">@TempData["Error"]</div>
+                }
+
+                <form action="/Account/Profile" method="post">
+                    <input type="hidden" name="makh" value="@Model.Makh" />
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label>Mã khách hàng</label>
+                            <input type="text" class="form-control" value="@Model.Makh" readonly style="background: #f5f5f5;" />
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại</label>
+                            <input type="text" class="form-control" value="@Model.Sdtkh" readonly style="background: #f5f5f5;" />
+                            <small style="color: #666;">Số điện thoại không thể thay đổi</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Họ và tên <span style="color: red;">*</span></label>
+                        <input type="text" class="form-control" name="hoTen" value="@Model.Hotenkh" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Địa chỉ <span style="color: red;">*</span></label>
+                        <textarea class="form-control" name="diaChi" rows="3" required>@Model.Diachikh</textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 15px; margin-top: 25px;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Cập nhật thông tin
+                        </button>
+                        <a href="/" class="btn btn-outline">
+                            <i class="fas fa-arrow-left"></i> Quay lại trang chủ
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>

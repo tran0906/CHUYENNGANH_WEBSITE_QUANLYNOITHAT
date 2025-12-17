@@ -1,0 +1,98 @@
+@using System.Data
+@model DataTable
+@{
+    ViewData["Title"] = "Sản phẩm bán chạy";
+}
+
+<h2 class="mb-4">Sản phẩm bán chạy</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Từ ngày</label>
+                <input type="date" name="tuNgay" class="form-control" value="@ViewBag.TuNgay" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Đến ngày</label>
+                <input type="date" name="denNgay" class="form-control" value="@ViewBag.DenNgay" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Số lượng hiển thị</label>
+                <select name="top" class="form-select">
+                    <option value="5" selected="@(ViewBag.Top == 5)">Top 5</option>
+                    <option value="10" selected="@(ViewBag.Top == 10)">Top 10</option>
+                    <option value="20" selected="@(ViewBag.Top == 20)">Top 20</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <strong>Top @ViewBag.Top sản phẩm bán chạy</strong>
+        <a asp-action="Index" class="btn btn-sm btn-secondary">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Hình ảnh</th>
+                        <th>Mã SP</th>
+                        <th>Tên sản phẩm</th>
+                        <th class="text-end">Số lượng bán</th>
+                        <th class="text-end">Doanh thu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Rows.Count > 0)
+                    {
+                        int stt = 1;
+                        @foreach (DataRow row in Model.Rows)
+                        {
+                            <tr>
+                                <td>
+                                    @if (stt <= 3)
+                                    {
+                                        <span class="badge @(stt == 1 ? "bg-warning" : stt == 2 ? "bg-secondary" : "bg-danger")">
+                                            <i class="bi bi-trophy"></i> @stt
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        @stt
+                                    }
+                                </td>
+                                <td>
+                                    @if (row["HINHANH"] != DBNull.Value)
+                                    {
+                                        <img src="@row["HINHANH"]" alt="" style="width: 50px; height: 50px; object-fit: cover;" class="rounded" />
+                                    }
+                                </td>
+                                <td>@row["MASP"]</td>
+                                <td>@row["TENSP"]</td>
+                                <td class="text-end fw-bold">@row["TongSoLuong"]</td>
+                                <td class="text-end text-success fw-bold">@(Convert.ToDecimal(row["TongDoanhThu"]).ToString("N0")) đ</td>
+                            </tr>
+                            stt++;
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="6" class="text-center text-muted">Không có dữ liệu</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

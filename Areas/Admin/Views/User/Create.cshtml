@@ -1,0 +1,47 @@
+@model User
+@{ ViewData["Title"] = "Thêm người dùng"; }
+
+<h2>Thêm người dùng mới</h2>
+<hr />
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="UserId" class="form-label">User ID</label>
+                <input asp-for="UserId" class="form-control" />
+                <span asp-validation-for="UserId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="TenUser" class="form-label">Tên đăng nhập</label>
+                <input asp-for="TenUser" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="HoTen" class="form-label">Họ tên</label>
+                <input asp-for="HoTen" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="MatKhau" class="form-label">Mật khẩu</label>
+                <input asp-for="MatKhau" class="form-control" type="password" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="VaiTro" class="form-label">Vai trò</label>
+                <select asp-for="VaiTro" class="form-select">
+                    <option value="NhanVien">Nhân viên</option>
+                    <option value="Admin">Admin</option>
+                    <option value="QuanLy">Quản lý</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

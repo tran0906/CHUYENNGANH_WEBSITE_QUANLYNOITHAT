@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Tin tức";
+}
+
+<!-- Breadcrumb -->
+<section class="breadcrumb-section">
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="/"><i class="fas fa-home"></i> Trang chủ</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Tin tức</span>
+        </nav>
+    </div>
+</section>
+
+<div class="container">
+    <div class="section">
+        <div class="section-title">
+            <h2>Tin tức & Mẹo hay</h2>
+            <p>Cập nhật những thông tin mới nhất về trang trí nội thất</p>
+        </div>
+        
+        <div class="news-grid">
+            @for (int i = 1; i <= 9; i++)
+            {
+                <article class="news-card">
+                    <div class="news-image">
+                        <img src="/images/news/news-@(i).jpg" alt="Tin tức @i" />
+                    </div>
+                    <div class="news-content">
+                        <div class="news-date"><i class="fas fa-calendar"></i> @DateTime.Now.AddDays(-i).ToString("dd/MM/yyyy")</div>
+                        <h3 class="news-title"><a href="/tin-tuc/@i">Xu hướng trang trí nội thất @(2025 - i % 3)</a></h3>
+                        <p class="news-excerpt">Khám phá những xu hướng trang trí nội thất mới nhất, từ phong cách minimalist đến bohemian...</p>
+                    </div>
+                </article>
+            }
+        </div>
+        
+        <nav class="pagination">
+            <span class="active">1</span>
+            <a href="#">2</a>
+            <a href="#">3</a>
+            <a href="#"><i class="fas fa-chevron-right"></i></a>
+        </nav>
+    </div>
+</div>

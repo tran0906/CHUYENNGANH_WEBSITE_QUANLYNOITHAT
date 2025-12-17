@@ -1,0 +1,42 @@
+@model MucDichSuDung
+@{ ViewData["Title"] = "Chi tiết mục đích sử dụng"; }
+
+<h2>Chi tiết mục đích sử dụng</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>Thông tin mục đích</strong></div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Mã mục đích</dt>
+                    <dd class="col-sm-8">@Model.Mamdsd</dd>
+                    <dt class="col-sm-4">Tên mục đích</dt>
+                    <dd class="col-sm-8">@Model.Tenmdsd</dd>
+                    <dt class="col-sm-4">Mô tả</dt>
+                    <dd class="col-sm-8">@Model.Motamdsd</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>Sản phẩm áp dụng (@Model.Masps.Count SP)</strong></div>
+            <div class="card-body">
+                <ul class="list-group">
+                    @foreach (var sp in Model.Masps)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            @sp.Tensp
+                            <span class="badge bg-primary">@sp.Giaban?.ToString("N0") đ</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Mamdsd" class="btn btn-warning">Sửa</a>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</div>

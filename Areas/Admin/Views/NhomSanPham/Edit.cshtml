@@ -1,0 +1,28 @@
+@model NhomSanPham
+@{ ViewData["Title"] = "Sửa nhóm sản phẩm"; }
+
+<h2>Sửa nhóm sản phẩm</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Manhomsp" />
+            <div class="mb-3">
+                <label asp-for="Manhomsp" class="form-label">Mã nhóm</label>
+                <input asp-for="Manhomsp" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Tennhomsp" class="form-label">Tên nhóm</label>
+                <input asp-for="Tennhomsp" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Mota" class="form-label">Mô tả</label>
+                <textarea asp-for="Mota" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

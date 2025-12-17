@@ -1,0 +1,59 @@
+@model QuanBaSp
+@{ ViewData["Title"] = "Thêm đợt quảng bá"; }
+
+<h2>Thêm đợt quảng bá mới</h2>
+<hr />
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Madotgiamgia" class="form-label">Mã đợt giảm giá</label>
+                        <input asp-for="Madotgiamgia" class="form-control" />
+                        <span asp-validation-for="Madotgiamgia" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Userid" class="form-label">Nhân viên phụ trách</label>
+                        <select asp-for="Userid" class="form-select" asp-items="ViewBag.Userid">
+                            <option value="">-- Chọn nhân viên --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Ngaybatdau" class="form-label">Ngày bắt đầu</label>
+                        <input asp-for="Ngaybatdau" class="form-control" type="date" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Ngayketthuc" class="form-label">Ngày kết thúc</label>
+                        <input asp-for="Ngayketthuc" class="form-control" type="date" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Chọn sản phẩm quảng bá</label>
+                        <div class="border rounded p-2" style="max-height: 300px; overflow-y: auto;">
+                            @foreach (var sp in ViewData["SanPhams"] as List<SanPham>)
+                            {
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="selectedSanPhams" value="@sp.Masp" id="sp_@sp.Masp">
+                                    <label class="form-check-label" for="sp_@sp.Masp">@sp.Tensp</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

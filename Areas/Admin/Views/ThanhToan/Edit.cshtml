@@ -1,0 +1,44 @@
+@model ThanhToan
+@{ ViewData["Title"] = "Sửa thanh toán"; }
+
+<h2>Sửa thanh toán</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Mathanhtoan" />
+            <div class="mb-3">
+                <label asp-for="Mathanhtoan" class="form-label">Mã thanh toán</label>
+                <input asp-for="Mathanhtoan" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Madonhang" class="form-label">Đơn hàng</label>
+                <select asp-for="Madonhang" class="form-select" asp-items="ViewBag.Madonhang">
+                    <option value="">-- Chọn đơn hàng --</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Userid" class="form-label">Nhân viên</label>
+                <select asp-for="Userid" class="form-select" asp-items="ViewBag.Userid">
+                    <option value="">-- Chọn nhân viên --</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Sotien" class="form-label">Số tiền</label>
+                <input asp-for="Sotien" class="form-control" type="number" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Phuongthuc" class="form-label">Phương thức</label>
+                <select asp-for="Phuongthuc" class="form-select">
+                    <option value="Tiền mặt">Tiền mặt</option>
+                    <option value="Chuyển khoản">Chuyển khoản</option>
+                    <option value="Thẻ tín dụng">Thẻ tín dụng</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

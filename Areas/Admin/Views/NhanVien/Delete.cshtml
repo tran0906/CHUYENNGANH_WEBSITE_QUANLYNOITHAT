@@ -1,0 +1,73 @@
+@model User
+@{
+    ViewData["Title"] = "Xóa nhân viên";
+}
+
+<h2><i class="bi bi-trash me-2 text-danger"></i>Xóa nhân viên</h2>
+<hr />
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <i class="bi bi-exclamation-triangle"></i> Xác nhận xóa
+            </div>
+            <div class="card-body">
+                @if (ViewBag.HasRelatedData == true)
+                {
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Cảnh báo:</strong> Nhân viên này có dữ liệu liên quan (đơn hàng, thanh toán...). 
+                        Không thể xóa!
+                    </div>
+                }
+
+                <div class="text-center mb-4">
+                    <i class="bi bi-person-x display-1 text-danger"></i>
+                </div>
+
+                <p class="text-center">Bạn có chắc chắn muốn xóa nhân viên này?</p>
+
+                <table class="table table-bordered">
+                    <tr>
+                        <th class="bg-light" style="width: 40%;">Mã nhân viên</th>
+                        <td><code>@Model.UserId</code></td>
+                    </tr>
+                    <tr>
+                        <th class="bg-light">Họ tên</th>
+                        <td><strong>@Model.HoTen</strong></td>
+                    </tr>
+                    <tr>
+                        <th class="bg-light">Tên đăng nhập</th>
+                        <td>@Model.TenUser</td>
+                    </tr>
+                    <tr>
+                        <th class="bg-light">Vai trò</th>
+                        <td>
+                            <span class="badge bg-secondary">@Model.VaiTro</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="bg-light">Ngày tạo</th>
+                        <td>@Model.NgayTao?.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                </table>
+
+                <div class="d-flex gap-2 justify-content-center">
+                    @if (ViewBag.HasRelatedData != true)
+                    {
+                        <form asp-action="Delete" method="post">
+                            <input type="hidden" asp-for="UserId" />
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Xác nhận xóa
+                            </button>
+                        </form>
+                    }
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

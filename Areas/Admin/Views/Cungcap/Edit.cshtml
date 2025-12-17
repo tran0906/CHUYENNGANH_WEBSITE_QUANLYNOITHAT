@@ -1,0 +1,29 @@
+@model Cungcap
+@{ ViewData["Title"] = "Sửa cung cấp"; }
+
+<h2>Sửa cung cấp</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Mancc" />
+            <input type="hidden" asp-for="Masp" />
+            <div class="mb-3">
+                <label asp-for="Mancc" class="form-label">Nhà cung cấp</label>
+                <input value="@Model.ManccNavigation?.Tenncc" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Masp" class="form-label">Sản phẩm</label>
+                <input value="@Model.MaspNavigation?.Tensp" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Soluongsp" class="form-label">Số lượng sản phẩm</label>
+                <input asp-for="Soluongsp" class="form-control" type="number" min="0" />
+            </div>
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

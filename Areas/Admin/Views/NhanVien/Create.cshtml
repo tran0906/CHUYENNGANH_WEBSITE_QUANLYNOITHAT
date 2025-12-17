@@ -1,0 +1,83 @@
+@model User
+@{
+    ViewData["Title"] = "Thêm nhân viên";
+}
+
+<h2><i class="bi bi-person-plus me-2"></i>Thêm nhân viên mới</h2>
+<hr />
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="UserId" class="form-label">Mã nhân viên <span class="text-danger">*</span></label>
+                            <input asp-for="UserId" class="form-control" placeholder="VD: NV01, AD01..." required />
+                            <span asp-validation-for="UserId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TenUser" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                            <input asp-for="TenUser" class="form-control" placeholder="Tên dùng để đăng nhập" required />
+                            <span asp-validation-for="TenUser" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="HoTen" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                        <input asp-for="HoTen" class="form-control" placeholder="Nhập họ và tên đầy đủ" required />
+                        <span asp-validation-for="HoTen" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="MatKhau" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                            <input asp-for="MatKhau" type="password" class="form-control" placeholder="Nhập mật khẩu" required />
+                            <small class="text-muted">Mật khẩu mặc định: 123456</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="VaiTro" class="form-label">Vai trò <span class="text-danger">*</span></label>
+                            <select asp-for="VaiTro" class="form-select" asp-items="@((List<SelectListItem>)ViewBag.VaiTroOptions)" required>
+                                <option value="">-- Chọn vai trò --</option>
+                            </select>
+                            <span asp-validation-for="VaiTro" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Lưu
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle"></i> Hướng dẫn</h6>
+                <ul class="small mb-0">
+                    <li>Mã nhân viên phải là duy nhất</li>
+                    <li>Tên đăng nhập dùng để đăng nhập hệ thống</li>
+                    <li>Vai trò quyết định quyền truy cập</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

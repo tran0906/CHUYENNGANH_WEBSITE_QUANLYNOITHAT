@@ -1,0 +1,54 @@
+@model VanChuyen
+@{ ViewData["Title"] = "Thêm vận chuyển"; }
+
+<h2>Thêm vận chuyển mới</h2>
+<hr />
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Mavandon" class="form-label">Mã vận đơn</label>
+                <input asp-for="Mavandon" class="form-control" />
+                <span asp-validation-for="Mavandon" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Madonhang" class="form-label">Đơn hàng</label>
+                <select asp-for="Madonhang" class="form-select" asp-items="ViewBag.Madonhang">
+                    <option value="">-- Chọn đơn hàng --</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Userid" class="form-label">Nhân viên</label>
+                <select asp-for="Userid" class="form-select" asp-items="ViewBag.Userid">
+                    <option value="">-- Chọn nhân viên --</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Donvivanchuyen" class="form-label">Đơn vị vận chuyển</label>
+                <input asp-for="Donvivanchuyen" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Trangthaigiao" class="form-label">Trạng thái giao</label>
+                <select asp-for="Trangthaigiao" class="form-select">
+                    <option value="Chờ lấy hàng">Chờ lấy hàng</option>
+                    <option value="Đang giao">Đang giao</option>
+                    <option value="Đã giao">Đã giao</option>
+                    <option value="Thất bại">Thất bại</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

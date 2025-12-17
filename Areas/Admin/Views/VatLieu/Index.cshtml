@@ -1,0 +1,43 @@
+@model IEnumerable<VatLieu>
+@{ ViewData["Title"] = "Quản lý vật liệu"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Quản lý vật liệu</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive-scroll">
+        <table class="table table-striped table-hover table-paginated">
+            <thead class="table-dark">
+                <tr>
+                    <th>Mã VL</th>
+                    <th>Tên vật liệu</th>
+                    <th>Màu</th>
+                    <th>Số lượng</th>
+                    <th>Mô tả</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Mavl</td>
+                        <td>@item.Tenvl</td>
+                        <td>@item.Mauvl</td>
+                        <td>@item.Soluong</td>
+                        <td>@item.Motavl</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.Mavl" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                            <a asp-action="Edit" asp-route-id="@item.Mavl" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                            <a asp-action="Delete" asp-route-id="@item.Mavl" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>

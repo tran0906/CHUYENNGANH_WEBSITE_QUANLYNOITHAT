@@ -1,0 +1,45 @@
+@model VatLieu
+@{ ViewData["Title"] = "Thêm vật liệu"; }
+
+<h2>Thêm vật liệu mới</h2>
+<hr />
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Mavl" class="form-label">Mã vật liệu</label>
+                <input asp-for="Mavl" class="form-control" />
+                <span asp-validation-for="Mavl" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Tenvl" class="form-label">Tên vật liệu</label>
+                <input asp-for="Tenvl" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Mauvl" class="form-label">Màu</label>
+                <input asp-for="Mauvl" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Soluong" class="form-label">Số lượng</label>
+                <input asp-for="Soluong" class="form-control" type="number" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Motavl" class="form-label">Mô tả</label>
+                <textarea asp-for="Motavl" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

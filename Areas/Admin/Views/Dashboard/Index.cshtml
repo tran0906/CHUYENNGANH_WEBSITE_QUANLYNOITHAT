@@ -1,0 +1,124 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2 class="mb-4">Dashboard</h2>
+
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>@ViewBag.TongSanPham</h4>
+                        <p class="mb-0">Sản phẩm</p>
+                    </div>
+                    <i class="bi bi-box-seam fs-1"></i>
+                </div>
+            </div>
+            <a asp-controller="SanPham" asp-action="Index" class="card-footer text-white text-decoration-none">
+                Xem chi tiết <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>@ViewBag.TongDonHang</h4>
+                        <p class="mb-0">Đơn hàng</p>
+                    </div>
+                    <i class="bi bi-cart fs-1"></i>
+                </div>
+            </div>
+            <a asp-controller="DonHang" asp-action="Index" class="card-footer text-white text-decoration-none">
+                Xem chi tiết <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>@ViewBag.TongKhachHang</h4>
+                        <p class="mb-0">Khách hàng</p>
+                    </div>
+                    <i class="bi bi-people fs-1"></i>
+                </div>
+            </div>
+            <a asp-controller="KhachHang" asp-action="Index" class="card-footer text-white text-decoration-none">
+                Xem chi tiết <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>@(((decimal)ViewBag.TongDoanhThu).ToString("N0")) đ</h4>
+                        <p class="mb-0">Doanh thu</p>
+                    </div>
+                    <i class="bi bi-currency-dollar fs-1"></i>
+                </div>
+            </div>
+            <a asp-controller="ThanhToan" asp-action="Index" class="card-footer text-white text-decoration-none">
+                Xem chi tiết <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <strong>Đơn hàng gần đây</strong>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã ĐH</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày đặt</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var dh in ViewBag.DonHangGanDay as List<DonHang>)
+                        {
+                            <tr>
+                                <td>@dh.Madonhang</td>
+                                <td>@dh.MakhNavigation?.Hotenkh</td>
+                                <td>@dh.Ngaydat.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="badge @(dh.Trangthai == "Hoàn thành" || dh.Trangthai == "Đã giao" ? "bg-success" : dh.Trangthai == "Đang xử lý" || dh.Trangthai == "Đang giao" ? "bg-warning" : dh.Trangthai == "Chờ xác nhận" ? "bg-info" : dh.Trangthai == "Đã hủy" ? "bg-danger" : "bg-secondary")">
+                                        @dh.Trangthai
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <strong>Thông báo</strong>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-2">
+                    <i class="bi bi-bell"></i> Có <strong>@ViewBag.DonHangMoi</strong> đơn hàng chờ xử lý
+                </div>
+                <a asp-controller="DonHang" asp-action="Index" class="btn btn-outline-primary btn-sm">
+                    Xem đơn hàng
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

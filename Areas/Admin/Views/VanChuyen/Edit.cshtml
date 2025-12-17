@@ -1,0 +1,45 @@
+@model VanChuyen
+@{ ViewData["Title"] = "Sửa vận chuyển"; }
+
+<h2>Sửa vận chuyển</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Mavandon" />
+            <div class="mb-3">
+                <label asp-for="Mavandon" class="form-label">Mã vận đơn</label>
+                <input asp-for="Mavandon" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Madonhang" class="form-label">Đơn hàng</label>
+                <select asp-for="Madonhang" class="form-select" asp-items="ViewBag.Madonhang">
+                    <option value="">-- Chọn đơn hàng --</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Userid" class="form-label">Nhân viên</label>
+                <select asp-for="Userid" class="form-select" asp-items="ViewBag.Userid">
+                    <option value="">-- Chọn nhân viên --</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Donvivanchuyen" class="form-label">Đơn vị vận chuyển</label>
+                <input asp-for="Donvivanchuyen" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Trangthaigiao" class="form-label">Trạng thái giao</label>
+                <select asp-for="Trangthaigiao" class="form-select">
+                    <option value="Chờ lấy hàng">Chờ lấy hàng</option>
+                    <option value="Đang giao">Đang giao</option>
+                    <option value="Đã giao">Đã giao</option>
+                    <option value="Thất bại">Thất bại</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

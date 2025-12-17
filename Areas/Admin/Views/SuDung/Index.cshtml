@@ -1,0 +1,105 @@
+@model IEnumerable<MucDichSuDung>
+@{
+    ViewData["Title"] = "Quản lý sử dụng sản phẩm";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Quản lý sử dụng sản phẩm</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Lọc theo mục đích sử dụng</label>
+                <select name="mamdsd" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Tất cả --</option>
+                    @foreach (SelectListItem item in (SelectList)ViewData["MucDichSuDungs"])
+                    {
+                        <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                    }
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (ViewBag.SelectedMdsd != null)
+{
+    var selected = ViewBag.SelectedMdsd as MucDichSuDung;
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <strong>@selected.Tenmdsd</strong>
+                <small class="text-muted ms-2">(@selected.Mamdsd)</small>
+            </div>
+            <span class="badge bg-info">@selected.Masps.Count sản phẩm</span>
+        </div>
+        <div class="card-body">
+            @if (selected.Masps.Any())
+            {
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Mã SP</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá bán</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sp in selected.Masps)
+                        {
+                            <tr>
+                                <td>@sp.Masp</td>
+                                <td>@sp.Tensp</td>
+                                <td>@sp.Giaban?.ToString("N0") đ</td>
+                                <td>
+                                    <a asp-action="Details" asp-route-mamdsd="@selected.Mamdsd" asp-route-masp="@sp.Masp" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                                    <a asp-action="Delete" asp-route-mamdsd="@selected.Mamdsd" asp-route-masp="@sp.Masp" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted text-center py-3">Chưa có sản phẩm nào được gán cho mục đích này</p>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Mã MDSD</th>
+                        <th>Tên mục đích</th>
+                        <th>Mô tả</th>
+                        <th>Số SP</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Mamdsd</td>
+                            <td>@item.Tenmdsd</td>
+                            <td>@item.Motamdsd</td>
+                            <td><span class="badge bg-info">@item.Masps.Count SP</span></td>
+                            <td>
+                                <a asp-action="Index" asp-route-mamdsd="@item.Mamdsd" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i> Xem SP</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

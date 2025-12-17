@@ -1,0 +1,67 @@
+@model IEnumerable<PhieuXuatKho>
+@{ ViewData["Title"] = "Quản lý phiếu xuất kho"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Quản lý phiếu xuất kho</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+</div>
+
+<!-- Form tìm kiếm -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Tìm theo mã phiếu</label>
+                <input type="text" name="searchMaPhieu" class="form-control" placeholder="Nhập mã phiếu..." value="@ViewBag.SearchMaPhieu" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Tìm theo mã đơn hàng</label>
+                <input type="text" name="searchMaDon" class="form-control" placeholder="Nhập mã đơn hàng..." value="@ViewBag.SearchMaDon" />
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
+                <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-counterclockwise"></i> Đặt lại</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive-scroll">
+        <table class="table table-striped table-hover table-paginated">
+            <thead class="table-dark">
+                <tr>
+                    <th>Mã phiếu</th>
+                    <th>Mã đơn hàng</th>
+                    <th>Nhân viên</th>
+                    <th>Ngày xuất</th>
+                    <th>NV duyệt</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Maphieuxuat</td>
+                        <td>@item.Madonhang</td>
+                        <td>@item.User?.HoTen</td>
+                        <td>@item.Ngayxuat?.ToString("dd/MM/yyyy")</td>
+                        <td>@item.Manvduyet</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.Maphieuxuat" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                            <a asp-action="Edit" asp-route-id="@item.Maphieuxuat" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                            <a asp-action="Delete" asp-route-id="@item.Maphieuxuat" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        </div>
+        @if (!Model.Any())
+        {
+            <div class="text-center text-muted py-3">Không có dữ liệu</div>
+        }
+    </div>
+</div>

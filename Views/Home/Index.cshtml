@@ -1,0 +1,188 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+@functions {
+    string GetFirstImage(string? hinhanh)
+    {
+        if (string.IsNullOrEmpty(hinhanh)) return "/images/no-image.jpg";
+        var images = hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        // Tìm hình đầu tiên hợp lệ (bắt đầu bằng / hoặc http)
+        foreach (var img in images)
+        {
+            var trimmed = img.Trim();
+            if (!string.IsNullOrEmpty(trimmed) && (trimmed.StartsWith("/") || trimmed.StartsWith("http")))
+                return trimmed;
+        }
+        return "/images/no-image.jpg";
+    }
+}
+
+<!-- Hero Slider -->
+<section class="hero-slider">
+    <div class="slide" style="background: linear-gradient(135deg, #8B4513, #D2691E);">
+        <div class="slide-content">
+            <h1>Không Gian Văn Hóa Nghệ Thuật</h1>
+            <p>Khám phá bộ sưu tập đồ trang trí nội thất cao cấp, mang đến vẻ đẹp tinh tế cho ngôi nhà của bạn</p>
+            <a href="/san-pham" class="btn btn-secondary">Khám phá ngay</a>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- Featured Products -->
+<section class="section" style="background: var(--gray-light);">
+    <div class="container">
+        <div class="section-title">
+            <h2>Sản phẩm nổi bật</h2>
+            <p>Những sản phẩm được yêu thích nhất</p>
+        </div>
+        <div class="products-grid">
+            @if (ViewBag.FeaturedProducts != null)
+            {
+                foreach (var product in ViewBag.FeaturedProducts)
+                {
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="@GetFirstImage(product.Hinhanh)" alt="@product.Tensp" />
+                            <span class="product-badge badge-hot">HOT</span>
+                            <div class="product-actions">
+                                <a href="/san-pham/@product.Masp" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                                <a href="#" onclick="addToCart('@product.Masp')" title="Thêm vào giỏ"><i class="fas fa-shopping-cart"></i></a>
+                                <a href="#" title="Yêu thích"><i class="fas fa-heart"></i></a>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-category">@(product.ManhomspNavigation?.Tennhomsp ?? "Nội thất")</div>
+                            <h3 class="product-name"><a href="/san-pham/@product.Masp">@product.Tensp</a></h3>
+                            <div class="product-price">
+                                <span class="current-price">@(product.Giaban?.ToString("N0") ?? "0") ₫</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="text-center mt-3">
+            <a href="/san-pham" class="btn btn-primary">Xem tất cả sản phẩm</a>
+        </div>
+    </div>
+</section>
+
+<!-- Banner Section -->
+<section class="banner-section">
+    <div class="container">
+        <h2>Ưu đãi đặc biệt - Giảm đến 30%</h2>
+        <p>Áp dụng cho tất cả sản phẩm trang trí nội thất cao cấp. Chỉ trong tháng này!</p>
+        <a href="/san-pham?sale=true" class="btn btn-secondary">Mua ngay</a>
+    </div>
+</section>
+
+<!-- New Products -->
+<section class="section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Sản phẩm mới</h2>
+            <p>Cập nhật những sản phẩm mới nhất</p>
+        </div>
+        <div class="products-grid">
+            @if (ViewBag.NewProducts != null)
+            {
+                foreach (var product in ViewBag.NewProducts)
+                {
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="@GetFirstImage(product.Hinhanh)" alt="@product.Tensp" />
+                            <span class="product-badge badge-new">NEW</span>
+                            <div class="product-actions">
+                                <a href="/san-pham/@product.Masp" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                                <a href="#" onclick="addToCart('@product.Masp')" title="Thêm vào giỏ"><i class="fas fa-shopping-cart"></i></a>
+                                <a href="#" title="Yêu thích"><i class="fas fa-heart"></i></a>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-category">@(product.ManhomspNavigation?.Tennhomsp ?? "Nội thất")</div>
+                            <h3 class="product-name"><a href="/san-pham/@product.Masp">@product.Tensp</a></h3>
+                            <div class="product-price">
+                                <span class="current-price">@(product.Giaban?.ToString("N0") ?? "0") ₫</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="section about-section" style="background: var(--gray-light);">
+    <div class="container">
+        <div class="about-image">
+            <img src="/images/about-home.jpg" alt="Về Nội Thất Việt" />
+        </div>
+        <div class="about-content">
+            <h2>Về Nội Thất Việt</h2>
+            <p>Nội Thất Việt là đơn vị chuyên cung cấp các sản phẩm trang trí nội thất cao cấp, đồ decor phong cách hiện đại và quà tặng sang trọng cho mọi không gian sống.</p>
+            <p>Với hơn 10 năm kinh nghiệm trong ngành, chúng tôi tự hào mang đến cho khách hàng những sản phẩm chất lượng nhất với giá cả hợp lý nhất.</p>
+            <ul class="about-features">
+                <li><i class="fas fa-check-circle"></i> Sản phẩm chính hãng 100%</li>
+                <li><i class="fas fa-check-circle"></i> Bảo hành dài hạn</li>
+                <li><i class="fas fa-check-circle"></i> Giao hàng toàn quốc</li>
+                <li><i class="fas fa-check-circle"></i> Đổi trả trong 30 ngày</li>
+            </ul>
+            <a href="/gioi-thieu" class="btn btn-primary mt-2">Tìm hiểu thêm</a>
+        </div>
+    </div>
+</section>
+
+<!-- News Section - Tạm ẩn khi chưa có hình
+<section class="section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Tin tức & Mẹo hay</h2>
+            <p>Cập nhật những thông tin mới nhất về trang trí nội thất</p>
+        </div>
+        <div class="news-grid">
+            Thêm hình vào wwwroot/images/news/ để hiển thị
+        </div>
+    </div>
+</section>
+-->
+
+<!-- Features Bar -->
+<section class="features-bar">
+    <div class="container">
+        <div class="feature-item">
+            <i class="fas fa-truck"></i>
+            <div>
+                <h4>Giao hàng toàn quốc</h4>
+                <p>Miễn phí vận chuyển</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <i class="fas fa-headset"></i>
+            <div>
+                <h4>Uy tín - Chuyên nghiệp</h4>
+                <p>Tư vấn, hỗ trợ tận tâm</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <i class="fas fa-certificate"></i>
+            <div>
+                <h4>Cam kết chất lượng</h4>
+                <p>Nhập khẩu chính hãng</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <i class="fas fa-tags"></i>
+            <div>
+                <h4>Giá rẻ nhất Việt Nam</h4>
+                <p>Cam kết rẻ nhất</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+

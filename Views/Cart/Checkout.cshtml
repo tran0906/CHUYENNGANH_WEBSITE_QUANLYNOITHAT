@@ -1,0 +1,112 @@
+@model List<DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers.CartItem>
+@{
+    ViewData["Title"] = "Thanh toán";
+    var customer = ViewBag.Customer as DOANCHUYENNGANH_WEB_QLNOITHAT.Models.KhachHang;
+}
+
+<!-- Breadcrumb -->
+<section class="breadcrumb-section">
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="/"><i class="fas fa-home"></i> Trang chủ</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="/gio-hang">Giỏ hàng</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Thanh toán</span>
+        </nav>
+    </div>
+</section>
+
+<div class="container">
+    <div class="checkout-section">
+        <div class="checkout-form">
+            <h3><i class="fas fa-user"></i> Thông tin giao hàng</h3>
+            
+            <form action="/dat-hang" method="post" id="checkoutForm">
+                <div class="form-group">
+                    <label>Họ và tên</label>
+                    <input type="text" class="form-control" value="@customer?.Hotenkh" readonly />
+                </div>
+                
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    <input type="text" class="form-control" value="@customer?.Sdtkh" readonly />
+                </div>
+                
+                <div class="form-group">
+                    <label>Địa chỉ giao hàng</label>
+                    <textarea class="form-control" rows="3" readonly>@customer?.Diachikh</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Ghi chú đơn hàng (tùy chọn)</label>
+                    <textarea class="form-control" name="ghichu" rows="3" placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."></textarea>
+                </div>
+
+                <h3 style="margin-top: 30px;"><i class="fas fa-credit-card"></i> Phương thức thanh toán</h3>
+                
+                <div style="margin-top: 20px;">
+                    <label style="display: flex; align-items: center; padding: 15px; background: var(--gray-light); border-radius: 8px; cursor: pointer; margin-bottom: 10px;">
+                        <input type="radio" name="paymentMethod" value="cod" checked style="margin-right: 15px;" />
+                        <i class="fas fa-money-bill-wave" style="font-size: 24px; color: var(--success); margin-right: 15px;"></i>
+                        <div>
+                            <strong>Thanh toán khi nhận hàng (COD)</strong>
+                            <p style="font-size: 13px; color: var(--text-light); margin: 0;">Thanh toán bằng tiền mặt khi nhận hàng</p>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; padding: 15px; background: var(--gray-light); border-radius: 8px; cursor: pointer; margin-bottom: 10px;">
+                        <input type="radio" name="paymentMethod" value="bank" style="margin-right: 15px;" />
+                        <i class="fas fa-university" style="font-size: 24px; color: var(--info); margin-right: 15px;"></i>
+                        <div>
+                            <strong>Chuyển khoản ngân hàng</strong>
+                            <p style="font-size: 13px; color: var(--text-light); margin: 0;">Chuyển khoản qua tài khoản ngân hàng</p>
+                        </div>
+                    </label>
+                </div>
+
+                @if (TempData["Error"] != null)
+                {
+                    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                    </div>
+                }
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 30px; padding: 15px; cursor: pointer; background: #8B4513; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                    <i class="fas fa-check"></i> Đặt hàng
+                </button>
+            </form>
+        </div>
+
+        <div class="order-summary">
+            <h3 style="margin-bottom: 20px; color: var(--primary-color);">Đơn hàng của bạn</h3>
+            
+            @foreach (var item in Model)
+            {
+                <div class="order-item">
+                    <img src="@(item.Hinhanh ?? "/images/no-image.jpg")" alt="@item.Tensp" />
+                    <div class="order-item-info">
+                        <div class="order-item-name">@item.Tensp</div>
+                        <div class="order-item-qty">Số lượng: @item.Soluong</div>
+                    </div>
+                    <div class="order-item-price">@item.Thanhtien.ToString("N0") ₫</div>
+                </div>
+            }
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--gray-medium);">
+                <div class="cart-summary-row">
+                    <span>Tạm tính:</span>
+                    <span>@ViewBag.TotalAmount.ToString("N0") ₫</span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span style="color: var(--success);">Miễn phí</span>
+                </div>
+                <div class="cart-summary-row total" style="font-size: 20px; margin-top: 15px;">
+                    <span>Tổng cộng:</span>
+                    <span style="color: var(--primary-color);">@ViewBag.TotalAmount.ToString("N0") ₫</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

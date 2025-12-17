@@ -1,0 +1,53 @@
+@model NhaCungCap
+@{ ViewData["Title"] = "Thêm nhà cung cấp"; }
+
+<h2>Thêm nhà cung cấp mới</h2>
+<hr />
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Mancc" class="form-label">Mã NCC</label>
+                <input asp-for="Mancc" class="form-control" />
+                <span asp-validation-for="Mancc" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Tenncc" class="form-label">Tên NCC</label>
+                <input asp-for="Tenncc" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Diachincc" class="form-label">Địa chỉ</label>
+                <input asp-for="Diachincc" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Sdtncc" class="form-label">Số điện thoại</label>
+                <input asp-for="Sdtncc" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Emailncc" class="form-label">Email</label>
+                <input asp-for="Emailncc" class="form-control" type="email" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Sanpham" class="form-label">Sản phẩm cung cấp</label>
+                <input asp-for="Sanpham" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Gianhap" class="form-label">Giá nhập</label>
+                <input asp-for="Gianhap" class="form-control" type="number" />
+            </div>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

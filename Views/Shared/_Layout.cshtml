@@ -1,0 +1,343 @@
+﻿@using DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
+@{
+    var cartCount = Context.Session.GetInt32("CartCount") ?? 0;
+    var customerName = Context.Session.GetString("CustomerName");
+    var customerId = Context.Session.GetString("CustomerId");
+    
+    // Kiểm tra admin đăng nhập
+    var adminUserId = Context.Session.GetString("AdminUserId");
+    var adminHoTen = Context.Session.GetString("AdminHoTen");
+    var adminVaiTro = Context.Session.GetString("AdminVaiTro");
+    var isAdmin = !string.IsNullOrEmpty(adminUserId);
+    
+    // Lấy mục đích sử dụng từ database (quà biếu, tân gia, khai trương...)
+    var mucDichBLL = new MucDichSuDungBLL();
+    var mucDichList = mucDichBLL.GetAll();
+    
+    // Lấy nhóm sản phẩm từ database
+    var nhomSpBLL = new NhomSanPhamBLL();
+    var nhomSpList = nhomSpBLL.GetAll();
+    
+    // Icon mapping cho mục đích sử dụng
+    var iconMap = new Dictionary<string, string> {
+        {"tân gia", "fa-home"}, {"khai trương", "fa-store"}, {"sinh nhật", "fa-birthday-cake"},
+        {"quà biếu", "fa-gift"}, {"quà tặng", "fa-gift"}, {"sếp", "fa-user-tie"},
+        {"đối tác", "fa-handshake"}, {"doanh nghiệp", "fa-building"}, {"cưới", "fa-heart"},
+        {"kỷ niệm", "fa-calendar-check"}, {"decor", "fa-paint-brush"}, {"trang trí", "fa-couch"}
+    };
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Nội Thất Việt</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="top-bar-left">
+                <a href="mailto:contact@noithatviet.vn">
+                    <i class="fas fa-envelope"></i> contact@noithatviet.vn
+                </a>
+                <a href="tel:0969534568">
+                    <i class="fas fa-phone"></i> 0969.534.568
+                </a>
+            </div>
+            <div class="top-bar-right">
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                    <a href="#"><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Main -->
+    <header class="header-main">
+        <div class="container">
+            <a href="/" class="logo">
+                <div class="logo-text">NỘI THẤT <span>VIỆT</span></div>
+            </a>
+            
+            <div class="header-contact">
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <div class="label">Showroom Hà Nội</div>
+                        <div class="value">Số 21 ngõ 120 Nguyễn Xiển, Q.Thanh Xuân</div>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <div class="label">Showroom HCM</div>
+                        <div class="value">Số 268/12 Nguyễn Thái Bình, Q.Tân Bình</div>
+                    </div>
+                </div>
+                <a href="tel:0969534568" class="hotline">
+                    <i class="fas fa-phone-alt"></i> Hotline: 0969.534.568
+                </a>
+            </div>
+
+            <div class="header-search">
+                <form class="search-box" action="/san-pham" method="get">
+                    <select name="nhomsp" class="search-category">
+                        <option value="">Tất cả danh mục</option>
+                        @foreach (var nhom in nhomSpList)
+                        {
+                            <option value="@nhom.Manhomsp">@nhom.Tennhomsp</option>
+                        }
+                    </select>
+                    <input type="text" name="search" placeholder="Tìm kiếm sản phẩm..." />
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <div class="category-dropdown">
+                <div class="category-btn">
+                    <i class="fas fa-bars"></i>
+                    <span>DANH MỤC SẢN PHẨM</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <ul class="category-menu">
+                    @foreach (var md in mucDichList)
+                    {
+                        var mdName = md.Tenmdsd?.ToLower() ?? "";
+                        var icon = "fa-gift";
+                        foreach (var kv in iconMap)
+                        {
+                            if (mdName.Contains(kv.Key))
+                            {
+                                icon = kv.Value;
+                                break;
+                            }
+                        }
+                        <li><a href="/san-pham?mucdich=@md.Mamdsd"><i class="fas @icon"></i> @md.Tenmdsd</a></li>
+                    }
+                </ul>
+            </div>
+            
+            <ul class="nav-menu">
+                <li><a href="/" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">Trang chủ</a></li>
+                <li><a href="/gioi-thieu">Giới thiệu</a></li>
+                <li><a href="/san-pham">Sản phẩm</a></li>
+                <li><a href="/san-pham-ban-chay">Sản phẩm bán chạy</a></li>
+                <li><a href="/tin-tuc">Tin tức</a></li>
+                <li><a href="/dich-vu">Dịch vụ</a></li>
+                <li><a href="/lien-he">Liên hệ</a></li>
+            </ul>
+
+            <div class="nav-icons">
+                @if (isAdmin)
+                {
+                    <!-- Admin đang đăng nhập -->
+                    <div class="user-logged-in" style="position: relative; display: flex; align-items: center; gap: 8px;">
+                        <a href="#" class="user-dropdown-toggle" onclick="toggleUserMenu(event)" style="display: flex; align-items: center; gap: 8px; color: #fff; text-decoration: none;">
+                            <i class="fas fa-user-shield" style="font-size: 22px; color: #FFD700;"></i>
+                            <span class="user-name" style="font-size: 14px; font-weight: 500; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@adminHoTen</span>
+                            <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                        </a>
+                        <div class="user-dropdown-menu" id="userDropdownMenu" style="display: none; position: absolute; right: 0; top: 100%; background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); min-width: 220px; z-index: 1000; margin-top: 10px;">
+                            <div style="padding: 15px; border-bottom: 1px solid #eee; background: linear-gradient(135deg, #5D2E0C, #3D1E0C); border-radius: 8px 8px 0 0;">
+                                <div style="color: #FFD700; font-weight: 600;"><i class="fas fa-crown"></i> @adminVaiTro</div>
+                                <div style="color: #fff; font-size: 14px;">@adminHoTen</div>
+                            </div>
+                            <a href="/Admin/Dashboard" style="display: flex; align-items: center; gap: 10px; padding: 12px 15px; color: #333; transition: all 0.3s;"><i class="fas fa-tachometer-alt" style="width: 20px; color: #8B4513;"></i> Trang quản trị</a>
+                            <a href="/Admin/Account/Profile" style="display: flex; align-items: center; gap: 10px; padding: 12px 15px; color: #333; transition: all 0.3s;"><i class="fas fa-user-cog" style="width: 20px; color: #8B4513;"></i> Hồ sơ Admin</a>
+                            <div style="border-top: 1px solid #eee;"></div>
+                            <a href="/Admin/Account/Logout" style="display: flex; align-items: center; gap: 10px; padding: 12px 15px; color: #dc3545; transition: all 0.3s;"><i class="fas fa-sign-out-alt" style="width: 20px;"></i> Đăng xuất</a>
+                        </div>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(customerId))
+                {
+                    <!-- Khách hàng đang đăng nhập -->
+                    <div class="user-logged-in" style="position: relative; display: flex; align-items: center; gap: 8px;">
+                        <a href="#" class="user-dropdown-toggle" onclick="toggleUserMenu(event)" style="display: flex; align-items: center; gap: 8px; color: #fff; text-decoration: none;">
+                            <i class="fas fa-user-circle" style="font-size: 22px;"></i>
+                            <span class="user-name" style="font-size: 14px; font-weight: 500; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@customerName</span>
+                            <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                        </a>
+                        <div class="user-dropdown-menu" id="userDropdownMenu" style="display: none; position: absolute; right: 0; top: 100%; background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); min-width: 220px; z-index: 1000; margin-top: 10px;">
+                            <div style="padding: 15px; border-bottom: 1px solid #eee; background: linear-gradient(135deg, #8B4513, #5D2E0C); border-radius: 8px 8px 0 0;">
+                                <div style="color: #fff; font-weight: 600;">Xin chào!</div>
+                                <div style="color: #DEB887; font-size: 14px;">@customerName</div>
+                            </div>
+                            <a href="/Account/Profile" style="display: flex; align-items: center; gap: 10px; padding: 12px 15px; color: #333; transition: all 0.3s;"><i class="fas fa-user-circle" style="width: 20px; color: #8B4513;"></i> Hồ sơ của tôi</a>
+                            <a href="/Account/Orders" style="display: flex; align-items: center; gap: 10px; padding: 12px 15px; color: #333; transition: all 0.3s;"><i class="fas fa-shopping-bag" style="width: 20px; color: #8B4513;"></i> Đơn hàng của tôi</a>
+                            <div style="border-top: 1px solid #eee;"></div>
+                            <a href="/Account/Logout" style="display: flex; align-items: center; gap: 10px; padding: 12px 15px; color: #dc3545; transition: all 0.3s;"><i class="fas fa-sign-out-alt" style="width: 20px;"></i> Đăng xuất</a>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <a href="/Account/Login" title="Đăng nhập" style="display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-user"></i>
+                        <span style="font-size: 13px;">Đăng nhập</span>
+                    </a>
+                }
+                <a href="/gio-hang" title="Giỏ hàng">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">@cartCount</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-main">
+                <div class="footer-about">
+                    <div class="logo-text">NỘI THẤT <span style="color: var(--accent-color);">VIỆT</span></div>
+                    <p>Chuyên cung cấp các sản phẩm trang trí nội thất cao cấp, đồ decor phong cách hiện đại và quà tặng sang trọng cho mọi không gian sống.</p>
+                    <div class="footer-social">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-links-col">
+                    <h4 class="footer-title">Về chúng tôi</h4>
+                    <ul class="footer-links">
+                        <li><a href="/gioi-thieu">Giới thiệu</a></li>
+                        <li><a href="/lien-he">Liên hệ</a></li>
+                        <li><a href="/tuyen-dung">Tuyển dụng</a></li>
+                        <li><a href="/tin-tuc">Tin tức</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-links-col">
+                    <h4 class="footer-title">Hỗ trợ khách hàng</h4>
+                    <ul class="footer-links">
+                        <li><a href="/huong-dan-mua-hang">Hướng dẫn mua hàng</a></li>
+                        <li><a href="/chinh-sach-doi-tra">Chính sách đổi trả</a></li>
+                        <li><a href="/chinh-sach-bao-hanh">Chính sách bảo hành</a></li>
+                        <li><a href="/phuong-thuc-thanh-toan">Phương thức thanh toán</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-contact-col">
+                    <h4 class="footer-title">Liên hệ</h4>
+                    <ul class="footer-contact">
+                        <li><i class="fas fa-map-marker-alt"></i> Số 21 ngõ 120 Nguyễn Xiển, Q.Thanh Xuân, Hà Nội</li>
+                        <li><i class="fas fa-phone"></i> 0969.534.568</li>
+                        <li><i class="fas fa-envelope"></i> contact@noithatviet.vn</li>
+                        <li><i class="fas fa-clock"></i> 8:00 - 21:00 (Thứ 2 - CN)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; @DateTime.Now.Year Nội Thất Việt. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Fixed Contact Buttons -->
+    <div class="fixed-contact" style="position: fixed; right: 20px; bottom: 20px; z-index: 999; display: flex; flex-direction: column; gap: 10px;">
+        <a href="tel:0969534568" style="width: 50px; height: 50px; background: #dc3545; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);">
+            <i class="fas fa-phone-alt"></i>
+        </a>
+        <a href="https://zalo.me/0969534568" style="width: 50px; height: 50px; background: #0068ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);">
+            <i class="fas fa-comment-dots"></i>
+        </a>
+        <a href="#" onclick="scrollToTop()" style="width: 50px; height: 50px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);">
+            <i class="fas fa-arrow-up"></i>
+        </a>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-container" style="position: fixed; top: 80px; right: 20px; z-index: 9999;"></div>
+    
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        function toggleUserMenu(e) {
+            e.preventDefault();
+            var menu = document.getElementById('userDropdownMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            var menu = document.getElementById('userDropdownMenu');
+            var toggle = document.querySelector('.user-dropdown-toggle');
+            if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            var container = document.getElementById('toast-container');
+            var toast = document.createElement('div');
+            var icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-info-circle';
+            var bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8';
+            
+            toast.innerHTML = '<i class="fas ' + icon + '"></i> ' + message;
+            toast.style.cssText = 'background:' + bgColor + ';color:#fff;padding:12px 20px;border-radius:8px;margin-bottom:10px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;animation:slideIn 0.3s ease;font-size:14px;';
+            
+            container.appendChild(toast);
+            
+            setTimeout(function() {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3000);
+        }
+        
+        // Add to cart function (global)
+        function addToCart(productId, quantity) {
+            quantity = quantity || 1;
+            fetch('/gio-hang/them', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'productId=' + productId + '&quantity=' + quantity
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('<i class="fas fa-shopping-cart"></i> ' + data.message, 'success');
+                    // Update cart count in header
+                    var cartBadge = document.querySelector('.cart-count');
+                    if (cartBadge) cartBadge.textContent = data.cartCount;
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('Có lỗi xảy ra!', 'error');
+            });
+        }
+    </script>
+    <style>
+        @@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @@keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+    </style>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

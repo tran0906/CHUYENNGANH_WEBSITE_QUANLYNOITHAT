@@ -1,0 +1,197 @@
+using System.Data;
+using Microsoft.Data.SqlClient;
+using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
+
+namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
+{
+    /// <summary>
+    /// Data Access Layer cho SanPham - Mô hình 3 lớp
+    /// </summary>
+    public class SanPhamDAL
+    {
+        /// <summary>
+        /// Lấy tất cả sản phẩm
+        /// </summary>
+        public List<SanPham> GetAll()
+        {
+            string query = @"SELECT sp.*, nsp.TENNHOMSP as Tennhomsp, vl.TENVL as Tenvl 
+                            FROM SAN_PHAM sp
+                            LEFT JOIN NHOM_SAN_PHAM nsp ON sp.MANHOMSP = nsp.MANHOMSP
+                            LEFT JOIN VAT_LIEU vl ON sp.MAVL = vl.MAVL
+                            ORDER BY sp.MASP";
+            
+            DataTable dt = SqlConnectionHelper.ExecuteQuery(query);
+            return MapDataTableToList(dt);
+        }
+
+        /// <summary>
+        /// Tìm kiếm sản phẩm theo điều kiện
+        /// </summary>
+        public List<SanPham> Search(string? maSp, string? tenSp, string? nhomSp, string? vatLieu)
+        {
+            string query = @"SELECT sp.*, nsp.TENNHOMSP as Tennhomsp, vl.TENVL as Tenvl 
+                            FROM SAN_PHAM sp
+                            LEFT JOIN NHOM_SAN_PHAM nsp ON sp.MANHOMSP = nsp.MANHOMSP
+                            LEFT JOIN VAT_LIEU vl ON sp.MAVL = vl.MAVL
+                            WHERE 1=1";
+            
+            var parameters = new List<SqlParameter>();
+
+            if (!string.IsNullOrEmpty(maSp))
+            {
+                query += " AND sp.MASP LIKE @MaSp";
+                parameters.Add(new SqlParameter("@MaSp", $"%{maSp}%"));
+            }
+            if (!string.IsNullOrEmpty(tenSp))
+            {
+                query += " AND sp.TENSP LIKE @TenSp";
+                parameters.Add(new SqlParameter("@TenSp", $"%{tenSp}%"));
+            }
+            if (!string.IsNullOrEmpty(nhomSp))
+            {
+                query += " AND sp.MANHOMSP = @NhomSp";
+                parameters.Add(new SqlParameter("@NhomSp", nhomSp));
+            }
+            if (!string.IsNullOrEmpty(vatLieu))
+            {
+                query += " AND sp.MAVL = @VatLieu";
+                parameters.Add(new SqlParameter("@VatLieu", vatLieu));
+            }
+            query += " ORDER BY sp.MASP";
+
+            DataTable dt = SqlConnectionHelper.ExecuteQuery(query, parameters.ToArray());
+            return MapDataTableToList(dt);
+        }
+
+        /// <summary>
+        /// Lấy sản phẩm theo mã
+        /// </summary>
+        public SanPham? GetById(string maSp)
+        {
+            string query = @"SELECT sp.*, nsp.TENNHOMSP as Tennhomsp, vl.TENVL as Tenvl 
+                            FROM SAN_PHAM sp
+                            LEFT JOIN NHOM_SAN_PHAM nsp ON sp.MANHOMSP = nsp.MANHOMSP
+                            LEFT JOIN VAT_LIEU vl ON sp.MAVL = vl.MAVL
+                            WHERE sp.MASP = @MaSp";
+            
+            SqlParameter[] parameters = { new SqlParameter("@MaSp", maSp) };
+            DataTable dt = SqlConnectionHelper.ExecuteQuery(query, parameters);
+            return MapDataTableToList(dt).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Thêm sản phẩm mới
+        /// </summary>
+        public int Insert(SanPham sp)
+        {
+            string query = @"INSERT INTO SAN_PHAM (MASP, TENSP, MOTA, GIABAN, SOLUONGTON, HINHANH, MANHOMSP, MAVL)
+                            VALUES (@Masp, @Tensp, @Mota, @Giaban, @Soluongton, @Hinhanh, @Manhomsp, @Mavl)";
+            
+            SqlParameter[] parameters = {
+                new SqlParameter("@Masp", sp.Masp),
+                new SqlParameter("@Tensp", (object?)sp.Tensp ?? DBNull.Value),
+                new SqlParameter("@Mota", (object?)sp.Mota ?? DBNull.Value),
+                new SqlParameter("@Giaban", (object?)sp.Giaban ?? DBNull.Value),
+                new SqlParameter("@Soluongton", (object?)sp.Soluongton ?? DBNull.Value),
+                new SqlParameter("@Hinhanh", (object?)sp.Hinhanh ?? DBNull.Value),
+                new SqlParameter("@Manhomsp", (object?)sp.Manhomsp ?? DBNull.Value),
+                new SqlParameter("@Mavl", (object?)sp.Mavl ?? DBNull.Value)
+            };
+            return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
+        }
+
+        /// <summary>
+        /// Cập nhật sản phẩm
+        /// </summary>
+        public int Update(SanPham sp)
+        {
+            string query = @"UPDATE SAN_PHAM SET 
+                            TENSP = @Tensp, MOTA = @Mota, GIABAN = @Giaban, 
+                            SOLUONGTON = @Soluongton, HINHANH = @Hinhanh, 
+                            MANHOMSP = @Manhomsp, MAVL = @Mavl
+                            WHERE MASP = @Masp";
+            
+            SqlParameter[] parameters = {
+                new SqlParameter("@Masp", sp.Masp),
+                new SqlParameter("@Tensp", (object?)sp.Tensp ?? DBNull.Value),
+                new SqlParameter("@Mota", (object?)sp.Mota ?? DBNull.Value),
+                new SqlParameter("@Giaban", (object?)sp.Giaban ?? DBNull.Value),
+                new SqlParameter("@Soluongton", (object?)sp.Soluongton ?? DBNull.Value),
+                new SqlParameter("@Hinhanh", (object?)sp.Hinhanh ?? DBNull.Value),
+                new SqlParameter("@Manhomsp", (object?)sp.Manhomsp ?? DBNull.Value),
+                new SqlParameter("@Mavl", (object?)sp.Mavl ?? DBNull.Value)
+            };
+            return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
+        }
+
+        /// <summary>
+        /// Xóa sản phẩm
+        /// </summary>
+        public int Delete(string maSp)
+        {
+            string query = "DELETE FROM SAN_PHAM WHERE MASP = @MaSp";
+            SqlParameter[] parameters = { new SqlParameter("@MaSp", maSp) };
+            return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
+        }
+
+        /// <summary>
+        /// Kiểm tra sản phẩm tồn tại
+        /// </summary>
+        public bool Exists(string maSp)
+        {
+            string query = "SELECT COUNT(*) FROM SAN_PHAM WHERE MASP = @MaSp";
+            SqlParameter[] parameters = { new SqlParameter("@MaSp", maSp) };
+            return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
+        }
+
+        /// <summary>
+        /// Đếm tổng số sản phẩm
+        /// </summary>
+        public int Count()
+        {
+            string query = "SELECT COUNT(*) FROM SAN_PHAM";
+            return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query));
+        }
+
+        /// <summary>
+        /// Chuyển DataTable thành List
+        /// </summary>
+        private List<SanPham> MapDataTableToList(DataTable dt)
+        {
+            var list = new List<SanPham>();
+            foreach (DataRow row in dt.Rows)
+            {
+                var sp = new SanPham
+                {
+                    Masp = row["MASP"].ToString() ?? "",
+                    Tensp = row["TENSP"] != DBNull.Value ? row["TENSP"].ToString() : null,
+                    Mota = row["MOTA"] != DBNull.Value ? row["MOTA"].ToString() : null,
+                    Giaban = row["GIABAN"] != DBNull.Value ? Convert.ToDecimal(row["GIABAN"]) : null,
+                    Soluongton = row["SOLUONGTON"] != DBNull.Value ? Convert.ToInt32(row["SOLUONGTON"]) : null,
+                    Hinhanh = row["HINHANH"] != DBNull.Value ? row["HINHANH"].ToString() : null,
+                    Manhomsp = row["MANHOMSP"] != DBNull.Value ? row["MANHOMSP"].ToString() : null,
+                    Mavl = row["MAVL"] != DBNull.Value ? row["MAVL"].ToString() : null
+                };
+
+                if (dt.Columns.Contains("Tennhomsp") && row["Tennhomsp"] != DBNull.Value)
+                {
+                    sp.ManhomspNavigation = new NhomSanPham 
+                    { 
+                        Manhomsp = sp.Manhomsp ?? "",
+                        Tennhomsp = row["Tennhomsp"].ToString() 
+                    };
+                }
+                if (dt.Columns.Contains("Tenvl") && row["Tenvl"] != DBNull.Value)
+                {
+                    sp.MavlNavigation = new VatLieu 
+                    { 
+                        Mavl = sp.Mavl ?? "",
+                        Tenvl = row["Tenvl"].ToString() 
+                    };
+                }
+                list.Add(sp);
+            }
+            return list;
+        }
+    }
+}

@@ -1,0 +1,33 @@
+@{
+    ViewData["Title"] = "Thêm sử dụng sản phẩm";
+}
+
+<h2>Gán sản phẩm cho mục đích sử dụng</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        <form asp-action="Create" method="post">
+            <div class="mb-3">
+                <label class="form-label">Mục đích sử dụng</label>
+                <select name="mamdsd" class="form-select" asp-items="ViewBag.Mamdsd">
+                    <option value="">-- Chọn mục đích --</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Sản phẩm</label>
+                <select name="masp" class="form-select" asp-items="ViewBag.Masp">
+                    <option value="">-- Chọn sản phẩm --</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>

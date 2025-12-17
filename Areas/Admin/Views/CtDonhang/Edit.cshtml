@@ -1,0 +1,33 @@
+@model CtDonhang
+@{ ViewData["Title"] = "Sửa chi tiết đơn hàng"; }
+
+<h2>Sửa chi tiết đơn hàng</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Madonhang" />
+            <input type="hidden" asp-for="Masp" />
+            <div class="mb-3">
+                <label asp-for="Madonhang" class="form-label">Đơn hàng</label>
+                <input asp-for="Madonhang" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Masp" class="form-label">Sản phẩm</label>
+                <input asp-for="Masp" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Soluong" class="form-label">Số lượng</label>
+                <input asp-for="Soluong" class="form-control" type="number" min="1" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Dongia" class="form-label">Đơn giá</label>
+                <input asp-for="Dongia" class="form-control" type="number" />
+            </div>
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+            <a asp-action="Index" asp-route-madonhang="@Model.Madonhang" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

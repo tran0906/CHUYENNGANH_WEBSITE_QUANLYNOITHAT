@@ -1,0 +1,243 @@
+@model IEnumerable<DOANCHUYENNGANH_WEB_QLNOITHAT.Models.SanPham>
+@{
+    ViewData["Title"] = "Sản phẩm";
+}
+
+@functions {
+    string GetFirstImage(string? hinhanh)
+    {
+        if (string.IsNullOrEmpty(hinhanh)) return "/images/no-image.jpg";
+        var images = hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var img in images)
+        {
+            var trimmed = img.Trim();
+            if (!string.IsNullOrEmpty(trimmed) && (trimmed.StartsWith("/") || trimmed.StartsWith("http")))
+                return trimmed;
+        }
+        return "/images/no-image.jpg";
+    }
+
+    string GetPageUrl(int page)
+    {
+        var queryParams = new List<string> { $"page={page}" };
+        if (!string.IsNullOrEmpty(ViewBag.CurrentNhomSp))
+            queryParams.Add($"nhomsp={ViewBag.CurrentNhomSp}");
+        if (!string.IsNullOrEmpty(ViewBag.CurrentSearch))
+            queryParams.Add($"search={ViewBag.CurrentSearch}");
+        if (!string.IsNullOrEmpty(ViewBag.CurrentSort))
+            queryParams.Add($"sort={ViewBag.CurrentSort}");
+        if (ViewBag.MinPrice != null)
+            queryParams.Add($"minPrice={ViewBag.MinPrice}");
+        if (ViewBag.MaxPrice != null)
+            queryParams.Add($"maxPrice={ViewBag.MaxPrice}");
+        return "/san-pham?" + string.Join("&", queryParams);
+    }
+}
+
+<!-- Breadcrumb -->
+<section class="breadcrumb-section">
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="/"><i class="fas fa-home"></i> Trang chủ</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Sản phẩm</span>
+        </nav>
+    </div>
+</section>
+
+<div class="container">
+    <div class="page-content">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- Nhóm sản phẩm -->
+            <div class="sidebar-widget">
+                <h3 class="widget-title">Nhóm sản phẩm</h3>
+                <ul class="category-list">
+                    <li>
+                        <a href="/san-pham" class="@(string.IsNullOrEmpty(ViewBag.CurrentNhomSp) ? "active" : "")">
+                            <i class="fas fa-th-large"></i> Tất cả sản phẩm
+                        </a>
+                    </li>
+                    @if (ViewBag.NhomSpList != null)
+                    {
+                        var iconMap = new Dictionary<string, string> {
+                            {"decor", "fa-paint-brush"}, {"trang trí", "fa-couch"}, {"phòng khách", "fa-couch"},
+                            {"phòng ngủ", "fa-bed"}, {"bàn ghế", "fa-chair"}, {"kệ", "fa-th-large"},
+                            {"đèn", "fa-lightbulb"}, {"gương", "fa-square"}, {"tranh", "fa-image"},
+                            {"bình", "fa-vase"}, {"tượng", "fa-monument"}, {"đồng hồ", "fa-clock"},
+                            {"quà tặng", "fa-gift"}, {"phong thủy", "fa-yin-yang"}
+                        };
+                        foreach (var nhom in ViewBag.NhomSpList)
+                        {
+                            var nhomName = ((string)nhom.Tennhomsp)?.ToLower() ?? "";
+                            var icon = "fa-cube";
+                            foreach (var kv in iconMap)
+                            {
+                                if (nhomName.Contains(kv.Key))
+                                {
+                                    icon = kv.Value;
+                                    break;
+                                }
+                            }
+                            var isActive = ViewBag.CurrentNhomSp == nhom.Manhomsp;
+                            <li>
+                                <a href="/san-pham?nhomsp=@nhom.Manhomsp" class="@(isActive ? "active" : "")">
+                                    <i class="fas @icon"></i> @nhom.Tennhomsp
+                                </a>
+                            </li>
+                        }
+                    }
+                </ul>
+            </div>
+
+            <!-- Price Filter -->
+            <div class="sidebar-widget">
+                <h3 class="widget-title">Lọc theo giá</h3>
+                <form class="price-filter" action="/san-pham" method="get">
+                    @if (!string.IsNullOrEmpty(ViewBag.CurrentNhomSp))
+                    {
+                        <input type="hidden" name="nhomsp" value="@ViewBag.CurrentNhomSp" />
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch))
+                    {
+                        <input type="hidden" name="search" value="@ViewBag.CurrentSearch" />
+                    }
+                    <div class="price-range">
+                        <input type="number" name="minPrice" placeholder="Từ" value="@ViewBag.MinPrice" />
+                        <input type="number" name="maxPrice" placeholder="Đến" value="@ViewBag.MaxPrice" />
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Lọc giá</button>
+                </form>
+            </div>
+
+            <!-- Hot Products -->
+            <div class="sidebar-widget">
+                <h3 class="widget-title">Sản phẩm hot</h3>
+                <div class="hot-products">
+                    @foreach (var product in Model.Take(3))
+                    {
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                            <img src="@GetFirstImage(product.Hinhanh)" alt="@product.Tensp" style="width: 70px; height: 70px; object-fit: cover; border-radius: 5px;" />
+                            <div>
+                                <a href="/san-pham/@product.Masp" style="font-size: 14px; font-weight: 500; color: #333;">@product.Tensp</a>
+                                <div style="color: var(--primary-color); font-weight: 600; margin-top: 5px;">@(product.Giaban?.ToString("N0") ?? "0") ₫</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            @if (!string.IsNullOrEmpty(ViewBag.CurrentNhomSpName) || !string.IsNullOrEmpty(ViewBag.CurrentSearch))
+            {
+                <div style="margin-bottom: 15px; padding: 12px 15px; background: linear-gradient(135deg, #8B4513, #D2691E); color: white; border-radius: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <i class="fas fa-filter"></i>
+                    @if (!string.IsNullOrEmpty(ViewBag.CurrentNhomSpName))
+                    {
+                        <span>Danh mục: <strong>@ViewBag.CurrentNhomSpName</strong></span>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch))
+                    {
+                        <span>| Từ khóa: <strong>"@ViewBag.CurrentSearch"</strong></span>
+                    }
+                    <a href="/san-pham" style="margin-left: auto; color: white; font-size: 13px;"><i class="fas fa-times"></i> Xóa bộ lọc</a>
+                </div>
+            }
+            <!-- Toolbar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 15px; background: var(--gray-light); border-radius: 10px;">
+                <div>
+                    Hiển thị <strong>@Model.Count()</strong> / <strong>@ViewBag.TotalItems</strong> sản phẩm
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label>Sắp xếp:</label>
+                    <select onchange="sortProducts(this.value)" style="padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px;" id="sortSelect">
+                        <option value="">Mặc định</option>
+                        <option value="price-asc">Giá: Thấp đến cao</option>
+                        <option value="price-desc">Giá: Cao đến thấp</option>
+                        <option value="name-asc">Tên: A-Z</option>
+                        <option value="name-desc">Tên: Z-A</option>
+                    </select>
+                    <script>document.getElementById('sortSelect').value = '@(ViewBag.CurrentSort ?? "")';</script>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid">
+                @foreach (var product in Model)
+                {
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="@GetFirstImage(product.Hinhanh)" alt="@product.Tensp" />
+                            <div class="product-actions">
+                                <a href="/san-pham/@product.Masp" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                                <a href="#" onclick="addToCart('@product.Masp'); return false;" title="Thêm vào giỏ"><i class="fas fa-shopping-cart"></i></a>
+                                <a href="#" title="Yêu thích"><i class="fas fa-heart"></i></a>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-category">@(product.ManhomspNavigation?.Tennhomsp ?? "Nội thất")</div>
+                            <h3 class="product-name"><a href="/san-pham/@product.Masp">@product.Tensp</a></h3>
+                            <div class="product-price">
+                                <span class="current-price">@(product.Giaban?.ToString("N0") ?? "0") ₫</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-box-open" style="font-size: 60px; color: #ddd; margin-bottom: 20px;"></i>
+                    <h3>Không tìm thấy sản phẩm</h3>
+                    <p style="color: #666;">Vui lòng thử lại với từ khóa khác</p>
+                </div>
+            }
+
+            <!-- Pagination -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav class="pagination">
+                    @if (ViewBag.CurrentPage > 1)
+                    {
+                        <a href="@GetPageUrl(ViewBag.CurrentPage - 1)"><i class="fas fa-chevron-left"></i></a>
+                    }
+                    
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                    {
+                        if (i == ViewBag.CurrentPage)
+                        {
+                            <span class="active">@i</span>
+                        }
+                        else
+                        {
+                            <a href="@GetPageUrl(i)">@i</a>
+                        }
+                    }
+                    
+                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                    {
+                        <a href="@GetPageUrl(ViewBag.CurrentPage + 1)"><i class="fas fa-chevron-right"></i></a>
+                    }
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function sortProducts(value) {
+        var url = new URL(window.location.href);
+        if (value) {
+            url.searchParams.set('sort', value);
+        } else {
+            url.searchParams.delete('sort');
+        }
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    }
+</script>
+}

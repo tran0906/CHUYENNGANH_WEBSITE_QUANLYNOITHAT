@@ -1,0 +1,271 @@
+@model DOANCHUYENNGANH_WEB_QLNOITHAT.Models.SanPham
+@{
+    ViewData["Title"] = Model.Tensp;
+    // Tách nhiều hình từ chuỗi (phân cách bởi ;) - chỉ lấy đường dẫn hợp lệ
+    var images = string.IsNullOrEmpty(Model.Hinhanh) 
+        ? new[] { "/images/no-image.jpg" } 
+        : Model.Hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .Where(x => !string.IsNullOrEmpty(x) && (x.StartsWith("/") || x.StartsWith("http")))
+            .ToArray();
+    if (images.Length == 0) images = new[] { "/images/no-image.jpg" };
+    var mainImage = images[0];
+}
+
+@functions {
+    string GetFirstImage(string? hinhanh)
+    {
+        if (string.IsNullOrEmpty(hinhanh)) return "/images/no-image.jpg";
+        var imgs = hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var img in imgs)
+        {
+            var trimmed = img.Trim();
+            if (!string.IsNullOrEmpty(trimmed) && (trimmed.StartsWith("/") || trimmed.StartsWith("http")))
+                return trimmed;
+        }
+        return "/images/no-image.jpg";
+    }
+}
+
+<!-- Breadcrumb -->
+<section class="breadcrumb-section">
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="/"><i class="fas fa-home"></i> Trang chủ</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="/san-pham">Sản phẩm</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>@Model.Tensp</span>
+        </nav>
+    </div>
+</section>
+
+<div class="container">
+    <div class="product-detail">
+        <!-- Product Gallery -->
+        <div class="product-gallery">
+            <div class="main-image">
+                <img src="@mainImage" alt="@Model.Tensp" id="mainImage" />
+            </div>
+            <div class="thumbnail-images">
+                @foreach (var img in images)
+                {
+                    <img src="@img" alt="@Model.Tensp" class="@(img == mainImage ? "active" : "")" onclick="changeImage(this)" />
+                }
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="product-detail-info">
+            <h1>@Model.Tensp</h1>
+            
+            <div class="product-rating">
+                <div class="stars">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                </div>
+                <span class="review-count">(25 đánh giá)</span>
+            </div>
+
+            <div class="product-detail-price">
+                <span class="current-price">@(Model.Giaban?.ToString("N0") ?? "0") ₫</span>
+            </div>
+
+            <div class="product-description">
+                @(Model.Mota ?? "Sản phẩm trang trí nội thất cao cấp, thiết kế tinh tế, phù hợp với mọi không gian sống.")
+            </div>
+
+            <div class="product-meta">
+                <p><strong>Mã sản phẩm:</strong> @Model.Masp</p>
+                <p><strong>Danh mục:</strong> @(Model.ManhomspNavigation?.Tennhomsp ?? "Chưa phân loại")</p>
+                <p><strong>Chất liệu:</strong> @(Model.MavlNavigation?.Tenvl ?? "Đang cập nhật")</p>
+                <p><strong>Tình trạng:</strong> 
+                    @if (Model.Soluongton > 0)
+                    {
+                        <span style="color: var(--success);">Còn hàng (@Model.Soluongton sản phẩm)</span>
+                    }
+                    else
+                    {
+                        <span style="color: var(--danger);">Hết hàng</span>
+                    }
+                </p>
+            </div>
+
+            <div class="quantity-selector">
+                <label>Số lượng:</label>
+                <div class="qty-input">
+                    <button type="button" onclick="decreaseQty()">-</button>
+                    <input type="number" id="quantity" value="1" min="1" max="@(Model.Soluongton ?? 99)" />
+                    <button type="button" onclick="increaseQty()">+</button>
+                </div>
+            </div>
+
+            <div class="product-buttons">
+                <button class="btn btn-primary" onclick="addToCart('@Model.Masp')">
+                    <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                </button>
+                <button class="btn btn-secondary" onclick="buyNow('@Model.Masp')">
+                    <i class="fas fa-bolt"></i> Mua ngay
+                </button>
+            </div>
+
+            <div style="margin-top: 25px; padding: 20px; background: var(--gray-light); border-radius: 10px;">
+                <h4 style="margin-bottom: 15px; color: var(--primary-color);"><i class="fas fa-shield-alt"></i> Cam kết của chúng tôi</h4>
+                <ul style="color: var(--text-light); font-size: 14px;">
+                    <li style="margin-bottom: 8px;"><i class="fas fa-check" style="color: var(--success); margin-right: 10px;"></i> Sản phẩm chính hãng 100%</li>
+                    <li style="margin-bottom: 8px;"><i class="fas fa-check" style="color: var(--success); margin-right: 10px;"></i> Giao hàng toàn quốc</li>
+                    <li style="margin-bottom: 8px;"><i class="fas fa-check" style="color: var(--success); margin-right: 10px;"></i> Đổi trả trong 30 ngày</li>
+                    <li><i class="fas fa-check" style="color: var(--success); margin-right: 10px;"></i> Bảo hành 12 tháng</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Tabs -->
+    <div style="margin: 40px 0;">
+        <div style="display: flex; border-bottom: 2px solid var(--primary-color);">
+            <button class="tab-btn active" onclick="showTab('description')" style="padding: 15px 30px; background: var(--primary-color); color: white; border: none; cursor: pointer;">Mô tả sản phẩm</button>
+            <button class="tab-btn" onclick="showTab('reviews')" style="padding: 15px 30px; background: var(--gray-light); color: var(--text-dark); border: none; cursor: pointer;">Đánh giá (25)</button>
+        </div>
+        <div id="description" class="tab-content" style="padding: 30px; background: var(--gray-light);">
+            <h3 style="margin-bottom: 15px;">Mô tả chi tiết</h3>
+            <p>@(Model.Mota ?? "Sản phẩm trang trí nội thất cao cấp, được thiết kế tinh tế và sang trọng. Phù hợp với mọi không gian sống từ phòng khách, phòng ngủ đến văn phòng làm việc.")</p>
+            <br/>
+            <h4>Đặc điểm nổi bật:</h4>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Thiết kế hiện đại, sang trọng</li>
+                <li>Chất liệu cao cấp, bền đẹp</li>
+                <li>Dễ dàng vệ sinh và bảo quản</li>
+                <li>Phù hợp với nhiều phong cách nội thất</li>
+            </ul>
+        </div>
+        <div id="reviews" class="tab-content" style="padding: 30px; background: var(--gray-light); display: none;">
+            <h3 style="margin-bottom: 20px;">Đánh giá từ khách hàng</h3>
+            <div style="padding: 20px; background: white; border-radius: 10px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <strong>Nguyễn Văn A</strong>
+                    <span style="color: var(--warning);"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></span>
+                </div>
+                <p style="color: var(--text-light);">Sản phẩm rất đẹp, đúng như mô tả. Giao hàng nhanh, đóng gói cẩn thận. Sẽ ủng hộ shop tiếp!</p>
+            </div>
+            <div style="padding: 20px; background: white; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <strong>Trần Thị B</strong>
+                    <span style="color: var(--warning);"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i></span>
+                </div>
+                <p style="color: var(--text-light);">Chất lượng tốt, giá cả hợp lý. Nhân viên tư vấn nhiệt tình.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    @if (ViewBag.RelatedProducts != null && ((IEnumerable<dynamic>)ViewBag.RelatedProducts).Any())
+    {
+        <section class="section" style="padding: 40px 0;">
+            <div class="section-title">
+                <h2>Sản phẩm liên quan</h2>
+            </div>
+            <div class="products-grid">
+                @foreach (var product in ViewBag.RelatedProducts)
+                {
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="@GetFirstImage((string)product.Hinhanh)" alt="@product.Tensp" />
+                            <div class="product-actions">
+                                <a href="/san-pham/@product.Masp" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                                <a href="#" onclick="addToCart('@product.Masp'); return false;" title="Thêm vào giỏ"><i class="fas fa-shopping-cart"></i></a>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-category">@(product.ManhomspNavigation?.Tennhomsp ?? "Nội thất")</div>
+                            <h3 class="product-name"><a href="/san-pham/@product.Masp">@product.Tensp</a></h3>
+                            <div class="product-price">
+                                <span class="current-price">@(product.Giaban?.ToString("N0") ?? "0") ₫</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@section Scripts {
+<script>
+    function changeImage(el) {
+        document.getElementById('mainImage').src = el.src;
+        document.querySelectorAll('.thumbnail-images img').forEach(img => img.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function decreaseQty() {
+        var input = document.getElementById('quantity');
+        if (parseInt(input.value) > 1) {
+            input.value = parseInt(input.value) - 1;
+        }
+    }
+
+    function increaseQty() {
+        var input = document.getElementById('quantity');
+        var max = parseInt(input.max);
+        if (parseInt(input.value) < max) {
+            input.value = parseInt(input.value) + 1;
+        }
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.style.background = 'var(--gray-light)';
+            btn.style.color = 'var(--text-dark)';
+        });
+        document.getElementById(tabId).style.display = 'block';
+        event.target.style.background = 'var(--primary-color)';
+        event.target.style.color = 'white';
+    }
+
+    // Override addToCart for detail page to include quantity
+    function addToCart(productId) {
+        var qtyInput = document.getElementById('quantity');
+        var quantity = qtyInput ? qtyInput.value : 1;
+        fetch('/gio-hang/them', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'productId=' + productId + '&quantity=' + quantity
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                var cartCountEl = document.querySelector('.cart-count');
+                if (cartCountEl) cartCountEl.textContent = data.cartCount;
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showToast('Có lỗi xảy ra!', 'error');
+        });
+    }
+
+    function buyNow(productId) {
+        var quantity = document.getElementById('quantity').value;
+        fetch('/gio-hang/them', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'productId=' + productId + '&quantity=' + quantity
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/thanh-toan';
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+    }
+</script>
+}
