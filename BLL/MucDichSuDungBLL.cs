@@ -62,5 +62,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
         }
 
         public bool Exists(string ma) => _dal.Exists(ma);
+
+        public List<MucDichSuDung> Search(string? keyword) => _dal.Search(keyword);
     }
 }

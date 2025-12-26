@@ -30,14 +30,15 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 
         public int Insert(QuanBaSp obj)
         {
-            string query = @"INSERT INTO QUAN_BA_SP (MADOTGIAMGIA, USERID, NGAYBATDAU, NGAYKETTHUC, MANVCHON) 
-                            VALUES (@Ma, @Userid, @Ngaybatdau, @Ngayketthuc, @Manvchon)";
+            string query = @"INSERT INTO QUAN_BA_SP (MADOTGIAMGIA, USERID, NGAYBATDAU, NGAYKETTHUC, MANVCHON, PHANTRAMGIAM) 
+                            VALUES (@Ma, @Userid, @Ngaybatdau, @Ngayketthuc, @Manvchon, @Phantramgiam)";
             SqlParameter[] parameters = {
                 new SqlParameter("@Ma", obj.Madotgiamgia),
                 new SqlParameter("@Userid", (object?)obj.Userid ?? DBNull.Value),
                 new SqlParameter("@Ngaybatdau", (object?)obj.Ngaybatdau ?? DBNull.Value),
                 new SqlParameter("@Ngayketthuc", (object?)obj.Ngayketthuc ?? DBNull.Value),
-                new SqlParameter("@Manvchon", (object?)obj.Manvchon ?? DBNull.Value)
+                new SqlParameter("@Manvchon", (object?)obj.Manvchon ?? DBNull.Value),
+                new SqlParameter("@Phantramgiam", (object?)obj.Phantramgiam ?? DBNull.Value)
             };
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
@@ -45,13 +46,14 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
         public int Update(QuanBaSp obj)
         {
             string query = @"UPDATE QUAN_BA_SP SET USERID=@Userid, NGAYBATDAU=@Ngaybatdau, 
-                            NGAYKETTHUC=@Ngayketthuc, MANVCHON=@Manvchon WHERE MADOTGIAMGIA=@Ma";
+                            NGAYKETTHUC=@Ngayketthuc, MANVCHON=@Manvchon, PHANTRAMGIAM=@Phantramgiam WHERE MADOTGIAMGIA=@Ma";
             SqlParameter[] parameters = {
                 new SqlParameter("@Ma", obj.Madotgiamgia),
                 new SqlParameter("@Userid", (object?)obj.Userid ?? DBNull.Value),
                 new SqlParameter("@Ngaybatdau", (object?)obj.Ngaybatdau ?? DBNull.Value),
                 new SqlParameter("@Ngayketthuc", (object?)obj.Ngayketthuc ?? DBNull.Value),
-                new SqlParameter("@Manvchon", (object?)obj.Manvchon ?? DBNull.Value)
+                new SqlParameter("@Manvchon", (object?)obj.Manvchon ?? DBNull.Value),
+                new SqlParameter("@Phantramgiam", (object?)obj.Phantramgiam ?? DBNull.Value)
             };
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
@@ -81,7 +83,9 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
                     Userid = row["USERID"] != DBNull.Value ? row["USERID"].ToString() : null,
                     Ngaybatdau = row["NGAYBATDAU"] != DBNull.Value ? Convert.ToDateTime(row["NGAYBATDAU"]) : null,
                     Ngayketthuc = row["NGAYKETTHUC"] != DBNull.Value ? Convert.ToDateTime(row["NGAYKETTHUC"]) : null,
-                    Manvchon = row["MANVCHON"] != DBNull.Value ? row["MANVCHON"].ToString() : null
+                    Manvchon = row["MANVCHON"] != DBNull.Value ? row["MANVCHON"].ToString() : null,
+                    Phantramgiam = row.Table.Columns.Contains("PHANTRAMGIAM") && row["PHANTRAMGIAM"] != DBNull.Value 
+                        ? Convert.ToInt32(row["PHANTRAMGIAM"]) : 0
                 };
 
                 if (dt.Columns.Contains("TenNguoiTao") && row["TenNguoiTao"] != DBNull.Value)

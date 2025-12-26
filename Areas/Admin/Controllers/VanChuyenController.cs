@@ -30,13 +30,6 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
                     (v.Donvivanchuyen != null && v.Donvivanchuyen.Contains(search, StringComparison.OrdinalIgnoreCase))).ToList();
             }
 
-            var trangThaiList = _bll.GetAll()
-                .Where(v => v.Trangthaigiao != null)
-                .Select(v => v.Trangthaigiao)
-                .Distinct()
-                .ToList();
-
-            ViewBag.TrangThaiList = trangThaiList;
             ViewBag.CurrentTrangThai = trangThai;
             ViewBag.Search = search;
 
@@ -53,8 +46,16 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
 
         public IActionResult Create()
         {
-            ViewData["Madonhang"] = new SelectList(_donHangBLL.GetAll(), "Madonhang", "Madonhang");
+            // Chỉ lấy đơn hàng có thể tạo vận chuyển (Đã xác nhận/Đang xử lý và chưa có vận chuyển)
+            var donHangCanVC = _bll.GetDonHangCanVanChuyen();
+            ViewData["Madonhang"] = new SelectList(donHangCanVC, "Madonhang", "Madonhang");
             ViewData["Userid"] = new SelectList(_userBLL.GetAll(), "UserId", "HoTen");
+            
+            if (!donHangCanVC.Any())
+            {
+                TempData["Warning"] = "Không có đơn hàng nào cần tạo vận chuyển. Chỉ đơn hàng ở trạng thái 'Đã xác nhận' hoặc 'Đang xử lý' và chưa có vận chuyển mới có thể tạo.";
+            }
+            
             return View();
         }
 
@@ -72,7 +73,8 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
                 }
                 ViewBag.Error = message;
             }
-            ViewData["Madonhang"] = new SelectList(_donHangBLL.GetAll(), "Madonhang", "Madonhang", obj.Madonhang);
+            var donHangCanVC = _bll.GetDonHangCanVanChuyen();
+            ViewData["Madonhang"] = new SelectList(donHangCanVC, "Madonhang", "Madonhang", obj.Madonhang);
             ViewData["Userid"] = new SelectList(_userBLL.GetAll(), "UserId", "HoTen", obj.Userid);
             return View(obj);
         }

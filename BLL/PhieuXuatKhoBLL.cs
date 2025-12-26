@@ -54,5 +54,6 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
 
         public bool Exists(string ma) => _dal.Exists(ma);
         public string GenerateNewId() => _dal.GenerateNewId();
+        public PhieuXuatKho? GetByDonHang(string maDonHang) => _dal.GetByDonHang(maDonHang);
     }
 }

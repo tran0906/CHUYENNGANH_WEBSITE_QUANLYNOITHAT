@@ -94,6 +94,19 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return $"TT{num:D3}";
         }
 
+        /// <summary>
+        /// Tính tổng doanh thu theo ngày từ bảng THANH_TOAN
+        /// </summary>
+        public decimal GetDoanhThuNgay(DateTime ngay)
+        {
+            string query = @"SELECT ISNULL(SUM(SOTIEN), 0) 
+                            FROM THANH_TOAN 
+                            WHERE CAST(NGAYTHANHTOAN AS DATE) = @Ngay";
+            SqlParameter[] parameters = { new SqlParameter("@Ngay", ngay.Date) };
+            var result = SqlConnectionHelper.ExecuteScalar(query, parameters);
+            return result != null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
+        }
+
         private List<ThanhToan> MapDataTableToList(DataTable dt)
         {
             var list = new List<ThanhToan>();

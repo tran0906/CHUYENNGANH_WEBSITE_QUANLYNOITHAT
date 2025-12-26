@@ -6,89 +6,89 @@ using DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Filters;
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [AdminOnlyFilter]
+    [AdminAuthFilter]
     public class MucDichSuDungController : Controller
     {
         private readonly MucDichSuDungBLL _bll = new MucDichSuDungBLL();
-        private readonly SanPhamBLL _sanPhamBLL = new SanPhamBLL();
 
-        public IActionResult Index(string? search)
+        public IActionResult Index(string? search, int page = 1)
         {
-            var list = _bll.GetAll();
-            if (!string.IsNullOrEmpty(search))
-            {
-                list = list.Where(m => m.Tenmdsd != null && m.Tenmdsd.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
-                ViewBag.Search = search;
-            }
-            return View(list);
-        }
-
-        public IActionResult Details(string id)
-        {
-            if (string.IsNullOrEmpty(id)) return NotFound();
-            var obj = _bll.GetById(id);
-            if (obj == null) return NotFound();
-            return View(obj);
+            int pageSize = 10;
+            var allItems = string.IsNullOrEmpty(search) ? _bll.GetAll() : _bll.Search(search);
+            
+            var totalItems = allItems.Count;
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, Math.Max(1, totalPages)));
+            
+            var pagedItems = allItems.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            
+            ViewBag.Search = search;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            
+            return View(pagedItems);
         }
 
         public IActionResult Create()
         {
-            ViewData["SanPhams"] = _sanPhamBLL.GetAll();
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(MucDichSuDung obj)
+        public IActionResult Create(MucDichSuDung model)
         {
             if (ModelState.IsValid)
             {
-                var (success, message) = _bll.Insert(obj);
+                var (success, message) = _bll.Insert(model);
                 if (success)
                 {
                     TempData["Success"] = message;
                     return RedirectToAction(nameof(Index));
                 }
-                ViewBag.Error = message;
+                TempData["Error"] = message;
             }
-            ViewData["SanPhams"] = _sanPhamBLL.GetAll();
-            return View(obj);
+            return View(model);
         }
 
         public IActionResult Edit(string id)
         {
-            if (string.IsNullOrEmpty(id)) return NotFound();
-            var obj = _bll.GetById(id);
-            if (obj == null) return NotFound();
-            ViewData["SanPhams"] = _sanPhamBLL.GetAll();
-            return View(obj);
+            var item = _bll.GetById(id);
+            if (item == null)
+            {
+                TempData["Error"] = "Không tìm thấy mục đích sử dụng";
+                return RedirectToAction(nameof(Index));
+            }
+            return View(item);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(string id, MucDichSuDung obj)
+        public IActionResult Edit(MucDichSuDung model)
         {
-            if (id != obj.Mamdsd) return NotFound();
             if (ModelState.IsValid)
             {
-                var (success, message) = _bll.Update(obj);
+                var (success, message) = _bll.Update(model);
                 if (success)
                 {
                     TempData["Success"] = message;
                     return RedirectToAction(nameof(Index));
                 }
-                ViewBag.Error = message;
+                TempData["Error"] = message;
             }
-            ViewData["SanPhams"] = _sanPhamBLL.GetAll();
-            return View(obj);
+            return View(model);
         }
 
         public IActionResult Delete(string id)
         {
-            if (string.IsNullOrEmpty(id)) return NotFound();
-            var obj = _bll.GetById(id);
-            if (obj == null) return NotFound();
-            return View(obj);
+            var item = _bll.GetById(id);
+            if (item == null)
+            {
+                TempData["Error"] = "Không tìm thấy mục đích sử dụng";
+                return RedirectToAction(nameof(Index));
+            }
+            return View(item);
         }
 
         [HttpPost, ActionName("Delete")]

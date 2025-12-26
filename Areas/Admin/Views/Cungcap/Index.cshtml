@@ -6,6 +6,21 @@
     <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm mới</a>
 </div>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <div class="card mb-3">
     <div class="card-body">
         <form method="get" class="row g-3">
@@ -43,7 +58,6 @@
                         <td>@item.MaspNavigation?.Tensp</td>
                         <td>@item.Soluongsp</td>
                         <td>
-                            <a asp-action="Details" asp-route-mancc="@item.Mancc" asp-route-masp="@item.Masp" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
                             <a asp-action="Edit" asp-route-mancc="@item.Mancc" asp-route-masp="@item.Masp" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
                             <a asp-action="Delete" asp-route-mancc="@item.Mancc" asp-route-masp="@item.Masp" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
                         </td>

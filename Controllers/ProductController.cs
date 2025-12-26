@@ -18,14 +18,17 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             int pageSize = 12;
             List<SanPham> products;
 
+            // Lấy sản phẩm kèm thông tin giảm giá
+            var allProducts = _sanPhamBLL.GetAllWithPromotion();
+
             // Lọc theo nhóm sản phẩm - từ sidebar
             if (!string.IsNullOrEmpty(nhomsp))
             {
-                products = _sanPhamBLL.GetAll().Where(s => s.Manhomsp == nhomsp).ToList();
+                products = allProducts.Where(s => s.Manhomsp == nhomsp).ToList();
             }
             else
             {
-                products = _sanPhamBLL.GetAll();
+                products = allProducts;
             }
 
             // Tìm kiếm
@@ -83,15 +86,16 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         [Route("san-pham/{id}")]
         public IActionResult Detail(string id)
         {
-            var product = _sanPhamBLL.GetById(id);
+            // Lấy sản phẩm kèm thông tin giảm giá
+            var product = _sanPhamBLL.GetByIdWithPromotion(id);
 
             if (product == null)
             {
                 return NotFound();
             }
 
-            // Sản phẩm liên quan
-            ViewBag.RelatedProducts = _sanPhamBLL.GetAll()
+            // Sản phẩm liên quan (cũng kèm thông tin giảm giá)
+            ViewBag.RelatedProducts = _sanPhamBLL.GetAllWithPromotion()
                 .Where(s => s.Manhomsp == product.Manhomsp && s.Masp != id)
                 .Take(4)
                 .ToList();
@@ -103,7 +107,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         [Route("san-pham-ban-chay")]
         public IActionResult BestSeller()
         {
-            var products = _sanPhamBLL.GetAll().Take(20).ToList();
+            var products = _sanPhamBLL.GetAllWithPromotion().Take(20).ToList();
             ViewBag.Categories = _nhomSanPhamBLL.GetAll();
             return View("Index", products);
         }

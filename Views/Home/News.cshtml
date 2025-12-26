@@ -21,11 +21,11 @@
         </div>
         
         <div class="news-grid">
-            @for (int i = 1; i <= 9; i++)
+            @for (int i = 1; i <= 6; i++)
             {
                 <article class="news-card">
                     <div class="news-image">
-                        <img src="/images/news/news-@(i).jpg" alt="Tin tức @i" />
+                        <img src="/images/news/news-@(i).jpg" alt="Tin tức @i" onerror="this.src='https://via.placeholder.com/400x250?text=News'" />
                     </div>
                     <div class="news-content">
                         <div class="news-date"><i class="fas fa-calendar"></i> @DateTime.Now.AddDays(-i).ToString("dd/MM/yyyy")</div>

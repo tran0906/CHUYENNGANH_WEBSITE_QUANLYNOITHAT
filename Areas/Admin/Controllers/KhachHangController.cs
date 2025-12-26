@@ -10,12 +10,22 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
     public class KhachHangController : Controller
     {
         private readonly KhachHangBLL _bll = new KhachHangBLL();
+        private readonly DonHangBLL _donHangBLL = new DonHangBLL();
 
-        public IActionResult Index(string? searchName, string? searchPhone)
+        public IActionResult Index(string? search)
         {
-            var list = _bll.Search(null, searchName, searchPhone);
-            ViewBag.SearchName = searchName;
-            ViewBag.SearchPhone = searchPhone;
+            var list = _bll.Search(search);
+            ViewBag.Search = search;
+            return View(list);
+        }
+
+        // GET: Admin/KhachHang/DanhSach - Cho Nhân viên xem danh sách khách hàng
+        [SkipAdminOnlyFilter]
+        [AdminAuthFilter]
+        public IActionResult DanhSach(string? search)
+        {
+            var list = _bll.Search(search);
+            ViewBag.Search = search;
             return View(list);
         }
 
@@ -24,28 +34,18 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
             if (string.IsNullOrEmpty(id)) return NotFound();
             var obj = _bll.GetById(id);
             if (obj == null) return NotFound();
-            return View(obj);
-        }
-
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(KhachHang obj)
-        {
-            if (ModelState.IsValid)
-            {
-                var (success, message) = _bll.Insert(obj);
-                if (success)
-                {
-                    TempData["Success"] = message;
-                    return RedirectToAction(nameof(Index));
-                }
-                ViewBag.Error = message;
-            }
+            
+            // Lấy danh sách đơn hàng của khách hàng kèm tổng tiền
+            var donHangs = _donHangBLL.GetByKhachHangWithTotal(id);
+            ViewBag.DonHangs = donHangs;
+            
+            // Thống kê
+            ViewBag.TongDonHang = donHangs.Count;
+            ViewBag.DonHoanThanh = donHangs.Count(d => d.Trangthai == "Hoàn thành" || d.Trangthai == "Đã giao");
+            ViewBag.DonDangXuLy = donHangs.Count(d => d.Trangthai != "Hoàn thành" && d.Trangthai != "Đã giao" && d.Trangthai != "Đã hủy");
+            ViewBag.DonDaHuy = donHangs.Count(d => d.Trangthai == "Đã hủy");
+            ViewBag.TongChiTieu = _donHangBLL.GetTongChiTieuKhachHang(id);
+            
             return View(obj);
         }
 

@@ -219,9 +219,9 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
         /// <summary>
         /// Top sản phẩm bán chạy
         /// </summary>
-        public DataTable TopSanPhamBanChay(int top = 10)
+        public DataTable TopSanPhamBanChay(int top = 10, int? nam = null)
         {
-            return _spDal.TopSanPhamBanChay(top);
+            return _spDal.TopSanPhamBanChay(top, nam);
         }
         #endregion
     }

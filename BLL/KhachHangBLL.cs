@@ -8,7 +8,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
         private readonly KhachHangDAL _dal = new KhachHangDAL();
 
         public List<KhachHang> GetAll() => _dal.GetAll();
-        public List<KhachHang> Search(string? maKh, string? hoTen, string? sdt) => _dal.Search(maKh, hoTen, sdt);
+        public List<KhachHang> Search(string? search) => _dal.Search(search);
 
         public KhachHang? GetById(string maKh)
         {

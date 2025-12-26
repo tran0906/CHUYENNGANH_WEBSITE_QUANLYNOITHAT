@@ -1,5 +1,6 @@
 @{
     ViewData["Title"] = "Dashboard";
+    var topSanPham = ViewBag.TopSanPhamBanChay as System.Data.DataTable;
 }
 
 <h2 class="mb-4">Dashboard</h2>
@@ -59,23 +60,47 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h4>@(((decimal)ViewBag.TongDoanhThu).ToString("N0")) đ</h4>
-                        <p class="mb-0">Doanh thu</p>
+                        <p class="mb-0">Tổng doanh thu</p>
                     </div>
                     <i class="bi bi-currency-dollar fs-1"></i>
                 </div>
             </div>
-            <a asp-controller="ThanhToan" asp-action="Index" class="card-footer text-white text-decoration-none">
+            <a asp-controller="ThongKe" asp-action="DoanhThu" class="card-footer text-white text-decoration-none">
                 Xem chi tiết <i class="bi bi-arrow-right"></i>
             </a>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
+<!-- Doanh thu hôm nay -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2"><i class="bi bi-calendar-day"></i> Doanh thu hôm nay (@DateTime.Now.ToString("dd/MM/yyyy"))</h6>
+                <h3 class="text-success mb-0">@(((decimal)ViewBag.DoanhThuHomNay).ToString("N0")) đ</h3>
+                <small class="text-muted">(Tổng thanh toán trong ngày)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-info">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2"><i class="bi bi-clock-history"></i> Đơn hàng chờ xử lý</h6>
+                <h3 class="text-info mb-0">@ViewBag.DonHangMoi</h3>
+                <a asp-controller="DonHang" asp-action="Index" class="btn btn-outline-info btn-sm mt-2">
+                    Xem ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <strong>Đơn hàng gần đây</strong>
+                <strong><i class="bi bi-list-ul"></i> Đơn hàng gần đây</strong>
             </div>
             <div class="card-body">
                 <table class="table table-hover">
@@ -91,11 +116,11 @@
                         @foreach (var dh in ViewBag.DonHangGanDay as List<DonHang>)
                         {
                             <tr>
-                                <td>@dh.Madonhang</td>
+                                <td><a asp-controller="DonHang" asp-action="Details" asp-route-id="@dh.Madonhang">@dh.Madonhang</a></td>
                                 <td>@dh.MakhNavigation?.Hotenkh</td>
                                 <td>@dh.Ngaydat.ToString("dd/MM/yyyy")</td>
                                 <td>
-                                    <span class="badge @(dh.Trangthai == "Hoàn thành" || dh.Trangthai == "Đã giao" ? "bg-success" : dh.Trangthai == "Đang xử lý" || dh.Trangthai == "Đang giao" ? "bg-warning" : dh.Trangthai == "Chờ xác nhận" ? "bg-info" : dh.Trangthai == "Đã hủy" ? "bg-danger" : "bg-secondary")">
+                                    <span class="badge @(dh.Trangthai == "Hoàn thành" || dh.Trangthai == "Đã giao" ? "bg-success" : dh.Trangthai == "Đang xử lý" || dh.Trangthai == "Đang giao" ? "bg-warning" : dh.Trangthai == "Chờ xác nhận" || dh.Trangthai == "Chờ thanh toán" ? "bg-info" : dh.Trangthai == "Đã hủy" ? "bg-danger" : "bg-secondary")">
                                         @dh.Trangthai
                                     </span>
                                 </td>
@@ -109,14 +134,40 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <strong>Thông báo</strong>
+                <strong><i class="bi bi-trophy"></i> Top sản phẩm bán chạy</strong>
+                <small class="text-muted">(đơn hoàn thành)</small>
             </div>
-            <div class="card-body">
-                <div class="alert alert-info mb-2">
-                    <i class="bi bi-bell"></i> Có <strong>@ViewBag.DonHangMoi</strong> đơn hàng chờ xử lý
-                </div>
-                <a asp-controller="DonHang" asp-action="Index" class="btn btn-outline-primary btn-sm">
-                    Xem đơn hàng
+            <div class="card-body p-0">
+                @if (topSanPham != null && topSanPham.Rows.Count > 0)
+                {
+                    <ul class="list-group list-group-flush">
+                        @{ var stt = 0; }
+                        @foreach (System.Data.DataRow row in topSanPham.Rows)
+                        {
+                            stt++;
+                            var tenSp = row["TENSP"]?.ToString() ?? "N/A";
+                            var soLuong = row["TongSoLuong"] != DBNull.Value ? Convert.ToInt32(row["TongSoLuong"]) : 0;
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <span class="badge bg-primary me-2">@stt</span>
+                                    @tenSp
+                                </span>
+                                <span class="badge bg-success">@soLuong đã bán</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-center py-3 text-muted">
+                        <i class="bi bi-inbox fs-3"></i>
+                        <p class="mb-0">Chưa có dữ liệu</p>
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                <a asp-controller="ThongKe" asp-action="SanPhamBanChay" class="btn btn-outline-primary btn-sm w-100">
+                    Xem thêm
                 </a>
             </div>
         </div>

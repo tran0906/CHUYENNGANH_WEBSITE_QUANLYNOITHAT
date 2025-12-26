@@ -58,6 +58,21 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
+        public List<MucDichSuDung> Search(string? keyword)
+        {
+            string query = "SELECT * FROM MUC_DICH_SU_DUNG WHERE 1=1";
+            var parameters = new List<SqlParameter>();
+
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                query += " AND (MAMDSD LIKE @Keyword OR TENMDSD LIKE @Keyword OR MOTAMDSD LIKE @Keyword)";
+                parameters.Add(new SqlParameter("@Keyword", $"%{keyword}%"));
+            }
+
+            query += " ORDER BY MAMDSD";
+            return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query, parameters.ToArray()));
+        }
+
         private List<MucDichSuDung> MapDataTableToList(DataTable dt)
         {
             var list = new List<MucDichSuDung>();

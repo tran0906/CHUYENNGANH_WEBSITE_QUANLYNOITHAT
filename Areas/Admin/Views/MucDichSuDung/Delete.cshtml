@@ -1,25 +1,37 @@
 @model MucDichSuDung
-@{ ViewData["Title"] = "Xóa mục đích sử dụng"; }
+@{
+    ViewData["Title"] = "Xóa mục đích sử dụng";
+}
 
-<h2>Xác nhận xóa</h2>
-<hr />
-<div class="alert alert-danger">
-    <h5>Bạn có chắc chắn muốn xóa mục đích sử dụng này?</h5>
-</div>
-<div class="card">
+<h2 class="mb-4">Xóa mục đích sử dụng</h2>
+
+<div class="card border-danger">
+    <div class="card-header bg-danger text-white">
+        <strong><i class="bi bi-exclamation-triangle"></i> Xác nhận xóa</strong>
+    </div>
     <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-circle"></i> Bạn có chắc chắn muốn xóa mục đích sử dụng này?
+        </div>
         <dl class="row">
-            <dt class="col-sm-3">Mã mục đích</dt>
+            <dt class="col-sm-3">Mã:</dt>
             <dd class="col-sm-9">@Model.Mamdsd</dd>
-            <dt class="col-sm-3">Tên mục đích</dt>
+            <dt class="col-sm-3">Tên:</dt>
             <dd class="col-sm-9">@Model.Tenmdsd</dd>
-            <dt class="col-sm-3">Mô tả</dt>
+            <dt class="col-sm-3">Mô tả:</dt>
             <dd class="col-sm-9">@Model.Motamdsd</dd>
         </dl>
+        <form asp-action="Delete" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Mamdsd" />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Xác nhận xóa
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Hủy
+                </a>
+            </div>
+        </form>
     </div>
 </div>
-<form asp-action="Delete" class="mt-3">
-    <input type="hidden" asp-for="Mamdsd" />
-    <button type="submit" class="btn btn-danger">Xóa</button>
-    <a asp-action="Index" class="btn btn-secondary">Hủy</a>
-</form>

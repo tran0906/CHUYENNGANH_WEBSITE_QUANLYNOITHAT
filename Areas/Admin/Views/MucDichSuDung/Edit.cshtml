@@ -1,49 +1,41 @@
 @model MucDichSuDung
-@{ ViewData["Title"] = "Sửa mục đích sử dụng"; }
+@{
+    ViewData["Title"] = "Sửa mục đích sử dụng";
+}
 
-<h2>Sửa mục đích sử dụng</h2>
-<hr />
-<div class="row">
-    <div class="col-md-8">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Mamdsd" />
+<h2 class="mb-4">Sửa mục đích sử dụng</h2>
+
+<div class="card">
+    <div class="card-header">
+        <strong><i class="bi bi-pencil"></i> Chỉnh sửa</strong>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
             <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label asp-for="Mamdsd" class="form-label">Mã mục đích</label>
-                        <input asp-for="Mamdsd" class="form-control" readonly />
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Tenmdsd" class="form-label">Tên mục đích</label>
-                        <input asp-for="Tenmdsd" class="form-control" />
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Motamdsd" class="form-label">Mô tả</label>
-                        <textarea asp-for="Motamdsd" class="form-control" rows="3"></textarea>
-                    </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Mamdsd" class="form-label">Mã mục đích sử dụng</label>
+                    <input asp-for="Mamdsd" class="form-control" readonly />
                 </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Chọn sản phẩm áp dụng</label>
-                        <div class="border rounded p-2" style="max-height: 250px; overflow-y: auto;">
-                            @{
-                                var selectedSps = ViewBag.SelectedSanPhams as List<string> ?? new List<string>();
-                            }
-                            @foreach (var sp in ViewData["SanPhams"] as List<SanPham>)
-                            {
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="selectedSanPhams" value="@sp.Masp" id="sp_@sp.Masp" @(selectedSps.Contains(sp.Masp) ? "checked" : "")>
-                                    <label class="form-check-label" for="sp_@sp.Masp">@sp.Tensp</label>
-                                </div>
-                            }
-                        </div>
-                    </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Tenmdsd" class="form-label">Tên mục đích sử dụng <span class="text-danger">*</span></label>
+                    <input asp-for="Tenmdsd" class="form-control" required />
+                    <span asp-validation-for="Tenmdsd" class="text-danger"></span>
+                </div>
+                <div class="col-12 mb-3">
+                    <label asp-for="Motamdsd" class="form-label">Mô tả</label>
+                    <textarea asp-for="Motamdsd" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Motamdsd" class="text-danger"></span>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Cập nhật</button>
-            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i> Cập nhật
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+            </div>
         </form>
     </div>
 </div>
-@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

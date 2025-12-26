@@ -148,6 +148,34 @@
 
 @section Scripts {
 <script>
+    // Lưu thông tin tồn kho
+    var stockInfo = {};
+    
+    // Load thông tin tồn kho khi trang load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('tr[data-product]').forEach(function(row) {
+            var productId = row.getAttribute('data-product');
+            fetch('/gio-hang/ton-kho/' + productId)
+                .then(response => response.json())
+                .then(data => {
+                    stockInfo[productId] = data.stock;
+                    // Cập nhật max cho input
+                    var input = row.querySelector('input[type="number"]');
+                    if (input) {
+                        input.max = data.stock;
+                        // Hiển thị cảnh báo nếu số lượng trong giỏ > tồn kho
+                        if (parseInt(input.value) > data.stock) {
+                            row.style.background = '#fff3cd';
+                            var warning = document.createElement('div');
+                            warning.style.cssText = 'color: #856404; font-size: 12px; margin-top: 5px;';
+                            warning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Chỉ còn ' + data.stock + ' sản phẩm';
+                            input.parentNode.appendChild(warning);
+                        }
+                    }
+                });
+        });
+    });
+
     // Custom confirm dialog
     function showConfirm(message, callback) {
         var modal = document.getElementById('confirmModal');
@@ -170,6 +198,13 @@
             return;
         }
         
+        // Kiểm tra tồn kho trước khi gửi request
+        var maxStock = stockInfo[productId] || 999;
+        if (quantity > maxStock) {
+            showToast('Chỉ còn ' + maxStock + ' sản phẩm trong kho!', 'error');
+            return;
+        }
+        
         fetch('/gio-hang/cap-nhat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -179,6 +214,16 @@
         .then(data => {
             if (data.success) {
                 location.reload();
+            } else {
+                showToast(data.message, 'error');
+                // Nếu có maxQuantity, cập nhật lại input
+                if (data.maxQuantity) {
+                    var row = document.querySelector('tr[data-product="' + productId + '"]');
+                    if (row) {
+                        var input = row.querySelector('input[type="number"]');
+                        if (input) input.value = data.maxQuantity;
+                    }
+                }
             }
         });
     }

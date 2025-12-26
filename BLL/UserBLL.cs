@@ -97,6 +97,12 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
                 return (false, "Mã không được để trống");
             if (!_dal.Exists(userId))
                 return (false, "Người dùng không tồn tại");
+            
+            // Kiểm tra không cho xóa Admin
+            var user = _dal.GetById(userId);
+            if (user != null && IsAdmin(user.VaiTro))
+                return (false, "Không thể xóa tài khoản Admin/Quản trị hệ thống!");
+            
             if (_dal.HasRelatedData(userId))
                 return (false, "Không thể xóa vì có dữ liệu liên quan!");
 

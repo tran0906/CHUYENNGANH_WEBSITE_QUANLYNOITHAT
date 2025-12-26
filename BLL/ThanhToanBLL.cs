@@ -57,5 +57,10 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
 
         public bool Exists(string ma) => _dal.Exists(ma);
         public string GenerateNewId() => _dal.GenerateNewId();
+        
+        /// <summary>
+        /// Tính tổng doanh thu theo ngày từ bảng THANH_TOAN
+        /// </summary>
+        public decimal GetDoanhThuNgay(DateTime ngay) => _dal.GetDoanhThuNgay(ngay);
     }
 }

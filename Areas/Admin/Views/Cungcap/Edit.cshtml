@@ -3,9 +3,18 @@
 
 <h2>Sửa cung cấp</h2>
 <hr />
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle me-2"></i>@ViewBag.Error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Edit">
+        <form asp-action="Edit" asp-route-mancc="@Model.Mancc" asp-route-masp="@Model.Masp">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Mancc" />
             <input type="hidden" asp-for="Masp" />

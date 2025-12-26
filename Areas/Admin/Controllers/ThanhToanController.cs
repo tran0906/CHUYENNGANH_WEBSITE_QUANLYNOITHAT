@@ -23,13 +23,6 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
                 list = list.Where(t => t.Phuongthuc == phuongThuc).ToList();
             }
 
-            var phuongThucList = _bll.GetAll()
-                .Where(t => t.Phuongthuc != null)
-                .Select(t => t.Phuongthuc)
-                .Distinct()
-                .ToList();
-
-            ViewBag.PhuongThucList = phuongThucList;
             ViewBag.CurrentPhuongThuc = phuongThuc;
 
             return View(list);

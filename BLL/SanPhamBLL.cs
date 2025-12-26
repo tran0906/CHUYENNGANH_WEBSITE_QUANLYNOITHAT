@@ -9,11 +9,51 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
     public class SanPhamBLL
     {
         private readonly SanPhamDAL _dal = new SanPhamDAL();
+        private readonly QuangBaDAL _quangBaDAL = new QuangBaDAL();
 
         public List<SanPham> GetAll() => _dal.GetAll();
+        
+        /// <summary>
+        /// Lấy tất cả sản phẩm kèm thông tin giảm giá (nếu đang trong đợt quảng bá)
+        /// </summary>
+        public List<SanPham> GetAllWithPromotion()
+        {
+            var products = _dal.GetAll();
+            var promotionProducts = _quangBaDAL.GetAllPromotedProducts();
+            
+            foreach (var sp in products)
+            {
+                if (promotionProducts.TryGetValue(sp.Masp!, out int phantram))
+                {
+                    sp.PhanTramGiam = phantram;
+                    sp.GiaGoc = sp.Giaban;
+                    sp.Giaban = Math.Round((sp.Giaban ?? 0) * (100 - phantram) / 100, 0);
+                }
+            }
+            return products;
+        }
+        
+        /// <summary>
+        /// Lấy sản phẩm theo mã kèm thông tin giảm giá
+        /// </summary>
+        public SanPham? GetByIdWithPromotion(string maSp)
+        {
+            var sp = _dal.GetById(maSp);
+            if (sp != null)
+            {
+                var phantram = _quangBaDAL.GetPhanTramGiam(maSp);
+                if (phantram.HasValue && phantram.Value > 0)
+                {
+                    sp.PhanTramGiam = phantram.Value;
+                    sp.GiaGoc = sp.Giaban;
+                    sp.Giaban = Math.Round((sp.Giaban ?? 0) * (100 - phantram.Value) / 100, 0);
+                }
+            }
+            return sp;
+        }
 
-        public List<SanPham> Search(string? maSp, string? tenSp, string? nhomSp, string? vatLieu)
-            => _dal.Search(maSp, tenSp, nhomSp, vatLieu);
+        public List<SanPham> Search(string? search, string? nhomSp, string? vatLieu)
+            => _dal.Search(search, nhomSp, vatLieu);
 
         public SanPham? GetById(string maSp)
         {

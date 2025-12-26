@@ -69,5 +69,22 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
         }
 
         public bool Exists(string masp, string madotgiamgia) => _dal.Exists(masp, madotgiamgia);
+
+        /// <summary>
+        /// Lấy % giảm giá của SP nếu đang trong đợt quảng bá
+        /// </summary>
+        public int? GetPhanTramGiam(string masp)
+        {
+            if (string.IsNullOrEmpty(masp)) return null;
+            return _dal.GetPhanTramGiam(masp);
+        }
+
+        /// <summary>
+        /// Lấy dictionary tất cả SP đang được quảng bá: MASP -> % giảm
+        /// </summary>
+        public Dictionary<string, int> GetAllPromotedProducts()
+        {
+            return _dal.GetAllPromotedProducts();
+        }
     }
 }

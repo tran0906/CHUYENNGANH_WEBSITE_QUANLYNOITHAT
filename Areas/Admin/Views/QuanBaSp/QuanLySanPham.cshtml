@@ -1,0 +1,137 @@
+@model IEnumerable<SanPham>
+@{
+    ViewData["Title"] = "Quản lý SP trong đợt giảm giá";
+    var dotGiamGia = ViewBag.DotGiamGia as QuanBaSp;
+    var sanPhamChuaThem = ViewBag.SanPhamChuaThem as List<SanPham>;
+    var isActive = dotGiamGia.Ngaybatdau <= DateTime.Now && dotGiamGia.Ngayketthuc >= DateTime.Now;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2>Quản lý SP - Đợt @dotGiamGia.Madotgiamgia</h2>
+        <small class="text-muted">
+            @dotGiamGia.Ngaybatdau?.ToString("dd/MM/yyyy") - @dotGiamGia.Ngayketthuc?.ToString("dd/MM/yyyy")
+            @if (isActive)
+            {
+                <span class="badge bg-success ms-2">Đang diễn ra</span>
+            }
+            else if (dotGiamGia.Ngayketthuc < DateTime.Now)
+            {
+                <span class="badge bg-secondary ms-2">Đã kết thúc</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary ms-2">Sắp diễn ra</span>
+            }
+        </small>
+    </div>
+    <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Form thêm SP -->
+<div class="card mb-3">
+    <div class="card-header" style="background:#8B4513;color:white;">
+        <i class="bi bi-plus-circle"></i> Thêm sản phẩm vào đợt giảm giá
+    </div>
+    <div class="card-body">
+        <form asp-action="ThemSanPham" method="post" class="row g-3">
+            <input type="hidden" name="madotgiamgia" value="@dotGiamGia.Madotgiamgia" />
+            <div class="col-md-8">
+                <select name="masp" class="form-select" required>
+                    <option value="">-- Chọn sản phẩm --</option>
+                    @foreach (var sp in sanPhamChuaThem)
+                    {
+                        <option value="@sp.Masp">@sp.Masp - @sp.Tensp (@sp.Giaban?.ToString("N0")đ)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-plus-lg"></i> Thêm SP
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Danh sách SP trong đợt -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-box-seam"></i> Sản phẩm trong đợt giảm giá 
+        <span class="badge bg-secondary">@Model.Count() SP</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead style="background:#8B4513;color:white;">
+                        <tr>
+                            <th>Hình</th>
+                            <th>Mã SP</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá bán</th>
+                            <th>Tồn kho</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sp in Model)
+                        {
+                            var imgSrc = sp.Hinhanh;
+                            if (!string.IsNullOrEmpty(imgSrc) && !imgSrc.StartsWith("/") && !imgSrc.StartsWith("http"))
+                            {
+                                imgSrc = "/" + imgSrc;
+                            }
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(sp.Hinhanh))
+                                    {
+                                        <img src="@imgSrc" alt="@sp.Tensp" style="width:50px;height:50px;object-fit:cover;border-radius:4px;" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>@sp.Masp</td>
+                                <td>@sp.Tensp</td>
+                                <td>@sp.Giaban?.ToString("N0") đ</td>
+                                <td>@sp.Soluongton</td>
+                                <td>
+                                    <form asp-action="XoaSanPham" method="post" style="display:inline;" 
+                                          onsubmit="return confirm('Xóa SP này khỏi đợt giảm giá?');">
+                                        <input type="hidden" name="madotgiamgia" value="@dotGiamGia.Madotgiamgia" />
+                                        <input type="hidden" name="masp" value="@sp.Masp" />
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted text-center py-4 mb-0">Chưa có sản phẩm nào trong đợt giảm giá này</p>
+        }
+    </div>
+</div>

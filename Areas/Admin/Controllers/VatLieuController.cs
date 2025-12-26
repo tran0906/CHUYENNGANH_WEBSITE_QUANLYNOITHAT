@@ -11,9 +11,11 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
     {
         private readonly VatLieuBLL _bll = new VatLieuBLL();
 
-        public IActionResult Index()
+        public IActionResult Index(string? search)
         {
-            return View(_bll.GetAll());
+            ViewBag.Search = search;
+            var data = string.IsNullOrEmpty(search) ? _bll.GetAll() : _bll.Search(search);
+            return View(data);
         }
 
         public IActionResult Details(string id)

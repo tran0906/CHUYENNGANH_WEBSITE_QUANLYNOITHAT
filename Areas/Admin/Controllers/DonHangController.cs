@@ -18,6 +18,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
         private readonly ThanhToanBLL _thanhToanBLL = new ThanhToanBLL();
         private readonly PhieuXuatKhoBLL _phieuXuatKhoBLL = new PhieuXuatKhoBLL();
         private readonly VanChuyenBLL _vanChuyenBLL = new VanChuyenBLL();
+        private readonly SanPhamBLL _sanPhamBLL = new SanPhamBLL();
 
         public IActionResult Index(string? searchMa, string? trangThai)
         {
@@ -176,34 +177,189 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
             
-            var (success, message) = _spBLL.HuyDonHang(id);
+            // Lấy thông tin đơn hàng để kiểm tra
+            var donHang = _donHangBLL.GetById(id);
+            if (donHang == null)
+            {
+                TempData["Error"] = "Đơn hàng không tồn tại";
+                return RedirectToAction(nameof(Index));
+            }
             
-            if (success)
-                TempData["Success"] = "Đã hủy đơn hàng và hoàn lại tồn kho thành công!";
+            // Kiểm tra đơn hàng đã hoàn thành chưa - không cho hủy
+            if (donHang.Trangthai == "Hoàn thành")
+            {
+                TempData["Error"] = "Không thể hủy đơn hàng đã hoàn thành!";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            
+            // Lấy thông tin người hủy (Admin hiện tại)
+            var currentUserId = HttpContext.Session.GetString("AdminUserId");
+            var currentUserName = HttpContext.Session.GetString("AdminHoTen");
+            
+            // Kiểm tra đơn hàng MoMo/Chuyển khoản đã thanh toán chưa
+            bool isMoMoPaid = donHang.Ghichu?.Contains("[MOMO ĐÃ THANH TOÁN") == true ||
+                              donHang.Ghichu?.Contains("[MOMO IPN") == true;
+            bool isMoMoOrder = donHang.Ghichu?.Contains("[MOMO") == true;
+            bool isChuyenKhoanOrder = donHang.Ghichu?.Contains("[CHUYỂN KHOẢN") == true;
+            
+            // Đơn hàng "Chờ thanh toán" = chưa trừ tồn kho (MoMo/Chuyển khoản chưa thanh toán)
+            bool isChoThanhToan = donHang.Trangthai == "Chờ thanh toán";
+            bool stockNotDeducted = isChoThanhToan && (isMoMoOrder || isChuyenKhoanOrder);
+            
+            // Ghi chú thông tin hủy đơn
+            var cancelNote = $"[HỦY BỞI: {currentUserName} - {DateTime.Now:dd/MM/yyyy HH:mm}]";
+            
+            // Nếu đơn hàng đã được nhân viên khác xử lý, ghi thêm thông tin
+            if (!string.IsNullOrEmpty(donHang.Nguoiduyetid) && donHang.Nguoiduyetid != currentUserId)
+            {
+                var nguoiDuyet = _userBLL.GetById(donHang.Nguoiduyetid);
+                if (nguoiDuyet != null)
+                {
+                    cancelNote = $"[HỦY BỞI: {currentUserName} - Đơn hàng do {nguoiDuyet.HoTen} xử lý - {DateTime.Now:dd/MM/yyyy HH:mm}]";
+                }
+            }
+            
+            // Nếu đơn MoMo đã thanh toán → Ghi chú cần hoàn tiền
+            if (isMoMoPaid)
+            {
+                cancelNote += " [CẦN HOÀN TIỀN MOMO]";
+            }
+            
+            bool success;
+            string message;
+            
+            if (stockNotDeducted)
+            {
+                // Đơn hàng chưa trừ tồn kho → Chỉ cập nhật trạng thái, KHÔNG hoàn tồn kho
+                donHang.Trangthai = "Đã hủy";
+                donHang.Ghichu = (donHang.Ghichu ?? "") + " " + cancelNote;
+                (success, message) = _donHangBLL.Update(donHang);
+                
+                if (success)
+                {
+                    TempData["Success"] = "Đã hủy đơn hàng! (Đơn chưa thanh toán - không cần hoàn tồn kho)";
+                }
+                else
+                {
+                    TempData["Error"] = message;
+                }
+            }
             else
-                TempData["Error"] = message;
+            {
+                // Đơn hàng đã trừ tồn kho → Gọi SP hoàn tồn kho
+                (success, message) = _spBLL.HuyDonHang(id);
+                
+                if (success)
+                {
+                    // Cập nhật ghi chú hủy đơn
+                    donHang = _donHangBLL.GetById(id); // Lấy lại sau khi SP cập nhật
+                    if (donHang != null)
+                    {
+                        donHang.Ghichu = (donHang.Ghichu ?? "") + " " + cancelNote;
+                        _donHangBLL.Update(donHang);
+                    }
+                    
+                    if (isMoMoPaid)
+                    {
+                        TempData["Warning"] = "Đã hủy đơn hàng và hoàn tồn kho! ⚠️ ĐƠN HÀNG NÀY ĐÃ THANH TOÁN MOMO - CẦN HOÀN TIỀN CHO KHÁCH HÀNG!";
+                    }
+                    else
+                    {
+                        TempData["Success"] = "Đã hủy đơn hàng và hoàn lại tồn kho thành công!";
+                    }
+                }
+                else
+                {
+                    TempData["Error"] = message;
+                }
+            }
                 
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        // POST: Xác nhận thanh toán (dùng sp_NV_XacNhanThanhToan)
+        // POST: Xác nhận thanh toán (dùng sp_NV_XacNhanThanhToan) + Trừ tồn kho cho đơn chuyển khoản
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult XacNhanThanhToan(string id)
         {
             var userId = HttpContext.Session.GetString("AdminUserId") ?? "";
             
-            var (success, message) = _spBLL.XacNhanThanhToan(id, userId);
+            // Lấy thông tin đơn hàng
+            var donHang = _donHangBLL.GetById(id);
+            if (donHang == null)
+            {
+                TempData["Error"] = "Đơn hàng không tồn tại";
+                return RedirectToAction(nameof(Index));
+            }
             
-            if (success)
-                TempData["Success"] = "Xác nhận thanh toán thành công!";
-            else
-                TempData["Error"] = message;
+            // Kiểm tra nếu đơn hàng là chuyển khoản (chưa trừ tồn kho)
+            bool isChuyenKhoan = donHang.Ghichu?.Contains("[CHUYỂN KHOẢN") == true;
+            bool isChoThanhToan = donHang.Trangthai == "Chờ thanh toán";
+            bool isDaGiao = donHang.Trangthai == "Đã giao";
+            
+            if (isChoThanhToan)
+            {
+                // Đơn hàng chuyển khoản đang chờ thanh toán → Xác nhận đã nhận tiền → chuyển sang "Đã xác nhận"
+                // Trừ tồn kho khi xác nhận thanh toán cho đơn chuyển khoản
+                var chiTietDonHang = _ctDonhangBLL.GetByDonHang(id);
+                foreach (var ct in chiTietDonHang)
+                {
+                    var product = _sanPhamBLL.GetById(ct.Masp!);
+                    if (product != null)
+                    {
+                        // Kiểm tra tồn kho còn đủ không
+                        if (product.Soluongton < ct.Soluong)
+                        {
+                            TempData["Error"] = $"Sản phẩm '{product.Tensp}' không đủ tồn kho (còn {product.Soluongton}, cần {ct.Soluong})";
+                            return RedirectToAction(nameof(Details), new { id });
+                        }
+                        
+                        product.Soluongton = (product.Soluongton ?? 0) - (ct.Soluong ?? 0);
+                        _sanPhamBLL.Update(product);
+                    }
+                }
                 
-            return RedirectToAction(nameof(Details), new { id });
+                // Cập nhật trạng thái sang "Đã xác nhận" và gán người duyệt
+                donHang.Trangthai = "Đã xác nhận";
+                donHang.Nguoiduyetid = userId;
+                var (updateSuccess, updateMessage) = _donHangBLL.Update(donHang);
+                
+                if (updateSuccess)
+                    TempData["Success"] = "Xác nhận đã nhận tiền chuyển khoản thành công! Đã trừ tồn kho. Tiếp tục xử lý đơn hàng.";
+                else
+                    TempData["Error"] = updateMessage;
+                    
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            else if (isDaGiao)
+            {
+                // Đơn hàng đã giao → Xác nhận đã thu tiền COD → chuyển sang "Hoàn thành"
+                var (success, message) = _spBLL.XacNhanThanhToan(id, userId);
+                
+                if (success)
+                {
+                    // Cập nhật trạng thái vận chuyển thành "Hoàn thành"
+                    var vanChuyen = _vanChuyenBLL.GetByDonHang(id);
+                    if (vanChuyen != null && vanChuyen.Trangthaigiao != "Hoàn thành")
+                    {
+                        vanChuyen.Trangthaigiao = "Hoàn thành";
+                        _vanChuyenBLL.Update(vanChuyen);
+                    }
+                    TempData["Success"] = "Xác nhận thanh toán COD thành công! Đơn hàng đã hoàn thành.";
+                }
+                else
+                    TempData["Error"] = message;
+                    
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            else
+            {
+                TempData["Error"] = "Không thể xác nhận thanh toán cho đơn hàng ở trạng thái này.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
         }
 
-        // POST: Xuất kho (dùng sp_NV_XuatKho)
+        // POST: Xuất kho (dùng sp_NV_XuatKho) + Tự động tạo phiếu xuất kho
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult XuatKho(string id)
@@ -213,7 +369,23 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
             var (success, message) = _spBLL.XuatKho(id, userId);
             
             if (success)
-                TempData["Success"] = "Xuất kho thành công!";
+            {
+                // Tự động tạo phiếu xuất kho
+                var phieuXuat = new PhieuXuatKho
+                {
+                    Maphieuxuat = _phieuXuatKhoBLL.GenerateNewId(),
+                    Userid = userId,
+                    Madonhang = id,
+                    Ngayxuat = DateTime.Now,
+                    Manvduyet = userId
+                };
+                
+                var (pxSuccess, pxMessage) = _phieuXuatKhoBLL.Insert(phieuXuat);
+                if (pxSuccess)
+                    TempData["Success"] = $"Xuất kho thành công! Đã tạo phiếu xuất kho: {phieuXuat.Maphieuxuat}";
+                else
+                    TempData["Success"] = $"Xuất kho thành công! (Lưu ý: Không tạo được phiếu xuất kho - {pxMessage})";
+            }
             else
                 TempData["Error"] = message;
                 
@@ -230,7 +402,51 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
             var (success, message) = _spBLL.DieuPhoiGiaoHang(id, donViVanChuyen, userId);
             
             if (success)
+            {
+                // Cập nhật trạng thái vận chuyển thành "Đang giao"
+                var vanChuyen = _vanChuyenBLL.GetByDonHang(id);
+                if (vanChuyen != null)
+                {
+                    vanChuyen.Trangthaigiao = "Đang giao";
+                    _vanChuyenBLL.Update(vanChuyen);
+                }
                 TempData["Success"] = "Điều phối giao hàng thành công!";
+            }
+            else
+                TempData["Error"] = message;
+                
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // POST: Xác nhận đã giao hàng
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult XacNhanDaGiao(string id)
+        {
+            var userId = HttpContext.Session.GetString("AdminUserId") ?? "";
+            
+            // Cập nhật trạng thái đơn hàng sang "Đã giao"
+            var donHang = _donHangBLL.GetById(id);
+            if (donHang == null)
+            {
+                TempData["Error"] = "Đơn hàng không tồn tại";
+                return RedirectToAction(nameof(Index));
+            }
+            
+            donHang.Trangthai = "Đã giao";
+            var (success, message) = _donHangBLL.Update(donHang);
+            
+            if (success)
+            {
+                // Cập nhật trạng thái vận chuyển thành "Hoàn thành"
+                var vanChuyen = _vanChuyenBLL.GetByDonHang(id);
+                if (vanChuyen != null)
+                {
+                    vanChuyen.Trangthaigiao = "Hoàn thành";
+                    _vanChuyenBLL.Update(vanChuyen);
+                }
+                TempData["Success"] = "Xác nhận đã giao hàng thành công!";
+            }
             else
                 TempData["Error"] = message;
                 

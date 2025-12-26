@@ -80,5 +80,13 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
         public int Count() => _dal.Count();
         public int CountByTrangThai(string trangThai) => _dal.CountByTrangThai(trangThai);
         public string GenerateNewId() => _dal.GenerateNewId();
+        public decimal GetTongDoanhThu() => _dal.GetTongDoanhThu();
+        public decimal GetDoanhThuTheoThoiGian(DateTime tuNgay, DateTime denNgay) => _dal.GetDoanhThuTheoThoiGian(tuNgay, denNgay);
+        
+        // Lấy đơn hàng của khách hàng kèm tổng tiền
+        public List<DonHang> GetByKhachHangWithTotal(string maKh) => _dal.GetByKhachHangWithTotal(maKh);
+        
+        // Tính tổng chi tiêu của khách hàng (chỉ đơn hoàn thành)
+        public decimal GetTongChiTieuKhachHang(string maKh) => _dal.GetTongChiTieuKhachHang(maKh);
     }
 }

@@ -9,6 +9,8 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
 
         public List<VatLieu> GetAll() => _dal.GetAll();
 
+        public List<VatLieu> Search(string? search) => _dal.Search(search);
+
         public VatLieu? GetById(string ma)
         {
             if (string.IsNullOrEmpty(ma)) return null;

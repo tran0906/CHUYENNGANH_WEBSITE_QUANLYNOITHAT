@@ -1,21 +1,24 @@
-@model IEnumerable<MucDichSuDung>
-@{ ViewData["Title"] = "Quản lý mục đích sử dụng"; }
+@model List<MucDichSuDung>
+@{
+    ViewData["Title"] = "Quản lý mục đích sử dụng";
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalPages = (int)ViewBag.TotalPages;
+    var totalItems = (int)ViewBag.TotalItems;
+    var search = ViewBag.Search as string;
+}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Quản lý mục đích sử dụng</h2>
-    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm mới</a>
-</div>
+<h2 class="mb-4">Quản lý mục đích sử dụng</h2>
 
 <!-- Form tìm kiếm -->
 <div class="card mb-3">
     <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label">Tìm theo tên mục đích</label>
-                <input type="text" name="search" class="form-control" placeholder="Nhập tên mục đích sử dụng..." value="@ViewBag.Search" />
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label">Tìm kiếm</label>
+                <input type="text" name="search" class="form-control" placeholder="Nhập mã, tên hoặc mô tả..." value="@search" />
             </div>
-            <div class="col-md-6 d-flex align-items-end gap-2">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Tìm</button>
                 <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-x-lg"></i> Xóa lọc</a>
             </div>
         </form>
@@ -23,35 +26,98 @@
 </div>
 
 <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-list-ul"></i> Danh sách mục đích sử dụng <span class="badge bg-info">@totalItems mục</span></span>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i> Thêm mới
+        </a>
+    </div>
     <div class="card-body">
-        <div class="table-responsive-scroll">
-        <table class="table table-striped table-hover table-paginated">
-            <thead class="table-dark">
-                <tr>
-                    <th>Mã MDSD</th>
-                    <th>Tên mục đích</th>
-                    <th>Mô tả</th>
-                    <th>Số SP liên quan</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
                     <tr>
-                        <td>@item.Mamdsd</td>
-                        <td>@item.Tenmdsd</td>
-                        <td>@item.Motamdsd</td>
-                        <td><span class="badge bg-info">@item.Masps.Count SP</span></td>
-                        <td>
-                            <a asp-action="Details" asp-route-id="@item.Mamdsd" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
-                            <a asp-action="Edit" asp-route-id="@item.Mamdsd" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                            <a asp-action="Delete" asp-route-id="@item.Mamdsd" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
-                        </td>
+                        <th>Mã</th>
+                        <th>Tên mục đích sử dụng</th>
+                        <th>Mô tả</th>
+                        <th style="width: 150px;">Thao tác</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><code>@item.Mamdsd</code></td>
+                                <td><strong>@item.Tenmdsd</strong></td>
+                                <td>@item.Motamdsd</td>
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@item.Mamdsd" class="btn btn-warning btn-sm" title="Sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Mamdsd" class="btn btn-danger btn-sm" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox display-6"></i>
+                                <p class="mt-2 mb-0">Không tìm thấy dữ liệu</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
+
+        <!-- Phân trang -->
+        @if (totalPages > 1)
+        {
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted">
+                    Trang @currentPage / @totalPages (Tổng: @totalItems mục)
+                </div>
+                <nav>
+                    <ul class="pagination mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-search="@search" asp-route-page="1">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-search="@search" asp-route-page="@(currentPage - 1)">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        @{
+                            var startPage = Math.Max(1, currentPage - 2);
+                            var endPage = Math.Min(totalPages, currentPage + 2);
+                        }
+                        @for (int i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-search="@search" asp-route-page="@i">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-search="@search" asp-route-page="@(currentPage + 1)">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-search="@search" asp-route-page="@totalPages">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
     </div>
 </div>

@@ -4,6 +4,21 @@
     ViewData["Title"] = "Sản phẩm bán chạy";
 }
 
+@functions {
+    string GetFirstImage(string? hinhanh)
+    {
+        if (string.IsNullOrEmpty(hinhanh)) return "/images/no-image.jpg";
+        var images = hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var img in images)
+        {
+            var trimmed = img.Trim();
+            if (!string.IsNullOrEmpty(trimmed) && (trimmed.StartsWith("/") || trimmed.StartsWith("http")))
+                return trimmed;
+        }
+        return "/images/no-image.jpg";
+    }
+}
+
 <h2 class="mb-4">Sản phẩm bán chạy</h2>
 
 <div class="card mb-4">
@@ -60,6 +75,12 @@
                         int stt = 1;
                         @foreach (DataRow row in Model.Rows)
                         {
+                            // Lấy giá trị - tên cột chuẩn từ query
+                            var maSp = row["MASP"]?.ToString() ?? "N/A";
+                            var tenSp = row["TENSP"]?.ToString() ?? "N/A";
+                            var hinhAnh = row["HINHANH"]?.ToString();
+                            var soLuong = row["TongSoLuong"] != DBNull.Value ? Convert.ToInt32(row["TongSoLuong"]) : 0;
+                            var doanhThu = row["TongDoanhThu"] != DBNull.Value ? Convert.ToDecimal(row["TongDoanhThu"]) : 0;
                             <tr>
                                 <td>
                                     @if (stt <= 3)
@@ -74,15 +95,12 @@
                                     }
                                 </td>
                                 <td>
-                                    @if (row["HINHANH"] != DBNull.Value)
-                                    {
-                                        <img src="@row["HINHANH"]" alt="" style="width: 50px; height: 50px; object-fit: cover;" class="rounded" />
-                                    }
+                                    <img src="@GetFirstImage(hinhAnh)" alt="@tenSp" style="width: 50px; height: 50px; object-fit: cover;" class="rounded" />
                                 </td>
-                                <td>@row["MASP"]</td>
-                                <td>@row["TENSP"]</td>
-                                <td class="text-end fw-bold">@row["TongSoLuong"]</td>
-                                <td class="text-end text-success fw-bold">@(Convert.ToDecimal(row["TongDoanhThu"]).ToString("N0")) đ</td>
+                                <td>@maSp</td>
+                                <td>@tenSp</td>
+                                <td class="text-end fw-bold">@soLuong</td>
+                                <td class="text-end text-success fw-bold">@doanhThu.ToString("N0") đ</td>
                             </tr>
                             stt++;
                         }

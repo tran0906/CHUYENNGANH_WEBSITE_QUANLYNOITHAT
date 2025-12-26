@@ -393,6 +393,10 @@
             @{
                 var vaiTro = Context.Session.GetString("AdminVaiTro");
                 var isAdmin = vaiTro == "Admin" || vaiTro == "QuanLy" || vaiTro == "Quản trị hệ thống";
+                var donHangBLL = new DOANCHUYENNGANH_WEB_QLNOITHAT.BLL.DonHangBLL();
+                var soChoXacNhan = donHangBLL.CountByTrangThai("Chờ xác nhận");
+                var soChoThanhToan = donHangBLL.CountByTrangThai("Chờ thanh toán");
+                var tongDonMoi = soChoXacNhan + soChoThanhToan;
             }
             
             @if (isAdmin)
@@ -408,16 +412,27 @@
                     <i class="bi bi-palette2"></i><span>Vật liệu</span>
                 </a>
                 <a href="@Url.Action("Index", "MucDichSuDung", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "MucDichSuDung" ? "active" : "")">
-                    <i class="bi bi-bookmark"></i><span>Mục đích SD</span>
+                    <i class="bi bi-house-door"></i><span>Mục đích SD</span>
+                </a>
+            }
+            else
+            {
+                <div class="menu-label">Xem thông tin</div>
+                <a href="@Url.Action("DanhSach", "SanPham", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "SanPham" ? "active" : "")">
+                    <i class="bi bi-box-seam"></i><span>Xem sản phẩm</span>
+                </a>
+                <a href="@Url.Action("DanhSach", "KhachHang", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "KhachHang" ? "active" : "")">
+                    <i class="bi bi-people"></i><span>Xem khách hàng</span>
                 </a>
             }
             
             <div class="menu-label">Đơn hàng</div>
             <a href="@Url.Action("Index", "DonHang", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "DonHang" ? "active" : "")">
                 <i class="bi bi-cart3"></i><span>Đơn hàng</span>
-            </a>
-            <a href="@Url.Action("Index", "CtDonhang", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "CtDonhang" ? "active" : "")">
-                <i class="bi bi-list-check"></i><span>Chi tiết ĐH</span>
+                @if (tongDonMoi > 0)
+                {
+                    <span class="badge bg-danger ms-auto" style="font-size: 11px;">@tongDonMoi</span>
+                }
             </a>
             <a href="@Url.Action("Index", "ThanhToan", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ThanhToan" ? "active" : "")">
                 <i class="bi bi-credit-card"></i><span>Thanh toán</span>
@@ -425,8 +440,10 @@
             <a href="@Url.Action("Index", "VanChuyen", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "VanChuyen" ? "active" : "")">
                 <i class="bi bi-truck"></i><span>Vận chuyển</span>
             </a>
-            <a href="@Url.Action("Index", "PhieuXuatKho", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "PhieuXuatKho" ? "active" : "")">
-                <i class="bi bi-clipboard-check"></i><span>Xuất kho</span>
+            
+            <div class="menu-label">Marketing</div>
+            <a href="@Url.Action("Index", "QuanBaSp", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "QuanBaSp" ? "active" : "")">
+                <i class="bi bi-megaphone"></i><span>Quảng bá</span>
             </a>
 
             @if (isAdmin)
@@ -442,18 +459,7 @@
                     <i class="bi bi-arrow-left-right"></i><span>Cung cấp SP</span>
                 </a>
                 
-                <div class="menu-label">Marketing</div>
-                <a href="@Url.Action("Index", "QuanBaSp", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "QuanBaSp" ? "active" : "")">
-                    <i class="bi bi-megaphone"></i><span>Quảng bá</span>
-                </a>
-                <a href="@Url.Action("Index", "SuDung", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "SuDung" ? "active" : "")">
-                    <i class="bi bi-link-45deg"></i><span>Sử dụng SP</span>
-                </a>
-                
                 <div class="menu-label">Hệ thống</div>
-                <a href="@Url.Action("Index", "NhanVien", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "NhanVien" ? "active" : "")">
-                    <i class="bi bi-person-badge"></i><span>Nhân viên</span>
-                </a>
                 <a href="@Url.Action("Index", "User", new { area = "Admin" })" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")">
                     <i class="bi bi-person-gear"></i><span>Người dùng</span>
                 </a>
@@ -466,6 +472,61 @@
         <header class="top-header">
             <h1 class="page-title"><i class="bi bi-chevron-right"></i> @ViewData["Title"]</h1>
             <div class="header-actions">
+                
+                <!-- Thông báo đơn hàng mới -->
+                <div class="dropdown">
+                    <button class="btn-icon position-relative" data-bs-toggle="dropdown" title="Đơn hàng mới">
+                        <i class="bi bi-bell"></i>
+                        @if (tongDonMoi > 0)
+                        {
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px;">
+                                @tongDonMoi
+                            </span>
+                        }
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end" style="width: 320px; padding: 0;">
+                        <div style="background: linear-gradient(135deg, #8B4513, #5D2E0C); color: white; padding: 12px 16px; border-radius: 6px 6px 0 0;">
+                            <i class="bi bi-bell-fill me-2"></i>Thông báo đơn hàng
+                        </div>
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            @if (soChoThanhToan > 0)
+                            {
+                                <a href="@Url.Action("Index", "DonHang", new { area = "Admin", trangthai = "Chờ thanh toán" })" class="dropdown-item d-flex align-items-center py-3" style="border-bottom: 1px solid #eee;">
+                                    <div style="width: 40px; height: 40px; background: #fff3cd; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                                        <i class="bi bi-credit-card text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: #333;">@soChoThanhToan đơn chờ thanh toán</div>
+                                        <small style="color: #888;">Đơn hàng cần xác nhận đặt cọc</small>
+                                    </div>
+                                </a>
+                            }
+                            @if (soChoXacNhan > 0)
+                            {
+                                <a href="@Url.Action("Index", "DonHang", new { area = "Admin", trangthai = "Chờ xác nhận" })" class="dropdown-item d-flex align-items-center py-3" style="border-bottom: 1px solid #eee;">
+                                    <div style="width: 40px; height: 40px; background: #e3f2fd; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                                        <i class="bi bi-cart-check text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: #333;">@soChoXacNhan đơn chờ xác nhận</div>
+                                        <small style="color: #888;">Đơn hàng COD mới</small>
+                                    </div>
+                                </a>
+                            }
+                            @if (tongDonMoi == 0)
+                            {
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-check-circle" style="font-size: 32px; color: #28a745;"></i>
+                                    <p class="mb-0 mt-2">Không có đơn hàng mới</p>
+                                </div>
+                            }
+                        </div>
+                        <a href="@Url.Action("Index", "DonHang", new { area = "Admin" })" class="dropdown-item text-center py-2" style="background: #f8f9fa; border-radius: 0 0 6px 6px; font-weight: 500; color: #8B4513;">
+                            Xem tất cả đơn hàng <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
                 <a href="/" target="_blank" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-globe me-1"></i> Xem website
                 </a>

@@ -139,6 +139,37 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters));
         }
 
+        /// <summary>
+        /// Tính tổng doanh thu từ các đơn hàng đã hoàn thành
+        /// </summary>
+        public decimal GetTongDoanhThu()
+        {
+            string query = @"SELECT ISNULL(SUM(ct.THANHTIEN), 0) 
+                            FROM DON_HANG dh
+                            INNER JOIN CT_DONHANG ct ON dh.MADONHANG = ct.MADONHANG
+                            WHERE dh.TRANGTHAI = 'Hoàn thành'";
+            var result = SqlConnectionHelper.ExecuteScalar(query);
+            return result != null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
+        }
+
+        /// <summary>
+        /// Tính doanh thu theo khoảng thời gian
+        /// </summary>
+        public decimal GetDoanhThuTheoThoiGian(DateTime tuNgay, DateTime denNgay)
+        {
+            string query = @"SELECT ISNULL(SUM(ct.THANHTIEN), 0) 
+                            FROM DON_HANG dh
+                            INNER JOIN CT_DONHANG ct ON dh.MADONHANG = ct.MADONHANG
+                            WHERE dh.TRANGTHAI = 'Hoàn thành'
+                            AND dh.NGAYDAT >= @TuNgay AND dh.NGAYDAT < @DenNgay";
+            SqlParameter[] parameters = {
+                new SqlParameter("@TuNgay", tuNgay.Date),
+                new SqlParameter("@DenNgay", denNgay.Date.AddDays(1))
+            };
+            var result = SqlConnectionHelper.ExecuteScalar(query, parameters);
+            return result != null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
+        }
+
         public string GenerateNewId()
         {
             // Lấy số lớn nhất từ các mã đơn hàng có dạng DHxxx
@@ -156,6 +187,66 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             } while (Exists(newId)); // Đảm bảo mã chưa tồn tại
             
             return newId;
+        }
+
+        /// <summary>
+        /// Lấy đơn hàng của khách hàng kèm tổng tiền
+        /// </summary>
+        public List<DonHang> GetByKhachHangWithTotal(string maKh)
+        {
+            string query = @"SELECT dh.*, kh.HOTENKH as Hotenkh,
+                            ISNULL((SELECT SUM(ct.THANHTIEN) FROM CT_DONHANG ct WHERE ct.MADONHANG = dh.MADONHANG), 0) as TongTien
+                            FROM DON_HANG dh
+                            LEFT JOIN KHACH_HANG kh ON dh.MAKH = kh.MAKH
+                            WHERE dh.MAKH = @MaKh ORDER BY dh.NGAYDAT DESC";
+            SqlParameter[] parameters = { new SqlParameter("@MaKh", maKh) };
+            return MapDataTableToListWithTotal(SqlConnectionHelper.ExecuteQuery(query, parameters));
+        }
+
+        /// <summary>
+        /// Tính tổng chi tiêu của khách hàng (chỉ đơn hoàn thành)
+        /// </summary>
+        public decimal GetTongChiTieuKhachHang(string maKh)
+        {
+            string query = @"SELECT ISNULL(SUM(ct.THANHTIEN), 0) 
+                            FROM DON_HANG dh
+                            INNER JOIN CT_DONHANG ct ON dh.MADONHANG = ct.MADONHANG
+                            WHERE dh.MAKH = @MaKh AND (dh.TRANGTHAI = N'Hoàn thành' OR dh.TRANGTHAI = N'Đã giao')";
+            SqlParameter[] parameters = { new SqlParameter("@MaKh", maKh) };
+            var result = SqlConnectionHelper.ExecuteScalar(query, parameters);
+            return result != null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
+        }
+
+        private List<DonHang> MapDataTableToListWithTotal(DataTable dt)
+        {
+            var list = new List<DonHang>();
+            foreach (DataRow row in dt.Rows)
+            {
+                var dh = new DonHang
+                {
+                    Madonhang = row["MADONHANG"].ToString() ?? "",
+                    Makh = row["MAKH"].ToString() ?? "",
+                    Nguoiduyetid = row["NGUOIDUYETID"] != DBNull.Value ? row["NGUOIDUYETID"].ToString() : null,
+                    Ghichu = row["GHICHU"] != DBNull.Value ? row["GHICHU"].ToString() : null,
+                    Trangthai = row["TRANGTHAI"] != DBNull.Value ? row["TRANGTHAI"].ToString() : null,
+                    Ngaydat = Convert.ToDateTime(row["NGAYDAT"])
+                };
+
+                if (dt.Columns.Contains("Hotenkh") && row["Hotenkh"] != DBNull.Value)
+                {
+                    dh.MakhNavigation = new KhachHang { Makh = dh.Makh, Hotenkh = row["Hotenkh"].ToString() };
+                }
+                
+                // Lưu tổng tiền vào CtDonhangs (tạm thời)
+                if (dt.Columns.Contains("TongTien") && row["TongTien"] != DBNull.Value)
+                {
+                    var tongTien = Convert.ToDecimal(row["TongTien"]);
+                    dh.CtDonhangs = new List<CtDonhang> { new CtDonhang { Thanhtien = tongTien } };
+                }
+                
+                list.Add(dh);
+            }
+            return list;
         }
 
         private List<DonHang> MapDataTableToList(DataTable dt)

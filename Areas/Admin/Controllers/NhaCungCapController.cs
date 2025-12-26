@@ -11,19 +11,18 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
     {
         private readonly NhaCungCapBLL _bll = new NhaCungCapBLL();
 
-        public IActionResult Index(string? searchName, string? searchPhone)
+        public IActionResult Index(string? search)
         {
             var list = _bll.GetAll();
-            if (!string.IsNullOrEmpty(searchName))
+            if (!string.IsNullOrEmpty(search))
             {
-                list = list.Where(n => n.Tenncc != null && n.Tenncc.Contains(searchName, StringComparison.OrdinalIgnoreCase)).ToList();
-                ViewBag.SearchName = searchName;
+                list = list.Where(n => 
+                    (n.Mancc != null && n.Mancc.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                    (n.Tenncc != null && n.Tenncc.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                    (n.Sdtncc != null && n.Sdtncc.Contains(search))
+                ).ToList();
             }
-            if (!string.IsNullOrEmpty(searchPhone))
-            {
-                list = list.Where(n => n.Sdtncc != null && n.Sdtncc.Contains(searchPhone)).ToList();
-                ViewBag.SearchPhone = searchPhone;
-            }
+            ViewBag.Search = search;
             return View(list);
         }
 

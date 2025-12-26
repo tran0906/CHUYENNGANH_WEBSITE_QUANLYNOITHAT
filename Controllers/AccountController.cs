@@ -518,12 +518,25 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 });
             }
 
+            // Hoàn lại số lượng tồn kho trước khi hủy
+            var chiTietDonHang = _ctDonhangBLL.GetByDonHang(orderId);
+            var sanPhamBLL = new SanPhamBLL();
+            foreach (var ct in chiTietDonHang)
+            {
+                var sanPham = sanPhamBLL.GetById(ct.Masp);
+                if (sanPham != null)
+                {
+                    sanPham.Soluongton = (sanPham.Soluongton ?? 0) + ct.Soluong;
+                    sanPhamBLL.Update(sanPham);
+                }
+            }
+
             // Cập nhật trạng thái đơn hàng thành "Đã hủy"
             var (success, message) = _donHangBLL.UpdateTrangThai(orderId, "Đã hủy");
             
             if (success)
             {
-                return Json(new { success = true, message = "Hủy đơn hàng thành công" });
+                return Json(new { success = true, message = "Hủy đơn hàng thành công. Số lượng sản phẩm đã được hoàn lại kho." });
             }
 
             return Json(new { success = false, message = message });

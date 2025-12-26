@@ -71,12 +71,36 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
+        public PhieuXuatKho? GetByDonHang(string maDonHang)
+        {
+            string query = @"SELECT px.*, u.HoTen as TenNguoiTao
+                            FROM PHIEU_XUAT_KHO px
+                            LEFT JOIN [User] u ON px.USERID = u.UserId
+                            WHERE px.MADONHANG = @MaDonHang";
+            SqlParameter[] parameters = { new SqlParameter("@MaDonHang", maDonHang) };
+            return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query, parameters)).FirstOrDefault();
+        }
+
         public string GenerateNewId()
         {
             var result = SqlConnectionHelper.ExecuteScalar("SELECT MAX(MAPHIEUXUAT) FROM PHIEU_XUAT_KHO WHERE MAPHIEUXUAT LIKE 'PX%'");
             if (result == null || result == DBNull.Value) return "PX001";
-            int num = int.Parse(result.ToString()!.Substring(2)) + 1;
-            return $"PX{num:D3}";
+            
+            string maxId = result.ToString() ?? "";
+            // Chỉ lấy phần số sau "PX"
+            if (maxId.Length > 2 && maxId.StartsWith("PX"))
+            {
+                string numPart = maxId.Substring(2);
+                if (int.TryParse(numPart, out int num))
+                {
+                    return $"PX{(num + 1):D3}";
+                }
+            }
+            
+            // Fallback: đếm số lượng record + 1
+            var countResult = SqlConnectionHelper.ExecuteScalar("SELECT COUNT(*) FROM PHIEU_XUAT_KHO");
+            int count = countResult != null && countResult != DBNull.Value ? Convert.ToInt32(countResult) : 0;
+            return $"PX{(count + 1):D3}";
         }
 
         private List<PhieuXuatKho> MapDataTableToList(DataTable dt)

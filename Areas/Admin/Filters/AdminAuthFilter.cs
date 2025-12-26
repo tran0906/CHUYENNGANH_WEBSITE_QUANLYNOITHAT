@@ -4,6 +4,12 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Filters
 {
     /// <summary>
+    /// Marker attribute để bỏ qua AdminOnlyFilter
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method)]
+    public class SkipAdminOnlyFilterAttribute : Attribute { }
+
+    /// <summary>
     /// Filter kiểm tra đăng nhập Admin
     /// </summary>
     public class AdminAuthFilter : ActionFilterAttribute
@@ -30,6 +36,18 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Filters
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
+            // Kiểm tra nếu action có SkipAdminOnlyFilter thì bỏ qua
+            var actionDescriptor = context.ActionDescriptor as Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor;
+            if (actionDescriptor != null)
+            {
+                var hasSkipAttribute = actionDescriptor.MethodInfo.GetCustomAttributes(typeof(SkipAdminOnlyFilterAttribute), false).Any();
+                if (hasSkipAttribute)
+                {
+                    base.OnActionExecuting(context);
+                    return;
+                }
+            }
+
             var session = context.HttpContext.Session;
             var adminUserId = session.GetString("AdminUserId");
             var vaiTro = session.GetString("AdminVaiTro");

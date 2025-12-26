@@ -139,9 +139,13 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
         #endregion
 
         #region Top sản phẩm bán chạy - sp_TopSanPhamBanChay
-        public DataTable TopSanPhamBanChay(int top = 10)
+        public DataTable TopSanPhamBanChay(int top = 10, int? nam = null)
         {
-            SqlParameter[] parameters = { new SqlParameter("@TOP", top) };
+            nam ??= DateTime.Now.Year;
+            SqlParameter[] parameters = { 
+                new SqlParameter("@TOP", top),
+                new SqlParameter("@NAM", nam)
+            };
             return SqlConnectionHelper.ExecuteStoredProcedure("sp_TopSanPhamBanChay", parameters);
         }
         #endregion

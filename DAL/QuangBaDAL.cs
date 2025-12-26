@@ -64,6 +64,47 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        /// <summary>
+        /// Lấy % giảm giá của SP nếu đang trong đợt quảng bá đang diễn ra
+        /// </summary>
+        public int? GetPhanTramGiam(string masp)
+        {
+            string query = @"SELECT TOP 1 qbs.PHANTRAMGIAM 
+                            FROM QUAN_BA_SP qbs
+                            INNER JOIN QUANGBA qb ON qbs.MADOTGIAMGIA = qb.MADOTGIAMGIA
+                            WHERE qb.MASP = @Masp 
+                            AND qbs.NGAYBATDAU <= GETDATE() 
+                            AND qbs.NGAYKETTHUC >= GETDATE()
+                            AND qbs.PHANTRAMGIAM > 0
+                            ORDER BY qbs.PHANTRAMGIAM DESC";
+            SqlParameter[] parameters = { new SqlParameter("@Masp", masp) };
+            var result = SqlConnectionHelper.ExecuteScalar(query, parameters);
+            return result != null && result != DBNull.Value ? Convert.ToInt32(result) : null;
+        }
+
+        /// <summary>
+        /// Lấy danh sách tất cả SP đang được quảng bá (đợt đang diễn ra)
+        /// </summary>
+        public Dictionary<string, int> GetAllPromotedProducts()
+        {
+            string query = @"SELECT qb.MASP, qbs.PHANTRAMGIAM 
+                            FROM QUANGBA qb
+                            INNER JOIN QUAN_BA_SP qbs ON qb.MADOTGIAMGIA = qbs.MADOTGIAMGIA
+                            WHERE qbs.NGAYBATDAU <= GETDATE() 
+                            AND qbs.NGAYKETTHUC >= GETDATE()
+                            AND qbs.PHANTRAMGIAM > 0";
+            var dt = SqlConnectionHelper.ExecuteQuery(query);
+            var dict = new Dictionary<string, int>();
+            foreach (DataRow row in dt.Rows)
+            {
+                var masp = row["MASP"].ToString() ?? "";
+                var phantram = Convert.ToInt32(row["PHANTRAMGIAM"]);
+                if (!dict.ContainsKey(masp) || dict[masp] < phantram)
+                    dict[masp] = phantram;
+            }
+            return dict;
+        }
+
         private List<SanPham> MapSanPhamList(DataTable dt)
         {
             var list = new List<SanPham>();

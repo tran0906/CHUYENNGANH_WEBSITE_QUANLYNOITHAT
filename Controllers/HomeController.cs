@@ -10,7 +10,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly SanPhamBLL _sanPhamBLL = new SanPhamBLL();
         private readonly NhomSanPhamBLL _nhomSanPhamBLL = new NhomSanPhamBLL();
-        private readonly MucDichSuDungBLL _mucDichBLL = new MucDichSuDungBLL();
+        private readonly QuangBaBLL _quangBaBLL = new QuangBaBLL();
 
         public HomeController(ILogger<HomeController> logger)
         {
@@ -28,8 +28,8 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 .Take(4)
                 .ToList();
 
-            // Lấy danh mục mục đích sử dụng (quà biếu, tân gia, khai trương...)
-            ViewBag.MucDichList = _mucDichBLL.GetAll();
+            // Lấy danh sách SP đang được quảng bá (MASP -> % giảm)
+            ViewBag.PromotedProducts = _quangBaBLL.GetAllPromotedProducts();
             ViewBag.Categories = _nhomSanPhamBLL.GetAll();
 
             return View();

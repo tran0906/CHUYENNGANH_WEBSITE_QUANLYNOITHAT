@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.BLL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
+using DOANCHUYENNGANH_WEB_QLNOITHAT.Services;
 using System.Text.Json;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
@@ -21,8 +22,15 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         private readonly KhachHangBLL _khachHangBLL = new KhachHangBLL();
         private readonly DonHangBLL _donHangBLL = new DonHangBLL();
         private readonly CtDonhangBLL _ctDonhangBLL = new CtDonhangBLL();
+        private readonly ThanhToanBLL _thanhToanBLL = new ThanhToanBLL();
+        private readonly MoMoService _momoService;
         private const string CartCookieKey = "ShoppingCart";
         private const string CartSessionKey = "CartItems";
+
+        public CartController(IConfiguration configuration)
+        {
+            _momoService = new MoMoService(configuration);
+        }
 
         private List<CartItem> GetCartItems()
         {
@@ -62,6 +70,23 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         public IActionResult Index()
         {
             var cartItems = GetCartItems();
+            
+            // Cập nhật giá mới nhất (bao gồm giá khuyến mãi) cho từng sản phẩm
+            bool hasChanges = false;
+            foreach (var item in cartItems)
+            {
+                var product = _sanPhamBLL.GetByIdWithPromotion(item.Masp);
+                if (product != null && product.Giaban.HasValue && item.Giaban != product.Giaban.Value)
+                {
+                    item.Giaban = product.Giaban.Value;
+                    hasChanges = true;
+                }
+            }
+            if (hasChanges)
+            {
+                SaveCartItems(cartItems);
+            }
+            
             ViewBag.TotalAmount = cartItems.Sum(i => i.Thanhtien);
             return View(cartItems);
         }
@@ -70,18 +95,37 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         [Route("gio-hang/them")]
         public IActionResult AddToCart(string productId, int quantity = 1)
         {
-            var product = _sanPhamBLL.GetById(productId);
+            // Sử dụng GetByIdWithPromotion để lấy giá đã giảm (nếu có)
+            var product = _sanPhamBLL.GetByIdWithPromotion(productId);
             if (product == null)
             {
                 return Json(new { success = false, message = "Sản phẩm không tồn tại" });
             }
 
+            // Kiểm tra sản phẩm còn hàng không
+            if (product.Soluongton <= 0)
+            {
+                return Json(new { success = false, message = "Sản phẩm đã hết hàng" });
+            }
+
             var cartItems = GetCartItems();
             var existingItem = cartItems.FirstOrDefault(i => i.Masp == productId);
+
+            // Kiểm tra tổng số lượng trong giỏ + số lượng thêm có vượt quá tồn kho không
+            var currentQtyInCart = existingItem?.Soluong ?? 0;
+            if (currentQtyInCart + quantity > product.Soluongton)
+            {
+                return Json(new { 
+                    success = false, 
+                    message = $"Không đủ hàng! Còn lại {product.Soluongton} sản phẩm, trong giỏ đã có {currentQtyInCart}" 
+                });
+            }
 
             if (existingItem != null)
             {
                 existingItem.Soluong += quantity;
+                // Cập nhật giá mới nhất khi thêm số lượng
+                existingItem.Giaban = product.Giaban ?? 0;
             }
             else
             {
@@ -101,6 +145,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                     }
                 }
                 
+                // Giaban đã được tính giảm giá trong GetByIdWithPromotion
                 cartItems.Add(new CartItem
                 {
                     Masp = product.Masp!,
@@ -116,7 +161,10 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return Json(new { 
                 success = true, 
                 message = "Đã thêm sản phẩm vào giỏ hàng",
-                cartCount = cartItems.Sum(i => i.Soluong)
+                cartCount = cartItems.Sum(i => i.Soluong),
+                price = product.Giaban,
+                originalPrice = product.GiaGoc,
+                discount = product.PhanTramGiam
             });
         }
 
@@ -130,9 +178,29 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             if (item != null)
             {
                 if (quantity <= 0)
+                {
                     cartItems.Remove(item);
+                }
                 else
+                {
+                    // Kiểm tra tồn kho trước khi cập nhật
+                    var product = _sanPhamBLL.GetById(productId);
+                    if (product == null)
+                    {
+                        return Json(new { success = false, message = "Sản phẩm không tồn tại" });
+                    }
+                    
+                    if (quantity > product.Soluongton)
+                    {
+                        return Json(new { 
+                            success = false, 
+                            message = $"Không đủ hàng! Chỉ còn {product.Soluongton} sản phẩm",
+                            maxQuantity = product.Soluongton
+                        });
+                    }
+                    
                     item.Soluong = quantity;
+                }
                 SaveCartItems(cartItems);
             }
 
@@ -189,6 +257,22 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 return RedirectToAction("Index");
             }
 
+            // Cập nhật giá mới nhất (bao gồm giá khuyến mãi) cho từng sản phẩm
+            bool hasChanges = false;
+            foreach (var item in cartItems)
+            {
+                var product = _sanPhamBLL.GetByIdWithPromotion(item.Masp);
+                if (product != null && product.Giaban.HasValue && item.Giaban != product.Giaban.Value)
+                {
+                    item.Giaban = product.Giaban.Value;
+                    hasChanges = true;
+                }
+            }
+            if (hasChanges)
+            {
+                SaveCartItems(cartItems);
+            }
+
             ViewBag.TotalAmount = cartItems.Sum(i => i.Thanhtien);
             ViewBag.Customer = _khachHangBLL.GetById(customerId);
             return View(cartItems);
@@ -196,7 +280,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
 
         [HttpPost]
         [Route("dat-hang")]
-        public IActionResult PlaceOrder(string? ghichu)
+        public async Task<IActionResult> PlaceOrder(string? ghichu, string? paymentMethod, string? diachigiaohang)
         {
             try
             {
@@ -213,17 +297,71 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                     return RedirectToAction("Index");
                 }
 
-                // Tạo mã đơn hàng mới
+                // Kiểm tra địa chỉ giao hàng
+                if (string.IsNullOrWhiteSpace(diachigiaohang))
+                {
+                    TempData["Error"] = "Vui lòng nhập đầy đủ địa chỉ giao hàng";
+                    return RedirectToAction("Checkout");
+                }
+
+                // Tính tổng tiền
+                var totalAmount = cartItems.Sum(i => i.Thanhtien);
+                var requireDeposit = totalAmount >= 2000000; // Đơn >= 2 triệu yêu cầu đặt cọc qua MoMo
+                var isMoMo = paymentMethod == "momo";
+                
+                // Xác định trạng thái và ghi chú thanh toán
+                string trangThai;
+                string paymentNote = "";
+                bool shouldDeductStock = true;
+                decimal payAmount = totalAmount; // Số tiền cần thanh toán
+                
+                // Đơn >= 2 triệu bắt buộc thanh toán MoMo
+                if (requireDeposit && !isMoMo)
+                {
+                    TempData["Error"] = "Đơn hàng từ 2.000.000₫ trở lên yêu cầu đặt cọc 20% qua MoMo";
+                    return RedirectToAction("Checkout");
+                }
+                
+                if (isMoMo)
+                {
+                    // Thanh toán MoMo
+                    trangThai = "Chờ thanh toán";
+                    shouldDeductStock = false;
+                    
+                    if (requireDeposit)
+                    {
+                        payAmount = Math.Round(totalAmount * 0.2m, 0);
+                        var remainingAmount = totalAmount - payAmount;
+                        paymentNote = $"[MOMO - ĐẶT CỌC 20%: {payAmount:N0}₫ | CÒN LẠI: {remainingAmount:N0}₫]";
+                    }
+                    else
+                    {
+                        paymentNote = $"[MOMO: {totalAmount:N0}₫]";
+                    }
+                }
+                else
+                {
+                    // COD - Thanh toán khi nhận hàng
+                    trangThai = "Chờ xác nhận";
+                    paymentNote = "[COD]";
+                    shouldDeductStock = true;
+                }
+                
+                var fullNote = $"[ĐỊA CHỈ GIAO HÀNG: {diachigiaohang}] {paymentNote}";
+                if (!string.IsNullOrEmpty(ghichu))
+                {
+                    fullNote += $" [GHI CHÚ: {ghichu}]";
+                }
+
                 var newOrderId = _donHangBLL.GenerateNewId();
 
-                // Tạo đơn hàng từ website
                 var order = new DonHang
                 {
                     Madonhang = newOrderId,
                     Makh = customerId,
                     Ngaydat = DateTime.Now,
-                    Trangthai = "Chờ xác nhận",
-                    Ghichu = ghichu
+                    Trangthai = trangThai,
+                    Ghichu = fullNote
                 };
 
                 var (success, message) = _donHangBLL.Insert(order);
@@ -236,6 +374,14 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 // Tạo chi tiết đơn hàng
                 foreach (var item in cartItems)
                 {
+                    var product = _sanPhamBLL.GetById(item.Masp);
+                    if (product == null || product.Soluongton < item.Soluong)
+                    {
+                        _donHangBLL.Delete(newOrderId);
+                        TempData["Error"] = $"Sản phẩm '{item.Tensp}' không đủ số lượng tồn kho (còn {product?.Soluongton ?? 0})";
+                        return RedirectToAction("Checkout");
+                    }
+
                     var ctDonhang = new CtDonhang
                     {
                         Madonhang = newOrderId,
@@ -245,9 +391,48 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                         Thanhtien = item.Thanhtien
                     };
                     _ctDonhangBLL.Insert(ctDonhang);
+
+                    if (shouldDeductStock)
+                    {
+                        product.Soluongton = (product.Soluongton ?? 0) - item.Soluong;
+                        _sanPhamBLL.Update(product);
+                    }
                 }
 
-                // Xóa giỏ hàng
+                // Nếu thanh toán MoMo, redirect sang MoMo TRƯỚC khi xóa giỏ hàng
+                if (isMoMo)
+                {
+                    // Tạo URL động dựa trên request hiện tại
+                    var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                    var redirectUrl = $"{baseUrl}/thanh-toan/momo-return";
+                    var ipnUrl = $"{baseUrl}/thanh-toan/momo-ipn";
+                    
+                    var orderInfo = $"Thanh toan don hang {newOrderId}";
+                    var (momoSuccess, payUrl, momoMessage) = await _momoService.CreatePaymentAsync(
+                        newOrderId, 
+                        payAmount, 
+                        orderInfo,
+                        "",
+                        redirectUrl,
+                        ipnUrl
+                    );
+
+                    if (momoSuccess && !string.IsNullOrEmpty(payUrl))
+                    {
+                        // MoMo thành công - xóa giỏ hàng và redirect
+                        SaveCartItems(new List<CartItem>());
+                        return Redirect(payUrl);
+                    }
+                    else
+                    {
+                        // MoMo lỗi - xóa đơn hàng, GIỮ giỏ hàng và báo lỗi
+                        _donHangBLL.Delete(newOrderId);
+                        TempData["Error"] = $"Không thể kết nối MoMo: {momoMessage}. Vui lòng thử lại hoặc chọn phương thức thanh toán khác.";
+                        return RedirectToAction("Checkout");
+                    }
+                }
+
+                // Xóa giỏ hàng (cho COD và chuyển khoản thường)
                 SaveCartItems(new List<CartItem>());
 
                 TempData["Success"] = $"Đặt hàng thành công! Mã đơn hàng: {newOrderId}";
@@ -261,16 +446,151 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         }
 
         [Route("dat-hang-thanh-cong")]
-        public IActionResult OrderSuccess(string orderId)
+        public IActionResult OrderSuccess(string? orderId)
         {
+            if (string.IsNullOrEmpty(orderId))
+            {
+                TempData["Error"] = "Không tìm thấy mã đơn hàng";
+                return RedirectToAction("Index", "Home");
+            }
+            
             var order = _donHangBLL.GetById(orderId);
             if (order == null)
             {
-                return NotFound();
+                TempData["Error"] = "Đơn hàng không tồn tại";
+                return RedirectToAction("Index", "Home");
             }
 
             order.CtDonhangs = _ctDonhangBLL.GetByDonHang(orderId);
             return View(order);
+        }
+
+        /// <summary>
+        /// MoMo redirect về sau khi thanh toán
+        /// </summary>
+        [Route("thanh-toan/momo-return")]
+        public IActionResult MoMoReturn(
+            string? partnerCode, string? orderId, string? requestId,
+            long amount, string? orderInfo, string? orderType,
+            long transId, int resultCode, string? message,
+            string? payType, long responseTime, string? extraData, string? signature)
+        {
+            // Log để debug
+            System.Diagnostics.Debug.WriteLine($"MoMo Return - orderId: {orderId}, resultCode: {resultCode}, transId: {transId}");
+            
+            // Kiểm tra orderId có tồn tại không
+            if (string.IsNullOrEmpty(orderId))
+            {
+                TempData["Error"] = "Không tìm thấy mã đơn hàng từ MoMo";
+                return RedirectToAction("Index", "Home");
+            }
+            
+            // Kiểm tra kết quả thanh toán
+            if (resultCode == 0)
+            {
+                // Thanh toán thành công - cập nhật đơn hàng
+                var order = _donHangBLL.GetById(orderId);
+                if (order != null && order.Trangthai == "Chờ thanh toán")
+                {
+                    // Cập nhật trạng thái đơn hàng
+                    order.Trangthai = "Đã xác nhận";
+                    order.Ghichu += $" [MOMO ĐÃ THANH TOÁN - MÃ GD: {transId}]";
+                    _donHangBLL.Update(order);
+
+                    // Tạo bản ghi thanh toán với phương thức MoMo
+                    var thanhToan = new ThanhToan
+                    {
+                        Mathanhtoan = _thanhToanBLL.GenerateNewId(),
+                        Madonhang = orderId,
+                        Userid = order.Makh, // Mã khách hàng
+                        Sotien = amount,
+                        Phuongthuc = "MoMo",
+                        Ngaythanhtoan = DateTime.Now
+                    };
+                    _thanhToanBLL.Insert(thanhToan);
+
+                    // Trừ tồn kho
+                    var chiTiet = _ctDonhangBLL.GetByDonHang(orderId);
+                    foreach (var ct in chiTiet)
+                    {
+                        var product = _sanPhamBLL.GetById(ct.Masp!);
+                        if (product != null)
+                        {
+                            product.Soluongton = (product.Soluongton ?? 0) - (ct.Soluong ?? 0);
+                            _sanPhamBLL.Update(product);
+                        }
+                    }
+
+                    TempData["Success"] = $"Thanh toán MoMo thành công! Mã giao dịch: {transId}";
+                }
+            }
+            else
+            {
+                // Thanh toán thất bại
+                TempData["Error"] = $"Thanh toán MoMo thất bại: {message}";
+            }
+
+            // Redirect trực tiếp đến trang OrderSuccess với orderId
+            return Redirect($"/dat-hang-thanh-cong?orderId={orderId}");
+        }
+
+        /// <summary>
+        /// MoMo IPN callback (server-to-server)
+        /// </summary>
+        [HttpPost]
+        [Route("thanh-toan/momo-ipn")]
+        public IActionResult MoMoIpn([FromBody] MoMoIpnRequest request)
+        {
+            try
+            {
+                // Xác thực chữ ký
+                if (!_momoService.VerifySignature(request))
+                {
+                    return BadRequest(new { resultCode = 1, message = "Invalid signature" });
+                }
+
+                if (request.resultCode == 0)
+                {
+                    // Thanh toán thành công
+                    var order = _donHangBLL.GetById(request.orderId);
+                    if (order != null && order.Trangthai == "Chờ thanh toán")
+                    {
+                        order.Trangthai = "Đã xác nhận";
+                        order.Ghichu += $" [MOMO IPN - MÃ GD: {request.transId}]";
+                        _donHangBLL.Update(order);
+
+                        // Tạo bản ghi thanh toán với phương thức MoMo
+                        var thanhToan = new ThanhToan
+                        {
+                            Mathanhtoan = _thanhToanBLL.GenerateNewId(),
+                            Madonhang = request.orderId,
+                            Userid = order.Makh,
+                            Sotien = request.amount,
+                            Phuongthuc = "MoMo",
+                            Ngaythanhtoan = DateTime.Now
+                        };
+                        _thanhToanBLL.Insert(thanhToan);
+
+                        // Trừ tồn kho
+                        var chiTiet = _ctDonhangBLL.GetByDonHang(request.orderId);
+                        foreach (var ct in chiTiet)
+                        {
+                            var product = _sanPhamBLL.GetById(ct.Masp!);
+                            if (product != null)
+                            {
+                                product.Soluongton = (product.Soluongton ?? 0) - (ct.Soluong ?? 0);
+                                _sanPhamBLL.Update(product);
+                            }
+                        }
+                    }
+                }
+
+                return Ok(new { resultCode = 0, message = "OK" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { resultCode = 1, message = ex.Message });
+            }
         }
 
         [HttpGet]
@@ -279,6 +599,21 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         {
             var cartItems = GetCartItems();
             return Json(new { count = cartItems.Sum(i => i.Soluong) });
+        }
+
+        /// <summary>
+        /// Lấy thông tin tồn kho của sản phẩm
+        /// </summary>
+        [HttpGet]
+        [Route("gio-hang/ton-kho/{productId}")]
+        public IActionResult GetStock(string productId)
+        {
+            var product = _sanPhamBLL.GetById(productId);
+            if (product == null)
+            {
+                return Json(new { success = false, stock = 0 });
+            }
+            return Json(new { success = true, stock = product.Soluongton ?? 0 });
         }
     }
 }

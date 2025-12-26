@@ -13,23 +13,22 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
         private readonly PhieuXuatKhoBLL _bll = new PhieuXuatKhoBLL();
         private readonly DonHangBLL _donHangBLL = new DonHangBLL();
         private readonly UserBLL _userBLL = new UserBLL();
+        private readonly CtDonhangBLL _ctDonhangBLL = new CtDonhangBLL();
+        private readonly KhachHangBLL _khachHangBLL = new KhachHangBLL();
 
-        public IActionResult Index(string? searchMaPhieu, string? searchMaDon)
+        public IActionResult Index(string? search)
         {
             var list = _bll.GetAll();
 
-            if (!string.IsNullOrEmpty(searchMaPhieu))
+            if (!string.IsNullOrEmpty(search))
             {
-                list = list.Where(p => p.Maphieuxuat.Contains(searchMaPhieu, StringComparison.OrdinalIgnoreCase)).ToList();
+                list = list.Where(p => 
+                    p.Maphieuxuat.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (p.Madonhang != null && p.Madonhang.Contains(search, StringComparison.OrdinalIgnoreCase))
+                ).ToList();
             }
 
-            if (!string.IsNullOrEmpty(searchMaDon))
-            {
-                list = list.Where(p => p.Madonhang != null && p.Madonhang.Contains(searchMaDon, StringComparison.OrdinalIgnoreCase)).ToList();
-            }
-
-            ViewBag.SearchMaPhieu = searchMaPhieu;
-            ViewBag.SearchMaDon = searchMaDon;
+            ViewBag.Search = search;
 
             return View(list);
         }
@@ -118,6 +117,46 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
             else
                 TempData["Error"] = message;
             return RedirectToAction(nameof(Index));
+        }
+
+        // GET: In phiếu xuất kho
+        public IActionResult Print(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+            
+            var phieuXuat = _bll.GetById(id);
+            if (phieuXuat == null) return NotFound();
+            
+            // Lấy thông tin đơn hàng
+            var donHang = _donHangBLL.GetById(phieuXuat.Madonhang);
+            if (donHang != null)
+            {
+                donHang.CtDonhangs = _ctDonhangBLL.GetByDonHang(phieuXuat.Madonhang);
+                phieuXuat.MadonhangNavigation = donHang;
+            }
+            
+            // Lấy thông tin người duyệt
+            if (!string.IsNullOrEmpty(phieuXuat.Manvduyet))
+            {
+                ViewBag.NguoiDuyet = _userBLL.GetById(phieuXuat.Manvduyet);
+            }
+            
+            return View(phieuXuat);
+        }
+
+        // GET: In phiếu xuất kho theo mã đơn hàng
+        public IActionResult PrintByDonHang(string maDonHang)
+        {
+            if (string.IsNullOrEmpty(maDonHang)) return NotFound();
+            
+            var phieuXuat = _bll.GetByDonHang(maDonHang);
+            if (phieuXuat == null)
+            {
+                TempData["Error"] = "Đơn hàng này chưa có phiếu xuất kho";
+                return RedirectToAction("Details", "DonHang", new { id = maDonHang });
+            }
+            
+            return RedirectToAction(nameof(Print), new { id = phieuXuat.Maphieuxuat });
         }
     }
 }

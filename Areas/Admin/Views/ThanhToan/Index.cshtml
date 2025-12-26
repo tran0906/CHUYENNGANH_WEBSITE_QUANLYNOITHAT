@@ -2,8 +2,8 @@
 @{ ViewData["Title"] = "Quản lý thanh toán"; }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Quản lý thanh toán</h2>
-    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+    <h2><i class="bi bi-credit-card"></i> Quản lý thanh toán</h2>
+    <span class="text-muted small"><i class="bi bi-info-circle"></i> Dữ liệu được tạo tự động khi khách thanh toán</span>
 </div>
 
 <!-- Form lọc -->
@@ -12,14 +12,34 @@
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-4">
                 <label class="form-label">Lọc theo phương thức thanh toán</label>
+                @{
+                    var currentPT = ViewBag.CurrentPhuongThuc as string;
+                }
                 <select name="phuongThuc" class="form-select">
                     <option value="">-- Tất cả --</option>
-                    @if (ViewBag.PhuongThucList != null)
+                    @if (currentPT == "MoMo")
                     {
-                        foreach (var pt in ViewBag.PhuongThucList)
-                        {
-                            <option value="@pt" selected="@(ViewBag.CurrentPhuongThuc == pt)">@pt</option>
-                        }
+                        <option value="MoMo" selected>MoMo - Ví điện tử</option>
+                    }
+                    else
+                    {
+                        <option value="MoMo">MoMo - Ví điện tử</option>
+                    }
+                    @if (currentPT == "COD")
+                    {
+                        <option value="COD" selected>COD - Thanh toán khi nhận hàng</option>
+                    }
+                    else
+                    {
+                        <option value="COD">COD - Thanh toán khi nhận hàng</option>
+                    }
+                    @if (currentPT == "Tiền mặt")
+                    {
+                        <option value="Tiền mặt" selected>Tiền mặt - Thanh toán trực tiếp</option>
+                    }
+                    else
+                    {
+                        <option value="Tiền mặt">Tiền mặt - Thanh toán trực tiếp</option>
                     }
                 </select>
             </div>
@@ -32,43 +52,54 @@
 </div>
 
 <div class="card">
-    <div class="card-body">
-        <div class="table-responsive-scroll">
-        <table class="table table-striped table-hover table-paginated">
+    <div class="card-header">
+        <i class="bi bi-list-ul"></i> Danh sách thanh toán (@Model.Count())
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
             <thead class="table-dark">
                 <tr>
                     <th>Mã TT</th>
                     <th>Mã đơn hàng</th>
-                    <th>Nhân viên</th>
                     <th>Số tiền</th>
                     <th>Phương thức</th>
-                    <th>Ngày TT</th>
-                    <th>Thao tác</th>
+                    <th>Ngày thanh toán</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
+                @if (!Model.Any())
                 {
                     <tr>
-                        <td>@item.Mathanhtoan</td>
-                        <td>@item.Madonhang</td>
-                        <td>@item.User?.HoTen</td>
-                        <td>@item.Sotien?.ToString("N0") đ</td>
-                        <td>@item.Phuongthuc</td>
-                        <td>@item.Ngaythanhtoan?.ToString("dd/MM/yyyy")</td>
-                        <td>
-                            <a asp-action="Details" asp-route-id="@item.Mathanhtoan" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
-                            <a asp-action="Edit" asp-route-id="@item.Mathanhtoan" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                            <a asp-action="Delete" asp-route-id="@item.Mathanhtoan" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Không có dữ liệu thanh toán
                         </td>
+                    </tr>
+                }
+                @foreach (var item in Model)
+                {
+                    var badgeClass = item.Phuongthuc switch
+                    {
+                        "MoMo" => "bg-danger",
+                        "COD" => "bg-success",
+                        "Tiền mặt" => "bg-secondary",
+                        _ => "bg-secondary"
+                    };
+                    <tr>
+                        <td><strong>@item.Mathanhtoan</strong></td>
+                        <td>
+                            <a asp-controller="DonHang" asp-action="Details" asp-route-id="@item.Madonhang" class="text-decoration-none">
+                                @item.Madonhang
+                            </a>
+                        </td>
+                        <td class="fw-bold text-success">@item.Sotien?.ToString("N0") đ</td>
+                        <td><span class="badge @badgeClass">@item.Phuongthuc</span></td>
+                        <td>@item.Ngaythanhtoan?.ToString("dd/MM/yyyy HH:mm")</td>
                     </tr>
                 }
             </tbody>
         </table>
         </div>
-        @if (!Model.Any())
-        {
-            <div class="text-center text-muted py-3">Không có dữ liệu</div>
-        }
     </div>
 </div>

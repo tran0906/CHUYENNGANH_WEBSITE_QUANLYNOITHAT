@@ -3,52 +3,28 @@
     ViewData["Title"] = "Chi tiết đơn hàng";
     var tongTien = Model.CtDonhangs?.Sum(x => x.Thanhtien ?? 0) ?? 0;
     
-    // Kiểm tra quyền Admin
     var vaiTro = Context.Session.GetString("AdminVaiTro");
     var isAdmin = vaiTro == "Admin" || vaiTro == "QuanLy" || vaiTro == "Quản trị hệ thống";
     
-    // Xác định màu badge theo trạng thái - tông màu nhẹ nhàng
     var badgeClass = Model.Trangthai switch
     {
-        "Chờ xác nhận" => "status-pending",
-        "Đã xác nhận" => "status-confirmed",
-        "Đang xử lý" => "status-processing",
-        "Đang giao" => "status-shipping",
-        "Đã giao" => "status-delivered",
-        "Hoàn thành" => "status-completed",
-        "Đã hủy" => "status-cancelled",
-        _ => "status-default"
+        "Đã hủy" => "bg-danger",
+        "Hoàn thành" or "Đã giao" => "bg-success",
+        _ => "bg-secondary"
     };
 }
 
 <style>
-    /* Màu sắc nhã nhặn cho trạng thái */
-    .status-pending { background: #FEF3C7; color: #92400E; }
-    .status-confirmed { background: #DBEAFE; color: #1E40AF; }
-    .status-processing { background: #E0E7FF; color: #3730A3; }
-    .status-shipping { background: #F3E8FF; color: #6B21A8; }
-    .status-delivered { background: #D1FAE5; color: #065F46; }
-    .status-completed { background: #D1FAE5; color: #065F46; }
-    .status-cancelled { background: #FEE2E2; color: #991B1B; }
-    .status-default { background: #F1F5F9; color: #475569; }
-    
-    /* Timeline với màu nâu gỗ */
-    .order-timeline { display: flex; justify-content: space-between; margin: 20px 0; padding: 0; list-style: none; position: relative; }
-    .order-timeline::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 3px; background: #E8DDD4; z-index: 0; }
-    .order-timeline li { flex: 1; text-align: center; position: relative; z-index: 1; }
-    .order-timeline .step-icon { width: 32px; height: 32px; border-radius: 50%; background: #E8DDD4; color: #8B7355; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px; font-size: 14px; }
-    .order-timeline .step-icon.active { background: #8B4513; color: white; }
-    .order-timeline .step-icon.current { background: #A0522D; color: white; animation: pulse 1.5s infinite; }
-    .order-timeline .step-icon.cancelled { background: #B91C1C; color: white; }
-    .order-timeline .step-label { font-size: 12px; color: #8B7355; }
-    .order-timeline .step-label.active { color: #8B4513; font-weight: 600; }
-    .order-timeline .step-label.current { color: #A0522D; font-weight: 600; }
-    @@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-    .action-btn { padding: 10px 20px; border-radius: 8px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
-    
-    /* Card header màu nhẹ nhàng */
-    .card-header-wood { background: linear-gradient(135deg, #8B4513, #A0522D); color: white; }
-    .card-header-light { background: #F5DEB3; color: #5D2E0C; }
+    .card-header-main { background: #8B4513; color: white; }
+    .timeline { display: flex; justify-content: space-between; margin: 15px 0; padding: 0; list-style: none; position: relative; }
+    .timeline::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: #ddd; }
+    .timeline li { flex: 1; text-align: center; position: relative; z-index: 1; }
+    .timeline .icon { width: 30px; height: 30px; border-radius: 50%; background: #ddd; color: #666; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 5px; font-size: 12px; }
+    .timeline .icon.done { background: #8B4513; color: white; }
+    .timeline .icon.current { background: #A0522D; color: white; }
+    .timeline .icon.cancelled { background: #dc3545; color: white; }
+    .timeline .label { font-size: 11px; color: #666; }
+    .timeline .label.done, .timeline .label.current { color: #8B4513; font-weight: 600; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -59,49 +35,42 @@
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show">
-        <i class="bi bi-check-circle"></i> @TempData["Success"]
+        @TempData["Success"]
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show">
-        <i class="bi bi-exclamation-circle"></i> @TempData["Error"]
+        @TempData["Error"]
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
-<!-- Timeline trạng thái -->
+<!-- Timeline -->
 <div class="card mb-3">
-    <div class="card-body">
+    <div class="card-body py-2">
         @{
-            var steps = new[] { "Chờ xác nhận", "Đã xác nhận", "Đang xử lý", "Đang giao", "Đã giao", "Hoàn thành" };
-            var currentIndex = Array.IndexOf(steps, Model.Trangthai);
+            var steps = new[] { "Chờ xác nhận", "Đã xác nhận", "Đang xử lý", "Đang giao", "Hoàn thành" };
+            var currentIndex = Model.Trangthai == "Chờ thanh toán" ? 0 : Array.IndexOf(steps, Model.Trangthai);
+            if (Model.Trangthai == "Đã giao") currentIndex = 4;
             var isCancelled = Model.Trangthai == "Đã hủy";
         }
-        <ul class="order-timeline">
+        <ul class="timeline">
             @for (int i = 0; i < steps.Length; i++)
             {
-                var isActive = !isCancelled && i < currentIndex;
+                var isDone = !isCancelled && i < currentIndex;
                 var isCurrent = !isCancelled && i == currentIndex;
-                var iconClass = isCancelled ? "" : (isActive ? "active" : (isCurrent ? "current" : ""));
-                var labelClass = isCancelled ? "" : (isActive ? "active" : (isCurrent ? "current" : ""));
-                var icon = i switch { 0 => "bi-clock", 1 => "bi-check-lg", 2 => "bi-box-seam", 3 => "bi-truck", 4 => "bi-house-check", 5 => "bi-credit-card", _ => "bi-circle" };
-                
+                var iconClass = isCancelled ? "" : (isDone ? "done" : (isCurrent ? "current" : ""));
+                var icons = new[] { "bi-clock", "bi-check", "bi-box", "bi-truck", "bi-check-circle" };
                 <li>
-                    <div class="step-icon @iconClass @(isCancelled && i == 0 ? "cancelled" : "")">
-                        <i class="bi @(isCancelled && i == 0 ? "bi-x-lg" : icon)"></i>
+                    <div class="icon @iconClass @(isCancelled && i == 0 ? "cancelled" : "")">
+                        <i class="bi @(isCancelled && i == 0 ? "bi-x" : icons[i])"></i>
                     </div>
-                    <div class="step-label @labelClass">@steps[i]</div>
+                    <div class="label @iconClass">@steps[i]</div>
                 </li>
             }
         </ul>
-        @if (isCancelled)
-        {
-            <div class="text-center text-danger mt-2">
-                <i class="bi bi-x-circle"></i> Đơn hàng đã bị hủy
-            </div>
-        }
     </div>
 </div>
 
@@ -109,29 +78,17 @@
     <!-- Thông tin đơn hàng -->
     <div class="col-md-4">
         <div class="card mb-3">
-            <div class="card-header card-header-wood">
+            <div class="card-header card-header-main">
                 <i class="bi bi-info-circle"></i> Thông tin đơn hàng
             </div>
             <div class="card-body">
-                <table class="table table-borderless mb-0">
-                    <tr>
-                        <td class="text-muted" style="width: 120px;">Mã đơn hàng:</td>
-                        <td><strong class="text-primary">@Model.Madonhang</strong></td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted">Ngày đặt:</td>
-                        <td>@Model.Ngaydat.ToString("dd/MM/yyyy HH:mm")</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted">Trạng thái:</td>
-                        <td><span class="badge @badgeClass">@Model.Trangthai</span></td>
-                    </tr>
+                <table class="table table-sm table-borderless mb-0">
+                    <tr><td class="text-muted">Mã ĐH:</td><td><strong>@Model.Madonhang</strong></td></tr>
+                    <tr><td class="text-muted">Ngày đặt:</td><td>@Model.Ngaydat.ToString("dd/MM/yyyy HH:mm")</td></tr>
+                    <tr><td class="text-muted">Trạng thái:</td><td><span class="badge @badgeClass">@Model.Trangthai</span></td></tr>
                     @if (!string.IsNullOrEmpty(Model.Ghichu))
                     {
-                        <tr>
-                            <td class="text-muted">Ghi chú:</td>
-                            <td><em>"@Model.Ghichu"</em></td>
-                        </tr>
+                        <tr><td class="text-muted">Ghi chú:</td><td><small>@Model.Ghichu</small></td></tr>
                     }
                 </table>
             </div>
@@ -141,77 +98,39 @@
     <!-- Thông tin khách hàng -->
     <div class="col-md-4">
         <div class="card mb-3">
-            <div class="card-header card-header-wood">
-                <i class="bi bi-person"></i> Thông tin khách hàng
+            <div class="card-header card-header-main">
+                <i class="bi bi-person"></i> Khách hàng
             </div>
             <div class="card-body">
-                <table class="table table-borderless mb-0">
-                    <tr>
-                        <td class="text-muted" style="width: 100px;">Mã KH:</td>
-                        <td>@Model.Makh</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted">Họ tên:</td>
-                        <td><strong>@Model.MakhNavigation?.Hotenkh</strong></td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted">SĐT:</td>
-                        <td>@Model.MakhNavigation?.Sdtkh</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted">Địa chỉ:</td>
-                        <td>@Model.MakhNavigation?.Diachikh</td>
-                    </tr>
+                <table class="table table-sm table-borderless mb-0">
+                    <tr><td class="text-muted">Mã KH:</td><td>@Model.Makh</td></tr>
+                    <tr><td class="text-muted">Họ tên:</td><td><strong>@Model.MakhNavigation?.Hotenkh</strong></td></tr>
+                    <tr><td class="text-muted">SĐT:</td><td>@Model.MakhNavigation?.Sdtkh</td></tr>
+                    <tr><td class="text-muted">Địa chỉ:</td><td>@Model.MakhNavigation?.Diachikh</td></tr>
                 </table>
             </div>
         </div>
     </div>
     
-    <!-- Thông tin người duyệt -->
+    <!-- Người xử lý -->
     <div class="col-md-4">
         <div class="card mb-3">
-            <div class="card-header card-header-wood">
-                <i class="bi bi-person-check"></i> Người xử lý đơn hàng
+            <div class="card-header card-header-main">
+                <i class="bi bi-person-check"></i> Người xử lý
             </div>
             <div class="card-body">
                 @if (ViewBag.NguoiDuyet != null)
                 {
                     var nguoiDuyet = ViewBag.NguoiDuyet as DOANCHUYENNGANH_WEB_QLNOITHAT.Models.User;
-                    <table class="table table-borderless mb-0">
-                        <tr>
-                            <td class="text-muted" style="width: 100px;">Mã NV:</td>
-                            <td><strong>@nguoiDuyet?.UserId</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Họ tên:</td>
-                            <td><strong class="text-primary">@nguoiDuyet?.HoTen</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Chức vụ:</td>
-                            <td>
-                                @if (nguoiDuyet?.VaiTro == "Admin")
-                                {
-                                    <span class="badge bg-danger">Admin</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-info">Nhân viên</span>
-                                }
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Tên đăng nhập:</td>
-                            <td>@nguoiDuyet?.TenUser</td>
-                        </tr>
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr><td class="text-muted">Mã NV:</td><td>@nguoiDuyet?.UserId</td></tr>
+                        <tr><td class="text-muted">Họ tên:</td><td><strong>@nguoiDuyet?.HoTen</strong></td></tr>
+                        <tr><td class="text-muted">Chức vụ:</td><td>@nguoiDuyet?.VaiTro</td></tr>
                     </table>
                 }
                 else
                 {
-                    <div class="text-center py-3">
-                        <i class="bi bi-hourglass-split fs-1 text-warning"></i>
-                        <p class="text-muted mt-2 mb-0">Chưa có người xử lý</p>
-                        <small class="text-muted">Đơn hàng đang chờ xác nhận</small>
-                    </div>
+                    <p class="text-muted text-center mb-0 py-3">Chưa có người xử lý</p>
                 }
             </div>
         </div>
@@ -220,18 +139,18 @@
 
 <!-- Chi tiết sản phẩm -->
 <div class="card mb-3">
-    <div class="card-header card-header-light">
+    <div class="card-header card-header-main">
         <i class="bi bi-cart3"></i> Chi tiết sản phẩm
     </div>
     <div class="card-body p-0">
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
-                    <th style="width: 50px;">#</th>
+                    <th>#</th>
                     <th>Sản phẩm</th>
-                    <th class="text-center" style="width: 100px;">Số lượng</th>
-                    <th class="text-end" style="width: 130px;">Đơn giá</th>
-                    <th class="text-end" style="width: 130px;">Thành tiền</th>
+                    <th class="text-center">SL</th>
+                    <th class="text-end">Đơn giá</th>
+                    <th class="text-end">Thành tiền</th>
                 </tr>
             </thead>
             <tbody>
@@ -241,10 +160,7 @@
                     stt++;
                     <tr>
                         <td>@stt</td>
-                        <td>
-                            <strong>@(ct.MaspNavigation?.Tensp ?? "N/A")</strong>
-                            <br><small class="text-muted">Mã SP: @ct.Masp</small>
-                        </td>
+                        <td>@(ct.MaspNavigation?.Tensp ?? "N/A")<br><small class="text-muted">@ct.Masp</small></td>
                         <td class="text-center">@ct.Soluong</td>
                         <td class="text-end">@ct.Dongia?.ToString("N0") đ</td>
                         <td class="text-end"><strong>@ct.Thanhtien?.ToString("N0") đ</strong></td>
@@ -252,241 +168,189 @@
                 }
             </tbody>
             <tfoot>
-                <tr class="table-warning">
-                    <th colspan="4" class="text-end fs-5">Tổng cộng:</th>
-                    <th class="text-end fs-5 text-danger">@tongTien.ToString("N0") đ</th>
+                <tr class="table-light">
+                    <th colspan="4" class="text-end">Tổng cộng:</th>
+                    <th class="text-end text-danger fs-5">@tongTien.ToString("N0") đ</th>
                 </tr>
             </tfoot>
         </table>
     </div>
 </div>
 
-<!-- Nút xử lý đơn hàng -->
+<!-- Xử lý đơn hàng -->
 <div class="card mb-3">
-    <div class="card-header card-header-wood">
+    <div class="card-header card-header-main">
         <i class="bi bi-gear"></i> Xử lý đơn hàng
     </div>
     <div class="card-body">
-        @if (Model.Trangthai == "Chờ xác nhận")
+        @if (Model.Trangthai == "Chờ thanh toán")
         {
-            <div class="row g-3">
-                <div class="col-12">
-                    <div class="alert alert-info mb-3">
-                        <i class="bi bi-info-circle"></i> <strong>Bước 1:</strong> Xác nhận đơn hàng từ khách hàng
-                    </div>
-                </div>
-                <div class="col-auto">
-                    <form asp-action="UpdateTrangThai" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Madonhang" />
-                        <input type="hidden" name="trangThai" value="Đã xác nhận" />
-                        <button type="submit" class="btn btn-info action-btn">
-                            <i class="bi bi-check-circle"></i> Xác nhận đơn hàng
-                        </button>
-                    </form>
-                </div>
+            var ghiChuTT = Model.Ghichu ?? "";
+            var isDatCocTT = ghiChuTT.Contains("ĐẶT CỌC");
+            decimal tienDatCocTT = isDatCocTT ? Math.Round(tongTien * 0.3m, 0) : tongTien;
+            
+            <p class="mb-2"><strong>Đơn hàng chuyển khoản</strong> - Chờ khách thanh toán</p>
+            <p class="mb-3">Số tiền cần nhận: <strong class="text-danger">@tienDatCocTT.ToString("N0") đ</strong></p>
+            <div class="d-flex gap-2">
+                <form asp-action="XacNhanThanhToan" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Madonhang" />
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check"></i> Xác nhận đã nhận tiền</button>
+                </form>
                 @if (isAdmin)
                 {
-                    <div class="col-auto">
-                        <form asp-action="HuyDonHang" method="post" class="d-inline" onsubmit="return confirm('Hủy đơn hàng sẽ hoàn lại tồn kho. Bạn có chắc chắn?');">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.Madonhang" />
-                            <button type="submit" class="btn btn-danger action-btn">
-                                <i class="bi bi-x-circle"></i> Hủy đơn hàng (sp_HuyDonHang)
-                            </button>
-                        </form>
-                    </div>
+                    <form asp-action="HuyDonHang" method="post" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Madonhang" />
+                        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x"></i> Hủy đơn</button>
+                    </form>
                 }
-                else
+            </div>
+        }
+        else if (Model.Trangthai == "Chờ xác nhận")
+        {
+            <p class="mb-3">Xác nhận đơn hàng từ khách hàng</p>
+            <div class="d-flex gap-2">
+                <form asp-action="UpdateTrangThai" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Madonhang" />
+                    <input type="hidden" name="trangThai" value="Đã xác nhận" />
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Xác nhận đơn hàng</button>
+                </form>
+                @if (isAdmin)
                 {
-                    <div class="col-auto">
-                        <span class="text-muted"><i class="bi bi-info-circle"></i> Chỉ Admin mới có quyền hủy đơn hàng</span>
-                    </div>
+                    <form asp-action="HuyDonHang" method="post" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Madonhang" />
+                        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x"></i> Hủy đơn</button>
+                    </form>
                 }
             </div>
         }
         else if (Model.Trangthai == "Đã xác nhận")
         {
-            <div class="alert alert-info mb-3">
-                <i class="bi bi-info-circle"></i> <strong>Bước 2:</strong> Xuất kho chuẩn bị hàng
-            </div>
-            <div class="row g-3">
-                <!-- Form xuất kho -->
-                <div class="col-md-8">
-                    <div class="card border-primary">
-                        <div class="card-header bg-primary text-white">
-                            <i class="bi bi-box-seam"></i> Xuất kho (sp_NV_XuatKho)
-                        </div>
-                        <div class="card-body">
-                            <form asp-action="XuatKho" method="post">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@Model.Madonhang" />
-                                <div class="mb-3">
-                                    <p class="text-muted mb-0">Xuất kho sẽ tự động tạo phiếu xuất kho và cập nhật trạng thái đơn hàng sang "Đang xử lý".</p>
-                                </div>
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-box-arrow-right"></i> Xuất kho
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+            <p class="mb-3">Xuất kho chuẩn bị hàng</p>
+            <div class="d-flex gap-2">
+                <form asp-action="XuatKho" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Madonhang" />
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-box"></i> Xuất kho</button>
+                </form>
                 @if (isAdmin)
                 {
-                    <div class="col-md-4">
-                        <form asp-action="HuyDonHang" method="post" onsubmit="return confirm('Hủy đơn hàng sẽ hoàn lại tồn kho. Bạn có chắc chắn?');">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.Madonhang" />
-                            <button type="submit" class="btn btn-outline-danger w-100 h-100">
-                                <i class="bi bi-x-circle"></i> Hủy đơn hàng
-                            </button>
-                        </form>
-                    </div>
+                    <form asp-action="HuyDonHang" method="post" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Madonhang" />
+                        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x"></i> Hủy đơn</button>
+                    </form>
                 }
             </div>
         }
         else if (Model.Trangthai == "Đang xử lý")
         {
-            <div class="alert alert-info mb-3">
-                <i class="bi bi-info-circle"></i> <strong>Bước 3:</strong> Điều phối giao hàng cho đơn vị vận chuyển
-            </div>
-            <div class="row g-3">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header card-header-wood">
-                            <i class="bi bi-truck"></i> Điều phối giao hàng
-                        </div>
-                        <div class="card-body">
-                            <form asp-action="DieuPhoiGiaoHang" method="post" class="row g-3">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@Model.Madonhang" />
-                                <div class="col-md-8">
-                                    <label class="form-label">Đơn vị vận chuyển</label>
-                                    <select name="donViVanChuyen" class="form-select" required>
-                                        <option value="">-- Chọn đơn vị --</option>
-                                        <option value="Giao hàng nhanh (GHN)">Giao hàng nhanh (GHN)</option>
-                                        <option value="Giao hàng tiết kiệm (GHTK)">Giao hàng tiết kiệm (GHTK)</option>
-                                        <option value="J&T Express">J&T Express</option>
-                                        <option value="Viettel Post">Viettel Post</option>
-                                        <option value="Vietnam Post">Vietnam Post</option>
-                                        <option value="Ninja Van">Ninja Van</option>
-                                        <option value="Giao hàng nội bộ">Giao hàng nội bộ</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="bi bi-send"></i> Giao cho vận chuyển
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+            <p class="mb-2">Điều phối giao hàng</p>
+            <a asp-area="Admin" asp-controller="PhieuXuatKho" asp-action="PrintByDonHang" asp-route-maDonHang="@Model.Madonhang" 
+               class="btn btn-outline-secondary btn-sm mb-3" target="_blank">
+                <i class="bi bi-printer"></i> In phiếu xuất kho
+            </a>
+            <form asp-action="DieuPhoiGiaoHang" method="post" class="row g-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Madonhang" />
+                <div class="col-md-6">
+                    <select name="donViVanChuyen" class="form-select" required>
+                        <option value="">-- Chọn đơn vị vận chuyển --</option>
+                        <option value="Giao hàng nhanh (GHN)">GHN</option>
+                        <option value="Giao hàng tiết kiệm (GHTK)">GHTK</option>
+                        <option value="J&T Express">J&T Express</option>
+                        <option value="Viettel Post">Viettel Post</option>
+                        <option value="Giao hàng nội bộ">Nội bộ</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-truck"></i> Giao vận chuyển</button>
                 </div>
                 @if (isAdmin)
                 {
-                    <div class="col-md-4">
-                        <form asp-action="HuyDonHang" method="post" onsubmit="return confirm('Hủy đơn hàng sẽ hoàn lại tồn kho. Bạn có chắc chắn?');">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@Model.Madonhang" />
-                            <button type="submit" class="btn btn-outline-danger w-100 h-100">
-                                <i class="bi bi-x-circle"></i> Hủy đơn hàng
-                            </button>
-                        </form>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-outline-danger" onclick="if(confirm('Hủy đơn?')) document.getElementById('formHuy').submit();">
+                            <i class="bi bi-x"></i> Hủy
+                        </button>
                     </div>
                 }
-            </div>
+            </form>
+            @if (isAdmin)
+            {
+                <form id="formHuy" asp-action="HuyDonHang" method="post" style="display:none;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Madonhang" />
+                </form>
+            }
         }
         else if (Model.Trangthai == "Đang giao")
         {
-            <div class="alert alert-info mb-3">
-                <i class="bi bi-info-circle"></i> <strong>Bước 4:</strong> Xác nhận đã giao hàng thành công cho khách
-            </div>
-            <form asp-action="UpdateTrangThai" method="post" class="d-inline">
+            <p class="mb-3">Xác nhận đã giao hàng thành công</p>
+            <a asp-area="Admin" asp-controller="PhieuXuatKho" asp-action="PrintByDonHang" asp-route-maDonHang="@Model.Madonhang" 
+               class="btn btn-outline-secondary btn-sm mb-3" target="_blank">
+                <i class="bi bi-printer"></i> In phiếu xuất kho
+            </a>
+            <form asp-action="UpdateTrangThai" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.Madonhang" />
                 <input type="hidden" name="trangThai" value="Đã giao" />
-                <button type="submit" class="btn btn-success action-btn btn-lg">
-                    <i class="bi bi-house-check"></i> Xác nhận đã giao thành công
-                </button>
+                <button type="submit" class="btn btn-success"><i class="bi bi-check"></i> Xác nhận đã giao</button>
             </form>
         }
         else if (Model.Trangthai == "Đã giao")
         {
-            <div class="alert alert-info mb-3">
-                <i class="bi bi-info-circle"></i> <strong>Bước 5:</strong> Thu tiền COD và xác nhận thanh toán
-            </div>
-            <div class="row g-3">
-                <div class="col-md-8">
-                    <div class="card border-success">
-                        <div class="card-header bg-success text-white">
-                            <i class="bi bi-credit-card"></i> Xác nhận thanh toán COD (sp_NV_XacNhanThanhToan)
-                        </div>
-                        <div class="card-body">
-                            <form asp-action="XacNhanThanhToan" method="post">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@Model.Madonhang" />
-                                <div class="mb-3">
-                                    <p class="mb-1"><strong>Tổng tiền cần thu:</strong> <span class="text-danger fs-4">@tongTien.ToString("N0") đ</span></p>
-                                    <p class="text-muted small mb-0">Shipper đã giao hàng thành công và thu tiền từ khách hàng.</p>
-                                </div>
-                                <button type="submit" class="btn btn-success w-100 btn-lg">
-                                    <i class="bi bi-check-lg"></i> Xác nhận đã thu tiền - Hoàn thành đơn hàng
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            var ghiChu = Model.Ghichu ?? "";
+            var isDatCoc = ghiChu.Contains("ĐẶT CỌC");
+            var isMoMoPaid = ghiChu.Contains("[MOMO ĐÃ THANH TOÁN") || ghiChu.Contains("[MOMO IPN");
+            var isMoMoOrder = ghiChu.Contains("[MOMO:") || ghiChu.Contains("[MOMO ");
+            var isChuyenKhoan100 = ghiChu.Contains("[CHUYỂN KHOẢN]") && !isDatCoc;
+            var isFullyPaid = (isMoMoPaid && !isDatCoc) || isChuyenKhoan100 || (isMoMoOrder && !isDatCoc);
+            
+            decimal tienConLai = tongTien;
+            if (isDatCoc)
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(ghiChu, @"CÒN LẠI:\s*([\d,\.]+)");
+                if (match.Success) decimal.TryParse(match.Groups[1].Value.Replace(",", "").Replace(".", ""), out tienConLai);
+                else tienConLai = Math.Round(tongTien * 0.7m, 0);
+            }
+            
+            <a asp-area="Admin" asp-controller="PhieuXuatKho" asp-action="PrintByDonHang" asp-route-maDonHang="@Model.Madonhang" 
+               class="btn btn-outline-secondary btn-sm mb-3" target="_blank">
+                <i class="bi bi-printer"></i> In phiếu xuất kho
+            </a>
+            
+            @if (isFullyPaid)
+            {
+                <p class="mb-3">Đơn hàng đã thanh toán đầy đủ</p>
+            }
+            else
+            {
+                <p class="mb-2">Thu tiền COD: <strong class="text-danger">@tienConLai.ToString("N0") đ</strong></p>
+            }
+            <form asp-action="XacNhanThanhToan" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Madonhang" />
+                <button type="submit" class="btn btn-success"><i class="bi bi-check"></i> Hoàn thành đơn hàng</button>
+            </form>
         }
         else if (Model.Trangthai == "Hoàn thành")
         {
-            <div class="alert alert-success mb-0 d-flex align-items-center gap-2">
-                <i class="bi bi-check-circle-fill fs-4"></i>
-                <div>
-                    <strong>Đơn hàng đã hoàn thành!</strong>
-                    <br><small>Đã giao hàng và thu tiền thành công. Cảm ơn bạn đã xử lý đơn hàng này.</small>
-                </div>
-            </div>
+            <p class="text-success mb-3"><i class="bi bi-check-circle"></i> Đơn hàng đã hoàn thành</p>
+            <a asp-area="Admin" asp-controller="PhieuXuatKho" asp-action="PrintByDonHang" asp-route-maDonHang="@Model.Madonhang" 
+               class="btn btn-outline-secondary btn-sm" target="_blank">
+                <i class="bi bi-printer"></i> In phiếu xuất kho
+            </a>
         }
         else if (Model.Trangthai == "Đã hủy")
         {
-            <div class="alert alert-danger mb-0 d-flex align-items-center gap-2">
-                <i class="bi bi-x-circle-fill fs-4"></i>
-                <div>
-                    <strong>Đơn hàng đã bị hủy</strong>
-                    <br><small>Tồn kho đã được hoàn lại (nếu có).</small>
-                </div>
-            </div>
+            <p class="text-danger mb-0"><i class="bi bi-x-circle"></i> Đơn hàng đã bị hủy</p>
         }
     </div>
 </div>
 
-<!-- Thông báo phân quyền cho nhân viên -->
-@if (!isAdmin)
-{
-    <div class="alert alert-warning mb-3">
-        <i class="bi bi-shield-exclamation"></i> <strong>Lưu ý phân quyền:</strong> Bạn đang đăng nhập với quyền <span class="badge bg-info">Nhân viên</span>
-        <ul class="mb-0 mt-2">
-            <li>Bạn <strong>có thể</strong>: Xem đơn hàng, xác nhận đơn, xuất kho, điều phối giao hàng, xác nhận thanh toán</li>
-            <li>Bạn <strong>không thể</strong>: Sửa thông tin đơn hàng, hủy đơn hàng, xóa đơn hàng <em>(chỉ Admin)</em></li>
-        </ul>
-    </div>
-}
-
-<div class="d-flex gap-2">
-    @if (isAdmin)
-    {
-        <a asp-action="Edit" asp-route-id="@Model.Madonhang" class="btn btn-warning">
-            <i class="bi bi-pencil"></i> Sửa thông tin
-        </a>
-    }
-    else
-    {
-        <button class="btn btn-warning disabled" disabled title="Chỉ Admin mới có quyền sửa">
-            <i class="bi bi-pencil"></i> Sửa thông tin <i class="bi bi-lock-fill ms-1"></i>
-        </button>
-    }
-    <a asp-action="Index" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Quay lại danh sách
-    </a>
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
 </div>

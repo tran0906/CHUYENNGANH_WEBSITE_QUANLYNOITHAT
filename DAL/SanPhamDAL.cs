@@ -27,7 +27,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
         /// <summary>
         /// Tìm kiếm sản phẩm theo điều kiện
         /// </summary>
-        public List<SanPham> Search(string? maSp, string? tenSp, string? nhomSp, string? vatLieu)
+        public List<SanPham> Search(string? search, string? nhomSp, string? vatLieu)
         {
             string query = @"SELECT sp.*, nsp.TENNHOMSP as Tennhomsp, vl.TENVL as Tenvl 
                             FROM SAN_PHAM sp
@@ -37,15 +37,10 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             
             var parameters = new List<SqlParameter>();
 
-            if (!string.IsNullOrEmpty(maSp))
+            if (!string.IsNullOrEmpty(search))
             {
-                query += " AND sp.MASP LIKE @MaSp";
-                parameters.Add(new SqlParameter("@MaSp", $"%{maSp}%"));
-            }
-            if (!string.IsNullOrEmpty(tenSp))
-            {
-                query += " AND sp.TENSP LIKE @TenSp";
-                parameters.Add(new SqlParameter("@TenSp", $"%{tenSp}%"));
+                query += " AND (sp.MASP LIKE @Search OR sp.TENSP LIKE @Search)";
+                parameters.Add(new SqlParameter("@Search", $"%{search}%"));
             }
             if (!string.IsNullOrEmpty(nhomSp))
             {
@@ -151,6 +146,47 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
         {
             string query = "SELECT COUNT(*) FROM SAN_PHAM";
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query));
+        }
+
+        /// <summary>
+        /// Lấy danh sách mã sản phẩm đang trong đợt quảng bá kèm % giảm giá
+        /// </summary>
+        public Dictionary<string, int> GetProductsInPromotionWithDiscount()
+        {
+            try
+            {
+                string query = @"SELECT qb.MASP, qbs.PHANTRAMGIAM 
+                                FROM QUANGBA qb
+                                INNER JOIN QUAN_BA_SP qbs ON qb.MADOTGIAMGIA = qbs.MADOTGIAMGIA
+                                WHERE GETDATE() BETWEEN qbs.NGAYBATDAU AND qbs.NGAYKETTHUC
+                                AND qbs.PHANTRAMGIAM > 0";
+                
+                DataTable dt = SqlConnectionHelper.ExecuteQuery(query);
+                var result = new Dictionary<string, int>();
+                foreach (DataRow row in dt.Rows)
+                {
+                    if (row["MASP"] != DBNull.Value)
+                    {
+                        var masp = row["MASP"].ToString() ?? "";
+                        var phantram = Convert.ToInt32(row["PHANTRAMGIAM"]);
+                        if (!result.ContainsKey(masp) || result[masp] < phantram)
+                            result[masp] = phantram;
+                    }
+                }
+                return result;
+            }
+            catch
+            {
+                return new Dictionary<string, int>();
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách mã sản phẩm đang trong đợt quảng bá (khuyến mãi)
+        /// </summary>
+        public HashSet<string> GetProductsInPromotion()
+        {
+            return GetProductsInPromotionWithDiscount().Keys.ToHashSet();
         }
 
         /// <summary>

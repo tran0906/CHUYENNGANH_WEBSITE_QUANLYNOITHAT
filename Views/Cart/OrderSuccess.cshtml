@@ -2,6 +2,47 @@
 @{
     ViewData["Title"] = "Đặt hàng thành công";
     var tongTien = Model.CtDonhangs?.Sum(c => c.Thanhtien) ?? 0;
+    var ghiChu = Model.Ghichu ?? "";
+    
+    // Kiểm tra phương thức thanh toán từ ghi chú
+    var isMoMoPaid = ghiChu.Contains("[MOMO ĐÃ THANH TOÁN") || ghiChu.Contains("[MOMO IPN");
+    var isMoMoDeposit = ghiChu.Contains("[MOMO - ĐẶT CỌC");
+    var isMoMoFull = (ghiChu.Contains("[MOMO:") || ghiChu.Contains("[MOMO ")) && !isMoMoDeposit; // Đơn MoMo 100%
+    var isMoMoOrder = ghiChu.Contains("[MOMO:") || ghiChu.Contains("[MOMO ") || ghiChu.Contains("[MOMO -"); // Bất kỳ đơn MoMo nào
+    var isCOD = ghiChu.Contains("[COD]");
+    var isWaitingPayment = Model.Trangthai == "Chờ thanh toán"; // Đang chờ thanh toán MoMo
+    
+    // Tính số tiền đặt cọc và còn lại
+    decimal depositAmount = 0;
+    decimal remainingAmount = tongTien;
+    
+    if (isMoMoDeposit)
+    {
+        // Lấy số tiền đặt cọc từ ghi chú: [MOMO - ĐẶT CỌC 20%: xxx₫ | CÒN LẠI: xxx₫]
+        var depositMatch = System.Text.RegularExpressions.Regex.Match(ghiChu, @"ĐẶT CỌC \d+%: ([\d,]+)");
+        if (depositMatch.Success)
+        {
+            decimal.TryParse(depositMatch.Groups[1].Value.Replace(",", ""), out depositAmount);
+            remainingAmount = tongTien - depositAmount;
+        }
+        else
+        {
+            depositAmount = Math.Round(tongTien * 0.2m, 0);
+            remainingAmount = tongTien - depositAmount;
+        }
+    }
+    
+    // Lấy địa chỉ giao hàng từ ghi chú
+    var diaChiGiaoHang = "";
+    if (ghiChu.Contains("[ĐỊA CHỈ GIAO HÀNG:"))
+    {
+        var start = ghiChu.IndexOf("[ĐỊA CHỈ GIAO HÀNG:") + 19;
+        var end = ghiChu.IndexOf("]", start);
+        if (end > start)
+        {
+            diaChiGiaoHang = ghiChu.Substring(start, end - start).Trim();
+        }
+    }
 }
 
 <style>
@@ -26,305 +67,209 @@
         box-shadow: 0 10px 40px rgba(40, 167, 69, 0.3);
         animation: scaleIn 0.5s ease;
     }
-    .success-icon i {
-        font-size: 60px;
-        color: white;
-    }
-    @@keyframes scaleIn {
-        from { transform: scale(0); }
-        to { transform: scale(1); }
-    }
-    .success-title {
-        color: #28a745;
-        font-size: 32px;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-    .success-subtitle {
-        color: #666;
-        font-size: 18px;
-    }
-    .order-card {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 5px 30px rgba(0,0,0,0.1);
-        overflow: hidden;
-        margin-bottom: 30px;
-    }
-    .order-card-header {
-        background: linear-gradient(135deg, #8B4513, #5D2E0C);
-        color: white;
-        padding: 20px 25px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .order-id {
-        font-size: 24px;
-        font-weight: 700;
-    }
-    .order-status {
-        background: #ffc107;
-        color: #333;
-        padding: 8px 20px;
-        border-radius: 25px;
-        font-weight: 600;
-        font-size: 14px;
-    }
-    .order-info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        padding: 25px;
-        background: #f8f9fa;
-        border-bottom: 1px solid #eee;
-    }
-    .info-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    .info-item i {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #8B4513, #A0522D);
-        color: white;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-    }
-    .info-item .label {
-        font-size: 13px;
-        color: #888;
-        margin-bottom: 3px;
-    }
-    .info-item .value {
-        font-weight: 600;
-        color: #333;
-    }
-    .order-products {
-        padding: 25px;
-    }
-    .order-products h4 {
-        margin-bottom: 20px;
-        color: #333;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .order-products h4 i {
-        color: #8B4513;
-    }
-    .product-item {
-        display: flex;
-        align-items: center;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 10px;
-        margin-bottom: 12px;
-        gap: 15px;
-    }
-    .product-item img {
-        width: 70px;
-        height: 70px;
-        object-fit: cover;
-        border-radius: 8px;
-        border: 2px solid #eee;
-    }
-    .product-item .product-info {
-        flex: 1;
-    }
-    .product-item .product-name {
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 5px;
-    }
-    .product-item .product-qty {
-        font-size: 14px;
-        color: #666;
-    }
-    .product-item .product-price {
-        text-align: right;
-    }
-    .product-item .unit-price {
-        font-size: 13px;
-        color: #888;
-    }
-    .product-item .total-price {
-        font-weight: 700;
-        color: #8B4513;
-        font-size: 16px;
-    }
-    .order-summary {
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-        padding: 20px 25px;
-        border-top: 2px dashed #ddd;
-    }
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        color: #666;
-    }
-    .summary-row.total {
-        border-top: 2px solid #8B4513;
-        margin-top: 10px;
-        padding-top: 15px;
-        font-size: 20px;
-        font-weight: 700;
-        color: #333;
-    }
-    .summary-row.total span:last-child {
-        color: #8B4513;
-    }
-    .action-buttons {
-        display: flex;
-        gap: 15px;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-    .action-buttons .btn {
-        padding: 15px 30px;
-        border-radius: 10px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        transition: all 0.3s;
-    }
-    .action-buttons .btn-primary {
-        background: linear-gradient(135deg, #8B4513, #A0522D);
-        border: none;
-        color: white;
-    }
-    .action-buttons .btn-primary:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 20px rgba(139, 69, 19, 0.4);
-    }
-    .action-buttons .btn-outline {
-        background: white;
-        border: 2px solid #8B4513;
-        color: #8B4513;
-    }
-    .action-buttons .btn-outline:hover {
-        background: #8B4513;
-        color: white;
-    }
-    .note-box {
-        background: #fff3cd;
-        border: 1px solid #ffc107;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 30px;
-        display: flex;
-        align-items: flex-start;
-        gap: 15px;
-    }
-    .note-box i {
-        color: #856404;
-        font-size: 24px;
-    }
-    .note-box .note-content h5 {
-        color: #856404;
-        margin-bottom: 5px;
-    }
-    .note-box .note-content p {
-        color: #856404;
-        margin: 0;
-        font-size: 14px;
-    }
+    .success-icon i { font-size: 60px; color: white; }
+    @@keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
+    .success-title { color: #28a745; font-size: 32px; font-weight: 700; margin-bottom: 10px; }
+    .success-subtitle { color: #666; font-size: 18px; }
+    .countdown-text { color: #8B4513; font-size: 16px; margin-top: 15px; }
+    .countdown-text span { font-weight: 700; color: #dc3545; font-size: 20px; }
+    .order-card { background: white; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 30px; }
+    .order-card-header { background: linear-gradient(135deg, #8B4513, #5D2E0C); color: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; }
+    .order-id { font-size: 24px; font-weight: 700; }
+    .order-status { background: #ffc107; color: #333; padding: 8px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; }
+    .order-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 25px; background: #f8f9fa; border-bottom: 1px solid #eee; }
+    .info-item { display: flex; align-items: flex-start; gap: 12px; }
+    .info-item i { width: 40px; height: 40px; background: linear-gradient(135deg, #8B4513, #A0522D); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .info-item .label { font-size: 13px; color: #888; margin-bottom: 3px; }
+    .info-item .value { font-weight: 600; color: #333; }
+    .order-products { padding: 25px; }
+    .order-products h4 { margin-bottom: 20px; color: #333; display: flex; align-items: center; gap: 10px; }
+    .order-products h4 i { color: #8B4513; }
+    .product-item { display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 12px; gap: 15px; }
+    .product-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 2px solid #eee; }
+    .product-item .product-info { flex: 1; }
+    .product-item .product-name { font-weight: 600; color: #333; margin-bottom: 5px; }
+    .product-item .product-qty { font-size: 14px; color: #666; }
+    .product-item .product-price { text-align: right; }
+    .product-item .unit-price { font-size: 13px; color: #888; }
+    .product-item .total-price { font-weight: 700; color: #8B4513; font-size: 16px; }
+    .order-summary { background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 20px 25px; border-top: 2px dashed #ddd; }
+    .summary-row { display: flex; justify-content: space-between; padding: 8px 0; color: #666; }
+    .summary-row.total { border-top: 2px solid #8B4513; margin-top: 10px; padding-top: 15px; font-size: 20px; font-weight: 700; color: #333; }
+    .summary-row.total span:last-child { color: #8B4513; }
+    .action-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    .action-buttons .btn { padding: 15px 30px; border-radius: 10px; font-weight: 600; display: flex; align-items: center; gap: 10px; transition: all 0.3s; text-decoration: none; }
+    .action-buttons .btn-primary { background: linear-gradient(135deg, #8B4513, #A0522D); border: none; color: white; }
+    .action-buttons .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 5px 20px rgba(139, 69, 19, 0.4); }
+    .action-buttons .btn-outline { background: white; border: 2px solid #8B4513; color: #8B4513; }
+    .action-buttons .btn-outline:hover { background: #8B4513; color: white; }
+    .note-box { background: #fff3cd; border: 1px solid #ffc107; border-radius: 10px; padding: 20px; margin-bottom: 30px; display: flex; align-items: flex-start; gap: 15px; }
+    .note-box i { color: #856404; font-size: 24px; }
+    .note-box .note-content h5 { color: #856404; margin-bottom: 5px; }
+    .note-box .note-content p { color: #856404; margin: 0; font-size: 14px; }
 </style>
 
 <div class="success-container">
-    <!-- Header -->
     <div class="success-header">
-        <div class="success-icon">
-            <i class="fas fa-check"></i>
-        </div>
+        <div class="success-icon"><i class="fas fa-check"></i></div>
         <h1 class="success-title">Đặt hàng thành công!</h1>
         <p class="success-subtitle">Cảm ơn bạn đã tin tưởng và mua sắm tại Nội Thất Việt</p>
+        <p class="countdown-text">Tự động chuyển về trang chủ sau <span id="countdown">5</span> giây...</p>
     </div>
 
-    <!-- Note Box -->
-    <div class="note-box">
-        <i class="fas fa-info-circle"></i>
-        <div class="note-content">
-            <h5>Thông tin quan trọng</h5>
-            <p>Đơn hàng của bạn đang chờ xác nhận. Chúng tôi sẽ liên hệ với bạn trong vòng 24h để xác nhận đơn hàng.</p>
+    @if (isMoMoPaid && isMoMoFull)
+    {
+        <!-- Đã thanh toán 100% qua MoMo -->
+        <div class="note-box" style="background: #d4edda; border-color: #28a745;">
+            <i class="fas fa-check-circle" style="color: #28a745;"></i>
+            <div class="note-content">
+                <h5 style="color: #155724;">Đơn hàng đã được thanh toán!</h5>
+                <p style="color: #155724;">Đơn hàng đã được thanh toán <strong>100%</strong> qua MoMo. Chúng tôi sẽ xử lý và giao hàng sớm nhất.</p>
+            </div>
         </div>
-    </div>
+    }
+    else if (isMoMoPaid && isMoMoDeposit)
+    {
+        <!-- Đã đặt cọc qua MoMo -->
+        <div class="note-box" style="background: #d4edda; border-color: #28a745;">
+            <i class="fas fa-check-circle" style="color: #28a745;"></i>
+            <div class="note-content">
+                <h5 style="color: #155724;">Đặt cọc thành công!</h5>
+                <p style="color: #155724;">
+                    Đã thanh toán đặt cọc <strong>@depositAmount.ToString("N0")₫</strong> qua MoMo.<br/>
+                    Còn lại <strong>@remainingAmount.ToString("N0")₫</strong> thanh toán khi nhận hàng (COD).
+                </p>
+            </div>
+        </div>
+    }
+    else if (isWaitingPayment && isMoMoOrder)
+    {
+        <!-- Đơn MoMo đang chờ thanh toán -->
+        <div class="note-box" style="background: #fff3cd; border-color: #ffc107;">
+            <i class="fas fa-clock" style="color: #856404;"></i>
+            <div class="note-content">
+                <h5 style="color: #856404;">Đang chờ thanh toán MoMo</h5>
+                @if (isMoMoDeposit)
+                {
+                    <p style="color: #856404;">
+                        Vui lòng thanh toán đặt cọc <strong>@depositAmount.ToString("N0")₫</strong> qua MoMo để xác nhận đơn hàng.<br/>
+                        Còn lại <strong>@remainingAmount.ToString("N0")₫</strong> thanh toán khi nhận hàng.
+                    </p>
+                }
+                else
+                {
+                    <p style="color: #856404;">Vui lòng hoàn tất thanh toán <strong>@tongTien.ToString("N0")₫</strong> qua MoMo để xác nhận đơn hàng.</p>
+                }
+            </div>
+        </div>
+    }
+    else if (isMoMoDeposit && !isMoMoPaid)
+    {
+        <!-- Chờ thanh toán đặt cọc MoMo -->
+        <div class="note-box" style="background: #fff3cd; border-color: #ffc107;">
+            <i class="fas fa-clock" style="color: #856404;"></i>
+            <div class="note-content">
+                <h5 style="color: #856404;">Chờ thanh toán đặt cọc</h5>
+                <p style="color: #856404;">
+                    Vui lòng thanh toán đặt cọc <strong>@depositAmount.ToString("N0")₫</strong> qua MoMo để xác nhận đơn hàng.<br/>
+                    Còn lại <strong>@remainingAmount.ToString("N0")₫</strong> thanh toán khi nhận hàng.
+                </p>
+            </div>
+        </div>
+    }
+    else if (isMoMoFull && !isMoMoPaid)
+    {
+        <!-- Chờ thanh toán MoMo 100% -->
+        <div class="note-box" style="background: #fff3cd; border-color: #ffc107;">
+            <i class="fas fa-clock" style="color: #856404;"></i>
+            <div class="note-content">
+                <h5 style="color: #856404;">Chờ thanh toán</h5>
+                <p style="color: #856404;">Vui lòng hoàn tất thanh toán <strong>@tongTien.ToString("N0")₫</strong> qua MoMo để xác nhận đơn hàng.</p>
+            </div>
+        </div>
+    }
+    else if (isCOD)
+    {
+        <!-- COD -->
+        <div class="note-box">
+            <i class="fas fa-info-circle"></i>
+            <div class="note-content">
+                <h5>Thông tin quan trọng</h5>
+                <p>Đơn hàng của bạn đang chờ xác nhận. Thanh toán <strong>@tongTien.ToString("N0")₫</strong> khi nhận hàng (COD).</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Mặc định -->
+        <div class="note-box">
+            <i class="fas fa-info-circle"></i>
+            <div class="note-content">
+                <h5>Thông tin đơn hàng</h5>
+                <p>Đơn hàng của bạn đang được xử lý.</p>
+            </div>
+        </div>
+    }
 
-    <!-- Order Card -->
     <div class="order-card">
         <div class="order-card-header">
             <div>
                 <div style="font-size: 13px; opacity: 0.8;">Mã đơn hàng</div>
                 <div class="order-id">#@Model.Madonhang</div>
             </div>
-            <span class="order-status">
-                <i class="fas fa-clock"></i> @Model.Trangthai
-            </span>
+            <span class="order-status"><i class="fas fa-clock"></i> @Model.Trangthai</span>
         </div>
 
         <div class="order-info-grid">
             <div class="info-item">
                 <i class="fas fa-calendar-alt"></i>
-                <div>
-                    <div class="label">Ngày đặt hàng</div>
-                    <div class="value">@Model.Ngaydat.ToString("dd/MM/yyyy HH:mm")</div>
-                </div>
+                <div><div class="label">Ngày đặt hàng</div><div class="value">@Model.Ngaydat.ToString("dd/MM/yyyy HH:mm")</div></div>
             </div>
             <div class="info-item">
                 <i class="fas fa-user"></i>
-                <div>
-                    <div class="label">Khách hàng</div>
-                    <div class="value">@(Model.MakhNavigation?.Hotenkh ?? "N/A")</div>
-                </div>
+                <div><div class="label">Khách hàng</div><div class="value">@(Model.MakhNavigation?.Hotenkh ?? "N/A")</div></div>
             </div>
             <div class="info-item">
                 <i class="fas fa-phone"></i>
-                <div>
-                    <div class="label">Số điện thoại</div>
-                    <div class="value">@(Model.MakhNavigation?.Sdtkh ?? "N/A")</div>
-                </div>
+                <div><div class="label">Số điện thoại</div><div class="value">@(Model.MakhNavigation?.Sdtkh ?? "N/A")</div></div>
             </div>
             <div class="info-item">
                 <i class="fas fa-map-marker-alt"></i>
-                <div>
-                    <div class="label">Địa chỉ giao hàng</div>
-                    <div class="value">@(Model.MakhNavigation?.Diachikh ?? "N/A")</div>
-                </div>
+                <div><div class="label">Địa chỉ giao hàng</div><div class="value">@(string.IsNullOrEmpty(diaChiGiaoHang) ? (Model.MakhNavigation?.Diachikh ?? "N/A") : diaChiGiaoHang)</div></div>
             </div>
         </div>
 
         <div class="order-products">
             <h4><i class="fas fa-shopping-bag"></i> Chi tiết sản phẩm (@(Model.CtDonhangs?.Count ?? 0) sản phẩm)</h4>
-            
             @if (Model.CtDonhangs != null && Model.CtDonhangs.Any())
             {
                 @foreach (var item in Model.CtDonhangs)
                 {
                     var productImage = "/images/no-image.jpg";
-                    if (!string.IsNullOrEmpty(item.MaspNavigation?.Hinhanh))
+                    var hinhanh = item.MaspNavigation?.Hinhanh;
+                    if (!string.IsNullOrEmpty(hinhanh))
                     {
-                        var images = item.MaspNavigation.Hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries);
-                        foreach (var img in images)
+                        // Lấy hình đầu tiên từ chuỗi (phân cách bằng ;)
+                        var images = hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                        if (images.Length > 0)
                         {
-                            var trimmed = img.Trim();
-                            if (!string.IsNullOrEmpty(trimmed) && (trimmed.StartsWith("/") || trimmed.StartsWith("http")))
+                            var firstImg = images[0].Trim();
+                            if (!string.IsNullOrEmpty(firstImg))
                             {
-                                productImage = trimmed;
-                                break;
+                                // Thêm / nếu chưa có
+                                if (!firstImg.StartsWith("/") && !firstImg.StartsWith("http"))
+                                {
+                                    firstImg = "/" + firstImg;
+                                }
+                                productImage = firstImg;
                             }
                         }
                     }
                     <div class="product-item">
-                        <img src="@productImage" alt="@item.MaspNavigation?.Tensp" />
+                        <img src="@productImage" alt="@item.MaspNavigation?.Tensp" onerror="this.src='/images/no-image.jpg'" />
                         <div class="product-info">
                             <div class="product-name">@(item.MaspNavigation?.Tensp ?? item.Masp)</div>
-                            <div class="product-qty">Số lượng: @item.Soluong</div>
+                            <div class="product-qty">Mã SP: @item.Masp | Số lượng: @item.Soluong</div>
                         </div>
                         <div class="product-price">
                             <div class="unit-price">@(item.Dongia?.ToString("N0") ?? "0") ₫/sp</div>
@@ -336,31 +281,109 @@
         </div>
 
         <div class="order-summary">
-            <div class="summary-row">
-                <span>Tạm tính:</span>
-                <span>@tongTien.ToString("N0") ₫</span>
-            </div>
-            <div class="summary-row">
-                <span>Phí vận chuyển:</span>
-                <span style="color: #28a745;">Miễn phí</span>
-            </div>
-            <div class="summary-row total">
-                <span>Tổng thanh toán:</span>
-                <span>@tongTien.ToString("N0") ₫</span>
-            </div>
+            <div class="summary-row"><span>Tạm tính:</span><span>@tongTien.ToString("N0") ₫</span></div>
+            <div class="summary-row"><span>Phí vận chuyển:</span><span style="color: #28a745;">Miễn phí</span></div>
+            
+            @if (isMoMoPaid && isMoMoFull)
+            {
+                <!-- Đã thanh toán 100% MoMo -->
+                <div class="summary-row" style="color: #28a745;">
+                    <span><i class="fas fa-check-circle"></i> Đã thanh toán (MoMo):</span>
+                    <span style="font-weight: 600;">@tongTien.ToString("N0") ₫</span>
+                </div>
+            }
+            else if (isMoMoPaid && isMoMoDeposit)
+            {
+                <!-- Đã đặt cọc MoMo -->
+                <div class="summary-row" style="color: #28a745;">
+                    <span><i class="fas fa-check-circle"></i> Đã đặt cọc (MoMo):</span>
+                    <span style="font-weight: 600;">@depositAmount.ToString("N0") ₫</span>
+                </div>
+                <div class="summary-row" style="color: #ff9800;">
+                    <span><i class="fas fa-truck"></i> Còn lại (COD):</span>
+                    <span style="font-weight: 600;">@remainingAmount.ToString("N0") ₫</span>
+                </div>
+            }
+            else if (isWaitingPayment && isMoMoOrder)
+            {
+                <!-- Đơn MoMo đang chờ thanh toán -->
+                @if (isMoMoDeposit)
+                {
+                    <div class="summary-row" style="color: #ff9800;">
+                        <span><i class="fas fa-clock"></i> Chờ đặt cọc (MoMo):</span>
+                        <span style="font-weight: 600;">@depositAmount.ToString("N0") ₫</span>
+                    </div>
+                    <div class="summary-row" style="color: #666;">
+                        <span><i class="fas fa-truck"></i> Còn lại (COD):</span>
+                        <span style="font-weight: 600;">@remainingAmount.ToString("N0") ₫</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="summary-row" style="color: #ff9800;">
+                        <span><i class="fas fa-clock"></i> Chờ thanh toán (MoMo):</span>
+                        <span style="font-weight: 600;">@tongTien.ToString("N0") ₫</span>
+                    </div>
+                }
+            }
+            else if (isMoMoDeposit && !isMoMoPaid)
+            {
+                <!-- Chờ đặt cọc MoMo -->
+                <div class="summary-row" style="color: #ff9800;">
+                    <span><i class="fas fa-clock"></i> Chờ đặt cọc (MoMo):</span>
+                    <span style="font-weight: 600;">@depositAmount.ToString("N0") ₫</span>
+                </div>
+                <div class="summary-row" style="color: #666;">
+                    <span><i class="fas fa-truck"></i> Còn lại (COD):</span>
+                    <span style="font-weight: 600;">@remainingAmount.ToString("N0") ₫</span>
+                </div>
+            }
+            else if (isMoMoFull && !isMoMoPaid)
+            {
+                <!-- Chờ thanh toán MoMo 100% -->
+                <div class="summary-row" style="color: #ff9800;">
+                    <span><i class="fas fa-clock"></i> Chờ thanh toán (MoMo):</span>
+                    <span style="font-weight: 600;">@tongTien.ToString("N0") ₫</span>
+                </div>
+            }
+            else if (isCOD)
+            {
+                <!-- COD -->
+                <div class="summary-row" style="color: #ff9800;">
+                    <span><i class="fas fa-money-bill-wave"></i> Thanh toán khi nhận hàng (COD):</span>
+                    <span style="font-weight: 600;">@tongTien.ToString("N0") ₫</span>
+                </div>
+            }
+            else
+            {
+                <!-- Mặc định -->
+                <div class="summary-row" style="color: #666;">
+                    <span><i class="fas fa-info-circle"></i> Thanh toán:</span>
+                    <span style="font-weight: 600;">@tongTien.ToString("N0") ₫</span>
+                </div>
+            }
+            
+            <div class="summary-row total"><span>Tổng giá trị đơn hàng:</span><span>@tongTien.ToString("N0") ₫</span></div>
         </div>
     </div>
 
-    <!-- Action Buttons -->
     <div class="action-buttons">
-        <a href="/Account/Orders" class="btn btn-primary">
-            <i class="fas fa-list-alt"></i> Xem đơn hàng của tôi
-        </a>
-        <a href="/san-pham" class="btn btn-outline">
-            <i class="fas fa-shopping-bag"></i> Tiếp tục mua sắm
-        </a>
-        <a href="/" class="btn btn-outline">
-            <i class="fas fa-home"></i> Về trang chủ
-        </a>
+        <a href="/Account/Orders" class="btn btn-primary" onclick="clearCountdown()"><i class="fas fa-list-alt"></i> Xem đơn hàng của tôi</a>
+        <a href="/san-pham" class="btn btn-outline" onclick="clearCountdown()"><i class="fas fa-shopping-bag"></i> Tiếp tục mua sắm</a>
+        <a href="/" class="btn btn-outline" onclick="clearCountdown()"><i class="fas fa-home"></i> Về trang chủ</a>
     </div>
 </div>
+
+<script>
+    let countdown = 5;
+    let countdownInterval = setInterval(function() {
+        countdown--;
+        document.getElementById('countdown').textContent = countdown;
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+            window.location.href = '/';
+        }
+    }, 1000);
+    
+    function clearCountdown() { clearInterval(countdownInterval); }
+</script>

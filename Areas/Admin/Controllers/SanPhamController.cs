@@ -30,13 +30,29 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
                 .ToList();
         }
 
-        // GET: Admin/SanPham
-        public IActionResult Index(string? searchMa, string? searchTen, string? nhomSp, string? vatLieu)
+        // GET: Admin/SanPham/DanhSach - Cho nhân viên xem (chỉ xem, không thao tác)
+        [SkipAdminOnlyFilter]
+        [AdminAuthFilter]
+        public IActionResult DanhSach(string? search, string? nhomSp, string? vatLieu)
         {
-            var sanPhams = _sanPhamBLL.Search(searchMa, searchTen, nhomSp, vatLieu);
+            var sanPhams = _sanPhamBLL.Search(search, nhomSp, vatLieu);
 
-            ViewBag.SearchMa = searchMa;
-            ViewBag.SearchTen = searchTen;
+            ViewBag.Search = search;
+            ViewBag.NhomSp = nhomSp;
+            ViewBag.VatLieu = vatLieu;
+
+            ViewData["NhomSanPhams"] = new SelectList(_nhomSanPhamBLL.GetAll(), "Manhomsp", "Tennhomsp", nhomSp);
+            ViewData["VatLieus"] = new SelectList(_vatLieuBLL.GetAll(), "Mavl", "Tenvl", vatLieu);
+
+            return View(sanPhams);
+        }
+
+        // GET: Admin/SanPham
+        public IActionResult Index(string? search, string? nhomSp, string? vatLieu)
+        {
+            var sanPhams = _sanPhamBLL.Search(search, nhomSp, vatLieu);
+
+            ViewBag.Search = search;
             ViewBag.NhomSp = nhomSp;
             ViewBag.VatLieu = vatLieu;
 
@@ -226,88 +242,6 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
                 TempData["Error"] = message;
             }
             return RedirectToAction(nameof(Index));
-        }
-
-        // GET: Admin/SanPham/QuanLyHinh - Quản lý hình ảnh sản phẩm
-        public IActionResult QuanLyHinh()
-        {
-            ViewBag.Images = GetExistingImages();
-            return View();
-        }
-
-        // POST: Admin/SanPham/UploadNhieuHinh - Upload nhiều hình cùng lúc
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UploadNhieuHinh(List<IFormFile> files)
-        {
-            if (files == null || files.Count == 0)
-            {
-                TempData["Error"] = "Vui lòng chọn ít nhất 1 file hình ảnh";
-                return RedirectToAction(nameof(QuanLyHinh));
-            }
-
-            var uploadPath = Path.Combine(_env.WebRootPath, "images", "products");
-            if (!Directory.Exists(uploadPath))
-                Directory.CreateDirectory(uploadPath);
-
-            int successCount = 0;
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-
-            foreach (var file in files)
-            {
-                if (file.Length > 0)
-                {
-                    var ext = Path.GetExtension(file.FileName).ToLower();
-                    if (!allowedExtensions.Contains(ext))
-                        continue;
-
-                    // Giữ tên file gốc, thêm timestamp nếu trùng
-                    var fileName = Path.GetFileNameWithoutExtension(file.FileName);
-                    var finalName = fileName + ext;
-                    var filePath = Path.Combine(uploadPath, finalName);
-                    
-                    if (System.IO.File.Exists(filePath))
-                    {
-                        finalName = fileName + "_" + DateTime.Now.Ticks + ext;
-                        filePath = Path.Combine(uploadPath, finalName);
-                    }
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-                    successCount++;
-                }
-            }
-
-            TempData["Success"] = $"Đã upload thành công {successCount} hình ảnh";
-            return RedirectToAction(nameof(QuanLyHinh));
-        }
-
-        // POST: Admin/SanPham/XoaHinh - Xóa hình ảnh
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult XoaHinh(string imagePath)
-        {
-            if (string.IsNullOrEmpty(imagePath))
-            {
-                TempData["Error"] = "Đường dẫn hình không hợp lệ";
-                return RedirectToAction(nameof(QuanLyHinh));
-            }
-
-            var fullPath = Path.Combine(_env.WebRootPath, imagePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
-            
-            if (System.IO.File.Exists(fullPath))
-            {
-                System.IO.File.Delete(fullPath);
-                TempData["Success"] = "Đã xóa hình ảnh thành công";
-            }
-            else
-            {
-                TempData["Error"] = "Không tìm thấy file hình ảnh";
-            }
-
-            return RedirectToAction(nameof(QuanLyHinh));
         }
     }
 }

@@ -15,25 +15,15 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query));
         }
 
-        public List<KhachHang> Search(string? maKh, string? hoTen, string? sdt)
+        public List<KhachHang> Search(string? search)
         {
             string query = "SELECT * FROM KHACH_HANG WHERE 1=1";
             var parameters = new List<SqlParameter>();
 
-            if (!string.IsNullOrEmpty(maKh))
+            if (!string.IsNullOrEmpty(search))
             {
-                query += " AND MAKH LIKE @MaKh";
-                parameters.Add(new SqlParameter("@MaKh", $"%{maKh}%"));
-            }
-            if (!string.IsNullOrEmpty(hoTen))
-            {
-                query += " AND HOTENKH LIKE @HoTen";
-                parameters.Add(new SqlParameter("@HoTen", $"%{hoTen}%"));
-            }
-            if (!string.IsNullOrEmpty(sdt))
-            {
-                query += " AND SDTKH LIKE @Sdt";
-                parameters.Add(new SqlParameter("@Sdt", $"%{sdt}%"));
+                query += " AND (MAKH LIKE @Search OR HOTENKH LIKE @Search OR SDTKH LIKE @Search)";
+                parameters.Add(new SqlParameter("@Search", $"%{search}%"));
             }
             query += " ORDER BY MAKH";
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query, parameters.ToArray()));

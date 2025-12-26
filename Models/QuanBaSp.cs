@@ -15,6 +15,8 @@ public partial class QuanBaSp
 
     public string? Manvchon { get; set; }
 
+    public int? Phantramgiam { get; set; }
+
     public virtual User? User { get; set; }
 
     public virtual ICollection<SanPham> Masps { get; set; } = new List<SanPham>();

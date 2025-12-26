@@ -1,0 +1,149 @@
+@model PhieuXuatKho
+@{
+    Layout = null;
+    var donHang = Model.MadonhangNavigation;
+    var chiTiet = donHang?.CtDonhangs ?? new List<CtDonhang>();
+    var tongTien = chiTiet.Sum(x => x.Thanhtien ?? 0);
+    var nguoiDuyet = ViewBag.NguoiDuyet as User;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Phiếu xuất kho - @Model.Maphieuxuat</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Times New Roman', serif; font-size: 14px; line-height: 1.5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #8B4513; padding-bottom: 15px; }
+        .company-name { font-size: 20px; font-weight: bold; color: #8B4513; text-transform: uppercase; }
+        .company-info { font-size: 12px; color: #666; margin-top: 5px; }
+        .title { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 20px 0; color: #333; }
+        .phieu-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .phieu-info-left, .phieu-info-right { width: 48%; }
+        .info-row { margin-bottom: 8px; }
+        .info-label { font-weight: bold; display: inline-block; width: 120px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #333; padding: 10px 8px; text-align: left; }
+        th { background: #8B4513; color: white; font-weight: bold; text-align: center; }
+        td.center { text-align: center; }
+        td.right { text-align: right; }
+        .total-row { background: #FFF8DC; font-weight: bold; }
+        .total-row td { font-size: 16px; }
+        .signatures { display: flex; justify-content: space-between; margin-top: 40px; text-align: center; }
+        .signature-box { width: 30%; }
+        .signature-title { font-weight: bold; margin-bottom: 60px; }
+        .signature-name { font-style: italic; }
+        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; border-top: 1px dashed #ccc; padding-top: 15px; }
+        .no-print { margin-bottom: 20px; text-align: center; }
+        .btn-print { background: #8B4513; color: white; padding: 10px 30px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px; }
+        .btn-print:hover { background: #A0522D; }
+        .btn-back { background: #6c757d; color: white; padding: 10px 30px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px; margin-left: 10px; text-decoration: none; }
+        @@media print {
+            .no-print { display: none; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button class="btn-print" onclick="window.print()">🖨️ In phiếu xuất kho</button>
+        <a href="@Url.Action("Details", "DonHang", new { id = Model.Madonhang })" class="btn-back">← Quay lại</a>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="company-name">🪑 Nội Thất Gỗ Việt</div>
+            <div class="company-info">Địa chỉ: 123 Đường ABC, Quận XYZ, TP.HCM</div>
+            <div class="company-info">Điện thoại: 0123 456 789 | Email: contact@noithatgoviet.vn</div>
+        </div>
+
+        <div class="title" style="text-align: center;">PHIẾU XUẤT KHO</div>
+
+        <div class="phieu-info">
+            <div class="phieu-info-left">
+                <div class="info-row"><span class="info-label">Số phiếu:</span> <strong>@Model.Maphieuxuat</strong></div>
+                <div class="info-row"><span class="info-label">Ngày xuất:</span> @Model.Ngayxuat?.ToString("dd/MM/yyyy HH:mm")</div>
+                <div class="info-row"><span class="info-label">Mã đơn hàng:</span> <strong>@Model.Madonhang</strong></div>
+            </div>
+            <div class="phieu-info-right">
+                <div class="info-row"><span class="info-label">Người lập:</span> @(Model.User?.HoTen ?? Model.Userid)</div>
+                <div class="info-row"><span class="info-label">Người duyệt:</span> @(nguoiDuyet?.HoTen ?? Model.Manvduyet ?? "N/A")</div>
+            </div>
+        </div>
+
+        @if (donHang != null)
+        {
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <strong>Thông tin giao hàng:</strong><br/>
+                <div class="info-row"><span class="info-label">Khách hàng:</span> @donHang.MakhNavigation?.Hotenkh</div>
+                <div class="info-row"><span class="info-label">Số điện thoại:</span> @donHang.MakhNavigation?.Sdtkh</div>
+                <div class="info-row"><span class="info-label">Địa chỉ:</span> @donHang.MakhNavigation?.Diachikh</div>
+            </div>
+        }
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50px;">STT</th>
+                    <th style="width: 100px;">Mã SP</th>
+                    <th>Tên sản phẩm</th>
+                    <th style="width: 80px;">ĐVT</th>
+                    <th style="width: 80px;">Số lượng</th>
+                    <th style="width: 120px;">Đơn giá</th>
+                    <th style="width: 120px;">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ var stt = 0; }
+                @foreach (var ct in chiTiet)
+                {
+                    stt++;
+                    <tr>
+                        <td class="center">@stt</td>
+                        <td>@ct.Masp</td>
+                        <td>@(ct.MaspNavigation?.Tensp ?? "N/A")</td>
+                        <td class="center">Cái</td>
+                        <td class="center">@ct.Soluong</td>
+                        <td class="right">@ct.Dongia?.ToString("N0") đ</td>
+                        <td class="right">@ct.Thanhtien?.ToString("N0") đ</td>
+                    </tr>
+                }
+                <tr class="total-row">
+                    <td colspan="4" class="right"><strong>TỔNG CỘNG:</strong></td>
+                    <td class="center"><strong>@chiTiet.Sum(x => x.Soluong ?? 0)</strong></td>
+                    <td></td>
+                    <td class="right"><strong>@tongTien.ToString("N0") đ</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        @if (!string.IsNullOrEmpty(donHang?.Ghichu))
+        {
+            <div style="margin-bottom: 20px;">
+                <strong>Ghi chú:</strong> @donHang.Ghichu
+            </div>
+        }
+
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-title">Người lập phiếu</div>
+                <div class="signature-name">@(Model.User?.HoTen ?? "")</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-title">Thủ kho</div>
+                <div class="signature-name"></div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-title">Người nhận hàng</div>
+                <div class="signature-name">@(donHang?.MakhNavigation?.Hotenkh ?? "")</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <em>Phiếu xuất kho được in từ hệ thống quản lý Nội Thất Gỗ Việt</em><br/>
+            <em>Ngày in: @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</em>
+        </div>
+    </div>
+</body>
+</html>

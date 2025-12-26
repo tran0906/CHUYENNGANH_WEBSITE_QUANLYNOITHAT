@@ -60,6 +60,7 @@
                                 <tr style="background: var(--primary-color); color: white;">
                                     <th style="padding: 15px; text-align: left;">Mã đơn hàng</th>
                                     <th style="padding: 15px; text-align: left;">Ngày đặt</th>
+                                    <th style="padding: 15px; text-align: left;">Dự kiến giao</th>
                                     <th style="padding: 15px; text-align: center;">Số SP</th>
                                     <th style="padding: 15px; text-align: right;">Tổng tiền</th>
                                     <th style="padding: 15px; text-align: center;">Trạng thái</th>
@@ -72,11 +73,31 @@
                                     var totalAmount = order.CtDonhangs?.Sum(c => c.Thanhtien) ?? 0;
                                     var itemCount = order.CtDonhangs?.Sum(c => c.Soluong) ?? 0;
                                     
+                                    // Tính ngày dự kiến giao hàng (3-5 ngày làm việc)
+                                    var ngayDuKienGiao = order.Ngaydat.AddDays(3);
+                                    var ngayDuKienGiaoMax = order.Ngaydat.AddDays(5);
+                                    while (ngayDuKienGiao.DayOfWeek == DayOfWeek.Sunday) ngayDuKienGiao = ngayDuKienGiao.AddDays(1);
+                                    while (ngayDuKienGiaoMax.DayOfWeek == DayOfWeek.Sunday) ngayDuKienGiaoMax = ngayDuKienGiaoMax.AddDays(1);
+                                    
                                     <tr style="border-bottom: 1px solid #eee;">
                                         <td style="padding: 15px;">
                                             <strong style="color: var(--primary-color);">@order.Madonhang</strong>
                                         </td>
                                         <td style="padding: 15px;">@order.Ngaydat.ToString("dd/MM/yyyy")</td>
+                                        <td style="padding: 15px;">
+                                            @if (order.Trangthai == "Hoàn thành" || order.Trangthai == "Đã giao")
+                                            {
+                                                <span style="color: #28a745; font-weight: 500;"><i class="fas fa-check-circle"></i> Đã giao</span>
+                                            }
+                                            else if (order.Trangthai == "Đã hủy")
+                                            {
+                                                <span style="color: #dc3545;">-</span>
+                                            }
+                                            else
+                                            {
+                                                <span style="color: #007bff; font-weight: 500;">@ngayDuKienGiao.ToString("dd/MM") - @ngayDuKienGiaoMax.ToString("dd/MM")</span>
+                                            }
+                                        </td>
                                         <td style="padding: 15px; text-align: center;">@itemCount</td>
                                         <td style="padding: 15px; text-align: right; font-weight: 600;">@totalAmount.ToString("N0") ₫</td>
                                         <td style="padding: 15px; text-align: center;">

@@ -1,8 +1,6 @@
 @model IEnumerable<DonHang>
 @{
     ViewData["Title"] = "Quản lý đơn hàng";
-    var vaiTro = Context.Session.GetString("AdminVaiTro");
-    var isAdmin = vaiTro == "Admin" || vaiTro == "QuanLy" || vaiTro == "Quản trị hệ thống";
 }
 
 <style>
@@ -19,6 +17,7 @@
     .status-card.cancelled { background: #FEF2F2; color: #991B1B; }
     
     /* Badge màu nhẹ nhàng */
+    .badge-payment { background: #FED7AA; color: #C2410C; }
     .badge-pending { background: #FEF3C7; color: #92400E; }
     .badge-confirmed { background: #DBEAFE; color: #1E40AF; }
     .badge-processing { background: #E0E7FF; color: #3730A3; }
@@ -29,18 +28,8 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2><i class="bi bi-receipt"></i> Quản lý đơn hàng</h2>
-    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+    <span class="text-muted small"><i class="bi bi-info-circle"></i> Đơn hàng được tạo tự động khi khách đặt hàng</span>
 </div>
-
-<!-- Thông báo phân quyền cho nhân viên -->
-@if (!isAdmin)
-{
-    <div class="alert alert-info alert-dismissible fade show mb-3">
-        <i class="bi bi-info-circle"></i> <strong>Quyền hạn của bạn:</strong> Bạn đang đăng nhập với quyền <span class="badge bg-info">Nhân viên</span>
-        <br><small class="text-muted">Bạn có thể xem chi tiết và xử lý đơn hàng. Các thao tác Sửa, Xóa, Hủy đơn chỉ dành cho Admin.</small>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
 
 @if (TempData["Success"] != null)
 {
@@ -53,56 +42,66 @@
 <!-- Thống kê nhanh theo trạng thái -->
 <div class="row mb-3 g-2">
     @{
+        var choThanhToan = Model.Count(x => x.Trangthai == "Chờ thanh toán");
         var choXacNhan = Model.Count(x => x.Trangthai == "Chờ xác nhận");
         var daXacNhan = Model.Count(x => x.Trangthai == "Đã xác nhận");
         var dangXuLy = Model.Count(x => x.Trangthai == "Đang xử lý");
         var dangGiao = Model.Count(x => x.Trangthai == "Đang giao");
         var daGiao = Model.Count(x => x.Trangthai == "Đã giao" || x.Trangthai == "Hoàn thành");
         var daHuy = Model.Count(x => x.Trangthai == "Đã hủy");
+        var currentFilter = ViewBag.TrangThai as string ?? "";
     }
-    <div class="col-md-2">
+    <div class="col">
+        <a href="?trangThai=Chờ thanh toán" class="text-decoration-none">
+            <div class="status-card @(currentFilter == "Chờ thanh toán" ? "border-3 border-warning" : "")" style="background: #FED7AA; color: #C2410C;">
+                <h3>@choThanhToan</h3>
+                <small><i class="bi bi-credit-card"></i> Chờ thanh toán</small>
+            </div>
+        </a>
+    </div>
+    <div class="col">
         <a href="?trangThai=Chờ xác nhận" class="text-decoration-none">
-            <div class="status-card pending">
+            <div class="status-card pending @(currentFilter == "Chờ xác nhận" ? "border-3 border-warning" : "")">
                 <h3>@choXacNhan</h3>
                 <small><i class="bi bi-clock"></i> Chờ xác nhận</small>
             </div>
         </a>
     </div>
-    <div class="col-md-2">
+    <div class="col">
         <a href="?trangThai=Đã xác nhận" class="text-decoration-none">
-            <div class="status-card confirmed">
+            <div class="status-card confirmed @(currentFilter == "Đã xác nhận" ? "border-3 border-primary" : "")">
                 <h3>@daXacNhan</h3>
                 <small><i class="bi bi-check-lg"></i> Đã xác nhận</small>
             </div>
         </a>
     </div>
-    <div class="col-md-2">
+    <div class="col">
         <a href="?trangThai=Đang xử lý" class="text-decoration-none">
-            <div class="status-card processing">
+            <div class="status-card processing @(currentFilter == "Đang xử lý" ? "border-3 border-primary" : "")">
                 <h3>@dangXuLy</h3>
                 <small><i class="bi bi-box-seam"></i> Đang xử lý</small>
             </div>
         </a>
     </div>
-    <div class="col-md-2">
+    <div class="col">
         <a href="?trangThai=Đang giao" class="text-decoration-none">
-            <div class="status-card shipping">
+            <div class="status-card shipping @(currentFilter == "Đang giao" ? "border-3 border-primary" : "")">
                 <h3>@dangGiao</h3>
                 <small><i class="bi bi-truck"></i> Đang giao</small>
             </div>
         </a>
     </div>
-    <div class="col-md-2">
+    <div class="col">
         <a href="?trangThai=Đã giao" class="text-decoration-none">
-            <div class="status-card delivered">
+            <div class="status-card delivered @(currentFilter == "Đã giao" ? "border-3 border-success" : "")">
                 <h3>@daGiao</h3>
                 <small><i class="bi bi-house-check"></i> Hoàn thành</small>
             </div>
         </a>
     </div>
-    <div class="col-md-2">
+    <div class="col">
         <a href="?trangThai=Đã hủy" class="text-decoration-none">
-            <div class="status-card cancelled">
+            <div class="status-card cancelled @(currentFilter == "Đã hủy" ? "border-3 border-danger" : "")">
                 <h3>@daHuy</h3>
                 <small><i class="bi bi-x-circle"></i> Đã hủy</small>
             </div>
@@ -122,12 +121,20 @@
                 <label class="form-label">Trạng thái</label>
                 <select name="trangThai" class="form-select">
                     <option value="">-- Tất cả --</option>
-                    <option value="Chờ xác nhận" selected="@(ViewBag.TrangThai == "Chờ xác nhận")">Chờ xác nhận</option>
-                    <option value="Đã xác nhận" selected="@(ViewBag.TrangThai == "Đã xác nhận")">Đã xác nhận</option>
-                    <option value="Đang xử lý" selected="@(ViewBag.TrangThai == "Đang xử lý")">Đang xử lý</option>
-                    <option value="Đang giao" selected="@(ViewBag.TrangThai == "Đang giao")">Đang giao</option>
-                    <option value="Đã giao" selected="@(ViewBag.TrangThai == "Đã giao")">Đã giao</option>
-                    <option value="Đã hủy" selected="@(ViewBag.TrangThai == "Đã hủy")">Đã hủy</option>
+                    @{
+                        var trangThaiOptions = new[] { "Chờ thanh toán", "Chờ xác nhận", "Đã xác nhận", "Đang xử lý", "Đang giao", "Đã giao", "Hoàn thành", "Đã hủy" };
+                    }
+                    @foreach (var tt in trangThaiOptions)
+                    {
+                        if (currentFilter == tt)
+                        {
+                            <option value="@tt" selected>@tt</option>
+                        }
+                        else
+                        {
+                            <option value="@tt">@tt</option>
+                        }
+                    }
                 </select>
             </div>
             <div class="col-md-3">
@@ -172,6 +179,7 @@
                 {
                     var badgeClass = item.Trangthai switch
                     {
+                        "Chờ thanh toán" => "badge-payment",
                         "Chờ xác nhận" => "badge-pending",
                         "Đã xác nhận" => "badge-confirmed",
                         "Đang xử lý" => "badge-processing",
@@ -188,18 +196,9 @@
                             <span class="badge @badgeClass">@item.Trangthai</span>
                         </td>
                         <td class="text-center">
-                            <a asp-action="Details" asp-route-id="@item.Madonhang" class="btn btn-sm btn-info" title="Xem chi tiết">
-                                <i class="bi bi-eye"></i>
+                            <a asp-action="Details" asp-route-id="@item.Madonhang" class="btn btn-sm btn-info" title="Xem chi tiết & Xử lý">
+                                <i class="bi bi-eye"></i> Xem
                             </a>
-                            @if (isAdmin)
-                            {
-                                <a asp-action="Edit" asp-route-id="@item.Madonhang" class="btn btn-sm btn-warning" title="Sửa">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@item.Madonhang" class="btn btn-sm btn-danger" title="Xóa">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            }
                         </td>
                     </tr>
                 }
