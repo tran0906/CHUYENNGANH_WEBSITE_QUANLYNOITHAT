@@ -19,15 +19,15 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label asp-for="Masp" class="form-label">Mã sản phẩm</label>
-                        <input asp-for="Masp" class="form-control" />
+                        <label asp-for="Masp" class="form-label">Mã sản phẩm <span class="text-danger">*</span></label>
+                        <input asp-for="Masp" class="form-control" placeholder="VD: SP001, SP002..." />
                         <span asp-validation-for="Masp" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label asp-for="Tensp" class="form-label">Tên sản phẩm</label>
-                        <input asp-for="Tensp" class="form-control" />
+                        <label asp-for="Tensp" class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                        <input asp-for="Tensp" class="form-control" placeholder="Nhập tên sản phẩm" />
                         <span asp-validation-for="Tensp" class="text-danger"></span>
                     </div>
                 </div>
@@ -39,6 +39,7 @@
                         <select asp-for="Manhomsp" class="form-select" asp-items="ViewBag.Manhomsp">
                             <option value="">-- Chọn nhóm --</option>
                         </select>
+                        <span asp-validation-for="Manhomsp" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -47,6 +48,7 @@
                         <select asp-for="Mavl" class="form-select" asp-items="ViewBag.Mavl">
                             <option value="">-- Chọn vật liệu --</option>
                         </select>
+                        <span asp-validation-for="Mavl" class="text-danger"></span>
                     </div>
                 </div>
             </div>
@@ -54,13 +56,15 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label asp-for="Giaban" class="form-label">Giá bán (VNĐ)</label>
-                        <input asp-for="Giaban" class="form-control" type="number" />
+                        <input asp-for="Giaban" class="form-control" type="number" min="0" placeholder="0" />
+                        <span asp-validation-for="Giaban" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label asp-for="Soluongton" class="form-label">Số lượng tồn</label>
-                        <input asp-for="Soluongton" class="form-control" type="number" />
+                        <input asp-for="Soluongton" class="form-control" type="number" min="0" placeholder="0" />
+                        <span asp-validation-for="Soluongton" class="text-danger"></span>
                     </div>
                 </div>
             </div>
@@ -121,7 +125,8 @@
 
             <div class="mb-3">
                 <label asp-for="Mota" class="form-label">Mô tả</label>
-                <textarea asp-for="Mota" class="form-control" rows="3"></textarea>
+                <textarea asp-for="Mota" class="form-control" rows="3" placeholder="Nhập mô tả sản phẩm (tối đa 2000 ký tự)"></textarea>
+                <span asp-validation-for="Mota" class="text-danger"></span>
             </div>
             <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Lưu</button>
             <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
@@ -132,9 +137,104 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="/js/validation.js"></script>
     <script>
         let selectedImages = [];
         
+        // ========== VALIDATION ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            
+            // Validate Mã SP
+            const masp = document.querySelector('[name="Masp"]');
+            if (masp) {
+                masp.addEventListener('blur', function() {
+                    const result = Validator.isValidCode(this.value, 'Mã sản phẩm');
+                    if (!result.valid) Validator.showError(this, result.message);
+                    else Validator.showSuccess(this);
+                });
+                masp.addEventListener('input', function() {
+                    // Chỉ cho phép chữ, số, _, -
+                    this.value = this.value.replace(/[^a-zA-Z0-9_-]/g, '').toUpperCase();
+                });
+            }
+            
+            // Validate Tên SP
+            const tensp = document.querySelector('[name="Tensp"]');
+            if (tensp) {
+                tensp.addEventListener('blur', function() {
+                    const result = Validator.checkLength(this.value, 2, 200);
+                    if (!result.valid) Validator.showError(this, 'Tên sản phẩm ' + result.message.toLowerCase());
+                    else Validator.showSuccess(this);
+                });
+            }
+            
+            // Validate Giá bán
+            const giaban = document.querySelector('[name="Giaban"]');
+            if (giaban) {
+                giaban.addEventListener('blur', function() {
+                    const result = Validator.isInRange(this.value, 0, 999999999, 'Giá bán');
+                    if (!result.valid) Validator.showError(this, result.message);
+                    else Validator.showSuccess(this);
+                });
+                giaban.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            }
+            
+            // Validate Số lượng tồn
+            const soluong = document.querySelector('[name="Soluongton"]');
+            if (soluong) {
+                soluong.addEventListener('blur', function() {
+                    const result = Validator.isInRange(this.value, 0, 99999, 'Số lượng tồn');
+                    if (!result.valid) Validator.showError(this, result.message);
+                    else Validator.showSuccess(this);
+                });
+                soluong.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            }
+            
+            // Validate Mô tả
+            const mota = document.querySelector('[name="Mota"]');
+            if (mota) {
+                mota.addEventListener('blur', function() {
+                    if (this.value && this.value.length > 2000) {
+                        Validator.showError(this, 'Mô tả tối đa 2000 ký tự');
+                    } else {
+                        Validator.clearError(this);
+                    }
+                });
+            }
+            
+            // Submit validation
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+                
+                // Validate Mã SP
+                if (masp) {
+                    const result = Validator.isValidCode(masp.value, 'Mã sản phẩm');
+                    if (!result.valid) { Validator.showError(masp, result.message); isValid = false; }
+                }
+                
+                // Validate Tên SP
+                if (tensp) {
+                    const result = Validator.checkLength(tensp.value, 2, 200);
+                    if (!result.valid) { Validator.showError(tensp, 'Tên sản phẩm ' + result.message.toLowerCase()); isValid = false; }
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    const firstError = form.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                }
+            });
+        });
+        
+        // ========== IMAGE HANDLING ==========
         // Preview uploaded images
         function previewUploadImages(input) {
             const container = document.getElementById('uploadPreview');

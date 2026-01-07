@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Dashboard";
     var topSanPham = ViewBag.TopSanPhamBanChay as System.Data.DataTable;
+    var donHangGanDay = ViewBag.DonHangGanDay as System.Data.DataTable;
 }
 
 <h2 class="mb-4">Dashboard</h2>
@@ -72,25 +73,50 @@
     </div>
 </div>
 
-<!-- Doanh thu hôm nay -->
+<!-- Biểu đồ đơn hàng theo trạng thái -->
 <div class="row mb-4">
     <div class="col-md-6">
-        <div class="card border-success">
-            <div class="card-body text-center">
-                <h6 class="text-muted mb-2"><i class="bi bi-calendar-day"></i> Doanh thu hôm nay (@DateTime.Now.ToString("dd/MM/yyyy"))</h6>
-                <h3 class="text-success mb-0">@(((decimal)ViewBag.DoanhThuHomNay).ToString("N0")) đ</h3>
-                <small class="text-muted">(Tổng thanh toán trong ngày)</small>
+        <div class="card h-100">
+            <div class="card-header">
+                <strong><i class="bi bi-pie-chart"></i> Đơn hàng theo trạng thái</strong>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="chartDonHang" style="max-height: 220px;"></canvas>
             </div>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card border-info">
-            <div class="card-body text-center">
-                <h6 class="text-muted mb-2"><i class="bi bi-clock-history"></i> Đơn hàng chờ xử lý</h6>
-                <h3 class="text-info mb-0">@ViewBag.DonHangMoi</h3>
-                <a asp-controller="DonHang" asp-action="Index" class="btn btn-outline-info btn-sm mt-2">
-                    Xem ngay
-                </a>
+        <div class="card h-100">
+            <div class="card-header">
+                <strong><i class="bi bi-clock-history"></i> Tình trạng đơn hàng</strong>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="p-3 rounded" style="background: #fff3cd;">
+                            <h3 class="mb-1 text-warning">@ViewBag.DonChoXuLy</h3>
+                            <small class="text-muted">Chờ xử lý</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="p-3 rounded" style="background: #cff4fc;">
+                            <h3 class="mb-1 text-info">@ViewBag.DonDangGiao</h3>
+                            <small class="text-muted">Đang giao</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded" style="background: #d1e7dd;">
+                            <h3 class="mb-1 text-success">@ViewBag.DonHoanThanh</h3>
+                            <small class="text-muted">Hoàn thành</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded" style="background: #f8d7da;">
+                            <h3 class="mb-1 text-danger">@ViewBag.DonDaHuy</h3>
+                            <small class="text-muted">Đã hủy</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -109,21 +135,37 @@
                             <th>Mã ĐH</th>
                             <th>Khách hàng</th>
                             <th>Ngày đặt</th>
+                            <th>Tổng tiền</th>
                             <th>Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var dh in ViewBag.DonHangGanDay as List<DonHang>)
+                        @if (donHangGanDay != null && donHangGanDay.Rows.Count > 0)
+                        {
+                            @foreach (System.Data.DataRow row in donHangGanDay.Rows)
+                            {
+                                var maDH = row["MADONHANG"]?.ToString() ?? "";
+                                var tenKH = row["HOTENKH"]?.ToString() ?? "N/A";
+                                var ngayDat = row["NGAYDAT"] != DBNull.Value ? Convert.ToDateTime(row["NGAYDAT"]).ToString("dd/MM/yyyy") : "";
+                                var tongTien = row["TongTien"] != DBNull.Value ? Convert.ToDecimal(row["TongTien"]) : 0;
+                                var trangThai = row["TRANGTHAI"]?.ToString() ?? "";
+                                var badgeClass = (trangThai == "Hoàn thành" || trangThai == "Đã giao") ? "bg-success" 
+                                               : (trangThai == "Đang xử lý" || trangThai == "Đang giao") ? "bg-warning" 
+                                               : (trangThai == "Chờ xác nhận" || trangThai == "Chờ thanh toán") ? "bg-info" 
+                                               : trangThai == "Đã hủy" ? "bg-danger" : "bg-secondary";
+                                <tr>
+                                    <td><a asp-controller="DonHang" asp-action="Details" asp-route-id="@maDH">@maDH</a></td>
+                                    <td>@tenKH</td>
+                                    <td>@ngayDat</td>
+                                    <td class="text-end">@tongTien.ToString("N0") đ</td>
+                                    <td><span class="badge @badgeClass">@trangThai</span></td>
+                                </tr>
+                            }
+                        }
+                        else
                         {
                             <tr>
-                                <td><a asp-controller="DonHang" asp-action="Details" asp-route-id="@dh.Madonhang">@dh.Madonhang</a></td>
-                                <td>@dh.MakhNavigation?.Hotenkh</td>
-                                <td>@dh.Ngaydat.ToString("dd/MM/yyyy")</td>
-                                <td>
-                                    <span class="badge @(dh.Trangthai == "Hoàn thành" || dh.Trangthai == "Đã giao" ? "bg-success" : dh.Trangthai == "Đang xử lý" || dh.Trangthai == "Đang giao" ? "bg-warning" : dh.Trangthai == "Chờ xác nhận" || dh.Trangthai == "Chờ thanh toán" ? "bg-info" : dh.Trangthai == "Đã hủy" ? "bg-danger" : "bg-secondary")">
-                                        @dh.Trangthai
-                                    </span>
-                                </td>
+                                <td colspan="5" class="text-center text-muted">Chưa có đơn hàng</td>
                             </tr>
                         }
                     </tbody>
@@ -173,3 +215,33 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Biểu đồ đơn hàng theo trạng thái
+        var ctx = document.getElementById('chartDonHang').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Chờ xử lý', 'Đang giao', 'Hoàn thành', 'Đã hủy'],
+                datasets: [{
+                    data: [@ViewBag.DonChoXuLy, @ViewBag.DonDangGiao, @ViewBag.DonHoanThanh, @ViewBag.DonDaHuy],
+                    backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 8, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    </script>
+}

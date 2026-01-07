@@ -4,11 +4,10 @@ using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho PhieuXuatKho - Mô hình 3 lớp
-    /// </summary>
+    // Data Access Layer cho PhieuXuatKho - Mô hình 3 lớp
     public class PhieuXuatKhoDAL
     {
+        // Lấy tất cả phiếu xuất kho
         public List<PhieuXuatKho> GetAll()
         {
             string query = @"SELECT px.*, u.HoTen as TenNguoiTao, dh.NGAYDAT as Ngaydat
@@ -19,6 +18,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query));
         }
 
+        // Lấy phiếu xuất kho theo mã
         public PhieuXuatKho? GetById(string ma)
         {
             string query = @"SELECT px.*, u.HoTen as TenNguoiTao
@@ -29,6 +29,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query, parameters)).FirstOrDefault();
         }
 
+        // Thêm phiếu xuất kho mới
         public int Insert(PhieuXuatKho obj)
         {
             string query = @"INSERT INTO PHIEU_XUAT_KHO (MAPHIEUXUAT, USERID, MADONHANG, NGAYXUAT, MANVDUYET) 
@@ -43,6 +44,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Cập nhật phiếu xuất kho
         public int Update(PhieuXuatKho obj)
         {
             string query = @"UPDATE PHIEU_XUAT_KHO SET USERID=@Userid, MADONHANG=@Madonhang, 
@@ -57,6 +59,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Xóa phiếu xuất kho
         public int Delete(string ma)
         {
             string query = "DELETE FROM PHIEU_XUAT_KHO WHERE MAPHIEUXUAT=@Ma";
@@ -64,6 +67,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Kiểm tra phiếu xuất kho tồn tại
         public bool Exists(string ma)
         {
             string query = "SELECT COUNT(*) FROM PHIEU_XUAT_KHO WHERE MAPHIEUXUAT=@Ma";
@@ -71,6 +75,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
+        // Lấy phiếu xuất kho theo mã đơn hàng
         public PhieuXuatKho? GetByDonHang(string maDonHang)
         {
             string query = @"SELECT px.*, u.HoTen as TenNguoiTao
@@ -81,6 +86,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query, parameters)).FirstOrDefault();
         }
 
+        // Tạo mã phiếu xuất kho mới tự động
         public string GenerateNewId()
         {
             var result = SqlConnectionHelper.ExecuteScalar("SELECT MAX(MAPHIEUXUAT) FROM PHIEU_XUAT_KHO WHERE MAPHIEUXUAT LIKE 'PX%'");
@@ -103,6 +109,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return $"PX{(count + 1):D3}";
         }
 
+        // Chuyển DataTable thành List<PhieuXuatKho>
         private List<PhieuXuatKho> MapDataTableToList(DataTable dt)
         {
             var list = new List<PhieuXuatKho>();

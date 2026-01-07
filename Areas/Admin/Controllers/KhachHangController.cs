@@ -29,6 +29,29 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
             return View(list);
         }
 
+        // GET: Admin/KhachHang/ChiTiet/5 - Cho nhân viên xem chi tiết khách hàng
+        [SkipAdminOnlyFilter]
+        [AdminAuthFilter]
+        public IActionResult ChiTiet(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+            var obj = _bll.GetById(id);
+            if (obj == null) return NotFound();
+            
+            // Lấy danh sách đơn hàng của khách hàng kèm tổng tiền
+            var donHangs = _donHangBLL.GetByKhachHangWithTotal(id);
+            ViewBag.DonHangs = donHangs;
+            
+            // Thống kê
+            ViewBag.TongDonHang = donHangs.Count;
+            ViewBag.DonHoanThanh = donHangs.Count(d => d.Trangthai == "Hoàn thành" || d.Trangthai == "Đã giao");
+            ViewBag.DonDangXuLy = donHangs.Count(d => d.Trangthai != "Hoàn thành" && d.Trangthai != "Đã giao" && d.Trangthai != "Đã hủy");
+            ViewBag.DonDaHuy = donHangs.Count(d => d.Trangthai == "Đã hủy");
+            ViewBag.TongChiTieu = _donHangBLL.GetTongChiTieuKhachHang(id);
+            
+            return View(obj);
+        }
+
         public IActionResult Details(string id)
         {
             if (string.IsNullOrEmpty(id)) return NotFound();

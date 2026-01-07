@@ -93,35 +93,34 @@
                 }
                 
                 <div style="margin-top: 20px;">
-                    @if (!requireDeposit)
-                    {
-                        <label style="display: flex; align-items: center; padding: 15px; background: var(--gray-light); border-radius: 8px; cursor: pointer; margin-bottom: 10px;">
-                            <input type="radio" name="paymentMethod" value="cod" checked style="margin-right: 15px;" />
-                            <i class="fas fa-money-bill-wave" style="font-size: 24px; color: var(--success); margin-right: 15px;"></i>
-                            <div>
-                                <strong>Thanh toán khi nhận hàng (COD)</strong>
-                                <p style="font-size: 13px; color: var(--text-light); margin: 0;">Thanh toán bằng tiền mặt khi nhận hàng</p>
-                            </div>
-                        </label>
-                    }
-                    
-                    <!-- MoMo Payment -->
-                    <label style="display: flex; align-items: center; padding: 15px; background: @(requireDeposit ? "#ffe0f0" : "var(--gray-light)"); border-radius: 8px; cursor: pointer; margin-bottom: 10px; @(requireDeposit ? "border: 2px solid #ae2070;" : "")">
-                        <input type="radio" name="paymentMethod" value="momo" @(requireDeposit ? "checked" : "") style="margin-right: 15px;" />
+                    <!-- Thanh toán qua MoMo -->
+                    <label style="display: flex; align-items: center; padding: 15px; background: #ffe0f0; border-radius: 8px; cursor: pointer; margin-bottom: 10px; border: 2px solid #ae2070;">
+                        <input type="radio" name="paymentMethod" value="momo" checked style="margin-right: 15px;" />
                         <img src="https://developers.momo.vn/v3/assets/images/icon-52bd5808cecdb1970e1aeec3c31a3ee1.png" alt="MoMo" style="width: 40px; height: 40px; margin-right: 15px; border-radius: 8px;" />
                         <div>
                             @if (requireDeposit)
                             {
-                                <strong style="color: #ae2070;">Đặt cọc 20% qua Ví MoMo</strong>
-                                <p style="font-size: 13px; color: var(--text-light); margin: 0;">Thanh toán @depositAmount.ToString("N0")₫ qua MoMo, còn lại @remainingAmount.ToString("N0")₫ khi nhận hàng</p>
+                                <strong style="color: #ae2070;">Đặt cọc 20% qua MoMo</strong>
+                                <p style="font-size: 13px; color: var(--text-light); margin: 0;">Thanh toán @depositAmount.ToString("N0")₫ bằng thẻ ATM nội địa</p>
                             }
                             else
                             {
-                                <strong style="color: #ae2070;">Thanh toán qua Ví MoMo</strong>
-                                <p style="font-size: 13px; color: var(--text-light); margin: 0;">Thanh toán qua thẻ ngân hàng hoặc ví MoMo</p>
+                                <strong style="color: #ae2070;">Thanh toán qua MoMo</strong>
+                                <p style="font-size: 13px; color: var(--text-light); margin: 0;">Thanh toán bằng thẻ ATM nội địa (Vietcombank, BIDV, Techcombank...)</p>
                             }
                         </div>
                     </label>
+                    
+                    <!-- Hướng dẫn test (chỉ hiển thị khi demo) -->
+                    <div style="background: #e8f4fd; border: 1px solid #bee5eb; padding: 12px; border-radius: 8px; margin-top: 10px;">
+                        <p style="margin: 0 0 8px 0; font-weight: 600; color: #0c5460;"><i class="fas fa-info-circle"></i> Thông tin thẻ test (Demo):</p>
+                        <div style="font-size: 13px; color: #0c5460;">
+                            <p style="margin: 3px 0;">• Số thẻ: <strong>9704 0000 0000 0018</strong></p>
+                            <p style="margin: 3px 0;">• Tên chủ thẻ: <strong>NGUYEN VAN A</strong></p>
+                            <p style="margin: 3px 0;">• Ngày phát hành: <strong>03/07</strong></p>
+                            <p style="margin: 3px 0;">• OTP: <strong>000000</strong></p>
+                        </div>
+                    </div>
                 </div>
 
                 @if (TempData["Error"] != null)
@@ -181,6 +180,7 @@
     </div>
 </div>
 
+<script src="/js/validation.js"></script>
 <script>
     // ========== API Địa chỉ Việt Nam ==========
     const API_URL = 'https://provinces.open-api.vn/api';
@@ -275,23 +275,83 @@
     provinceSelect.addEventListener('change', function() {
         loadDistricts(this.value);
         updateFullAddress();
+        Validator.clearError(this);
     });
 
     districtSelect.addEventListener('change', function() {
         loadWards(this.value);
         updateFullAddress();
+        Validator.clearError(this);
     });
 
-    wardSelect.addEventListener('change', updateFullAddress);
-    streetInput.addEventListener('input', updateFullAddress);
+    wardSelect.addEventListener('change', function() {
+        updateFullAddress();
+        Validator.clearError(this);
+    });
+    
+    streetInput.addEventListener('input', function() {
+        updateFullAddress();
+        Validator.clearError(this);
+    });
+    
+    // Validate số nhà khi blur
+    streetInput.addEventListener('blur', function() {
+        if (Validator.isEmpty(this.value)) {
+            Validator.showError(this, 'Vui lòng nhập số nhà, tên đường');
+        } else if (this.value.length < 5) {
+            Validator.showError(this, 'Địa chỉ quá ngắn (tối thiểu 5 ký tự)');
+        } else {
+            Validator.showSuccess(this);
+        }
+    });
 
     // Validate form trước khi submit
     document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-        if (!provinceSelect.value || !districtSelect.value || !wardSelect.value || !streetInput.value.trim()) {
+        let isValid = true;
+        let errorMessages = [];
+        
+        // Validate Tỉnh/Thành phố
+        if (!provinceSelect.value) {
+            Validator.showError(provinceSelect, 'Vui lòng chọn Tỉnh/Thành phố');
+            errorMessages.push('Tỉnh/Thành phố');
+            isValid = false;
+        }
+        
+        // Validate Quận/Huyện
+        if (!districtSelect.value) {
+            Validator.showError(districtSelect, 'Vui lòng chọn Quận/Huyện');
+            errorMessages.push('Quận/Huyện');
+            isValid = false;
+        }
+        
+        // Validate Phường/Xã
+        if (!wardSelect.value) {
+            Validator.showError(wardSelect, 'Vui lòng chọn Phường/Xã');
+            errorMessages.push('Phường/Xã');
+            isValid = false;
+        }
+        
+        // Validate Số nhà, tên đường
+        if (Validator.isEmpty(streetInput.value)) {
+            Validator.showError(streetInput, 'Vui lòng nhập số nhà, tên đường');
+            errorMessages.push('Số nhà, tên đường');
+            isValid = false;
+        } else if (streetInput.value.trim().length < 5) {
+            Validator.showError(streetInput, 'Địa chỉ quá ngắn (tối thiểu 5 ký tự)');
+            isValid = false;
+        }
+        
+        if (!isValid) {
             e.preventDefault();
-            alert('Vui lòng nhập đầy đủ địa chỉ giao hàng!');
+            // Scroll đến lỗi đầu tiên
+            const firstError = this.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
             return false;
         }
+        
         updateFullAddress();
     });
 

@@ -4,11 +4,10 @@ using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho Cungcap - Mô hình 3 lớp
-    /// </summary>
+    // Data Access Layer cho Cungcap - Mô hình 3 lớp
     public class CungcapDAL
     {
+        // Lấy tất cả thông tin cung cấp
         public List<Cungcap> GetAll()
         {
             string query = @"SELECT cc.*, ncc.TENNCC as Tenncc, sp.TENSP as Tensp
@@ -19,6 +18,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query));
         }
 
+        // Lấy thông tin cung cấp theo mã NCC và mã SP
         public Cungcap? GetById(string maNcc, string maSp)
         {
             string query = @"SELECT cc.*, ncc.TENNCC as Tenncc, sp.TENSP as Tensp
@@ -33,6 +33,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query, parameters)).FirstOrDefault();
         }
 
+        // Thêm liên kết cung cấp mới
         public int Insert(Cungcap obj)
         {
             string query = "INSERT INTO CUNGCAP (MANCC, MASP, SOLUONGSP) VALUES (@Mancc, @Masp, @Soluongsp)";
@@ -44,6 +45,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Cập nhật số lượng cung cấp
         public int Update(Cungcap obj)
         {
             string query = "UPDATE CUNGCAP SET SOLUONGSP=@Soluongsp WHERE MANCC=@Mancc AND MASP=@Masp";
@@ -55,6 +57,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Xóa liên kết cung cấp
         public int Delete(string maNcc, string maSp)
         {
             string query = "DELETE FROM CUNGCAP WHERE MANCC=@MaNcc AND MASP=@MaSp";
@@ -62,6 +65,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Kiểm tra liên kết cung cấp tồn tại
         public bool Exists(string maNcc, string maSp)
         {
             string query = "SELECT COUNT(*) FROM CUNGCAP WHERE MANCC=@MaNcc AND MASP=@MaSp";
@@ -69,6 +73,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
+        // Chuyển DataTable thành List<Cungcap>
         private List<Cungcap> MapDataTableToList(DataTable dt)
         {
             var list = new List<Cungcap>();

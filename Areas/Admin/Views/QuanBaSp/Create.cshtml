@@ -12,12 +12,13 @@
 }
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Create">
+        <form asp-action="Create" id="quanbaForm">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="mb-3">
-                <label asp-for="Madotgiamgia" class="form-label">Mã đợt giảm giá</label>
-                <input asp-for="Madotgiamgia" class="form-control" />
+                <label asp-for="Madotgiamgia" class="form-label">Mã đợt giảm giá <span class="text-danger">*</span></label>
+                <input asp-for="Madotgiamgia" class="form-control" placeholder="VD: KM001, SALE2024..." maxlength="20" />
                 <span asp-validation-for="Madotgiamgia" class="text-danger"></span>
+                <small class="text-muted">Tối đa 20 ký tự, chỉ chứa chữ, số, dấu gạch</small>
             </div>
             <div class="mb-3">
                 <label asp-for="Userid" class="form-label">Nhân viên phụ trách</label>
@@ -26,21 +27,139 @@
                 </select>
             </div>
             <div class="mb-3">
-                <label asp-for="Ngaybatdau" class="form-label">Ngày bắt đầu</label>
+                <label asp-for="Ngaybatdau" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
                 <input asp-for="Ngaybatdau" class="form-control" type="date" />
+                <span asp-validation-for="Ngaybatdau" class="text-danger"></span>
             </div>
             <div class="mb-3">
-                <label asp-for="Ngayketthuc" class="form-label">Ngày kết thúc</label>
+                <label asp-for="Ngayketthuc" class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
                 <input asp-for="Ngayketthuc" class="form-control" type="date" />
+                <span asp-validation-for="Ngayketthuc" class="text-danger"></span>
             </div>
             <div class="mb-3">
-                <label asp-for="Phantramgiam" class="form-label">Phần trăm giảm giá (%)</label>
-                <input asp-for="Phantramgiam" class="form-control" type="number" min="0" max="100" placeholder="VD: 20" />
-                <small class="text-muted">Nhập từ 0 đến 100</small>
+                <label asp-for="Phantramgiam" class="form-label">Phần trăm giảm giá (%) <span class="text-danger">*</span></label>
+                <input asp-for="Phantramgiam" class="form-control" type="number" min="1" max="100" placeholder="VD: 20" />
+                <span asp-validation-for="Phantramgiam" class="text-danger"></span>
+                <small class="text-muted">Nhập từ 1 đến 100</small>
             </div>
-            <button type="submit" class="btn btn-primary">Lưu</button>
-            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Lưu</button>
+            <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
         </form>
     </div>
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle"></i> Hướng dẫn</h6>
+                <ul class="small mb-0">
+                    <li>Mã đợt giảm giá phải là duy nhất</li>
+                    <li>Ngày kết thúc phải sau ngày bắt đầu</li>
+                    <li>Phần trăm giảm từ 1% đến 100%</li>
+                    <li>Sau khi tạo, vào "Quản lý SP" để thêm sản phẩm vào đợt giảm giá</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
-@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }
+@section Scripts { 
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="/js/validation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('quanbaForm');
+            
+            // Validate Mã đợt giảm giá
+            const madot = document.querySelector('[name="Madotgiamgia"]');
+            madot.addEventListener('blur', function() {
+                const result = Validator.isValidCode(this.value, 'Mã đợt giảm giá');
+                if (!result.valid) Validator.showError(this, result.message);
+                else Validator.showSuccess(this);
+            });
+            madot.addEventListener('input', function() {
+                this.value = this.value.replace(/[^a-zA-Z0-9_-]/g, '').toUpperCase();
+            });
+            
+            // Validate Ngày bắt đầu
+            const ngayBD = document.querySelector('[name="Ngaybatdau"]');
+            ngayBD.addEventListener('change', function() {
+                if (Validator.isEmpty(this.value)) {
+                    Validator.showError(this, 'Ngày bắt đầu không được để trống');
+                } else {
+                    Validator.showSuccess(this);
+                    // Kiểm tra lại ngày kết thúc
+                    if (ngayKT.value) ngayKT.dispatchEvent(new Event('change'));
+                }
+            });
+            
+            // Validate Ngày kết thúc
+            const ngayKT = document.querySelector('[name="Ngayketthuc"]');
+            ngayKT.addEventListener('change', function() {
+                if (Validator.isEmpty(this.value)) {
+                    Validator.showError(this, 'Ngày kết thúc không được để trống');
+                } else if (ngayBD.value && new Date(this.value) < new Date(ngayBD.value)) {
+                    Validator.showError(this, 'Ngày kết thúc phải sau ngày bắt đầu');
+                } else {
+                    Validator.showSuccess(this);
+                }
+            });
+            
+            // Validate Phần trăm giảm
+            const phantram = document.querySelector('[name="Phantramgiam"]');
+            phantram.addEventListener('blur', function() {
+                if (Validator.isEmpty(this.value)) {
+                    Validator.showError(this, 'Phần trăm giảm không được để trống');
+                } else {
+                    const val = parseInt(this.value);
+                    if (isNaN(val) || val < 1 || val > 100) {
+                        Validator.showError(this, 'Phần trăm giảm phải từ 1 đến 100');
+                    } else {
+                        Validator.showSuccess(this);
+                    }
+                }
+            });
+            phantram.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (parseInt(this.value) > 100) this.value = '100';
+            });
+            
+            // Submit validation
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+                
+                // Validate Mã
+                const maResult = Validator.isValidCode(madot.value, 'Mã đợt giảm giá');
+                if (!maResult.valid) { Validator.showError(madot, maResult.message); isValid = false; }
+                
+                // Validate Ngày bắt đầu
+                if (Validator.isEmpty(ngayBD.value)) {
+                    Validator.showError(ngayBD, 'Ngày bắt đầu không được để trống');
+                    isValid = false;
+                }
+                
+                // Validate Ngày kết thúc
+                if (Validator.isEmpty(ngayKT.value)) {
+                    Validator.showError(ngayKT, 'Ngày kết thúc không được để trống');
+                    isValid = false;
+                } else if (ngayBD.value && new Date(ngayKT.value) < new Date(ngayBD.value)) {
+                    Validator.showError(ngayKT, 'Ngày kết thúc phải sau ngày bắt đầu');
+                    isValid = false;
+                }
+                
+                // Validate Phần trăm
+                const ptVal = parseInt(phantram.value);
+                if (Validator.isEmpty(phantram.value) || isNaN(ptVal) || ptVal < 1 || ptVal > 100) {
+                    Validator.showError(phantram, 'Phần trăm giảm phải từ 1 đến 100');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    const firstError = form.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                }
+            });
+        });
+    </script>
+}

@@ -4,11 +4,10 @@ using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho QuangBa (bảng liên kết) - Mô hình 3 lớp
-    /// </summary>
+    // Data Access Layer cho QuangBa (bảng liên kết) - Mô hình 3 lớp
     public class QuangBaDAL
     {
+        // Lấy danh sách sản phẩm theo đợt giảm giá
         public List<SanPham> GetSanPhamByDotGiamGia(string madotgiamgia)
         {
             string query = @"SELECT sp.* FROM SAN_PHAM sp
@@ -18,6 +17,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapSanPhamList(SqlConnectionHelper.ExecuteQuery(query, parameters));
         }
 
+        // Lấy danh sách đợt giảm giá theo mã sản phẩm
         public List<QuanBaSp> GetDotGiamGiaByMasp(string masp)
         {
             string query = @"SELECT qbs.* FROM QUAN_BA_SP qbs
@@ -27,6 +27,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapQuanBaSpList(SqlConnectionHelper.ExecuteQuery(query, parameters));
         }
 
+        // Kiểm tra liên kết SP-đợt giảm giá tồn tại
         public bool Exists(string masp, string madotgiamgia)
         {
             string query = "SELECT COUNT(*) FROM QUANGBA WHERE MASP = @Masp AND MADOTGIAMGIA = @Madotgiamgia";
@@ -37,6 +38,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
+        // Thêm liên kết SP vào đợt giảm giá
         public int Insert(string masp, string madotgiamgia)
         {
             string query = "INSERT INTO QUANGBA (MASP, MADOTGIAMGIA) VALUES (@Masp, @Madotgiamgia)";
@@ -47,6 +49,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Xóa liên kết SP khỏi đợt giảm giá
         public int Delete(string masp, string madotgiamgia)
         {
             string query = "DELETE FROM QUANGBA WHERE MASP = @Masp AND MADOTGIAMGIA = @Madotgiamgia";
@@ -57,6 +60,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Xóa tất cả SP trong đợt giảm giá
         public int DeleteByDotGiamGia(string madotgiamgia)
         {
             string query = "DELETE FROM QUANGBA WHERE MADOTGIAMGIA = @Madotgiamgia";
@@ -64,9 +68,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
-        /// <summary>
-        /// Lấy % giảm giá của SP nếu đang trong đợt quảng bá đang diễn ra
-        /// </summary>
+        // Lấy % giảm giá của SP nếu đang trong đợt quảng bá
         public int? GetPhanTramGiam(string masp)
         {
             string query = @"SELECT TOP 1 qbs.PHANTRAMGIAM 
@@ -82,9 +84,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return result != null && result != DBNull.Value ? Convert.ToInt32(result) : null;
         }
 
-        /// <summary>
-        /// Lấy danh sách tất cả SP đang được quảng bá (đợt đang diễn ra)
-        /// </summary>
+        // Lấy danh sách tất cả SP đang được quảng bá
         public Dictionary<string, int> GetAllPromotedProducts()
         {
             string query = @"SELECT qb.MASP, qbs.PHANTRAMGIAM 
@@ -105,6 +105,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return dict;
         }
 
+        // Chuyển DataTable thành List<SanPham>
         private List<SanPham> MapSanPhamList(DataTable dt)
         {
             var list = new List<SanPham>();
@@ -123,6 +124,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return list;
         }
 
+        // Chuyển DataTable thành List<QuanBaSp>
         private List<QuanBaSp> MapQuanBaSpList(DataTable dt)
         {
             var list = new List<QuanBaSp>();

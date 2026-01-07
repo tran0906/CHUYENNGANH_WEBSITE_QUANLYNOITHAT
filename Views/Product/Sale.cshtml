@@ -1,0 +1,187 @@
+@model IEnumerable<DOANCHUYENNGANH_WEB_QLNOITHAT.Models.SanPham>
+@{
+    ViewData["Title"] = "Sản phẩm giảm giá";
+}
+
+@functions {
+    string GetFirstImage(string? hinhanh)
+    {
+        if (string.IsNullOrEmpty(hinhanh)) return "/images/no-image.jpg";
+        var images = hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        
+        foreach (var img in images)
+        {
+            var trimmed = img.Trim();
+            if (string.IsNullOrEmpty(trimmed)) continue;
+            
+            if (trimmed.StartsWith("/") || trimmed.StartsWith("http"))
+                return trimmed;
+            
+            if (!trimmed.Contains("/"))
+                return "/images/products/" + trimmed;
+            
+            return "/" + trimmed;
+        }
+        return "/images/no-image.jpg";
+    }
+
+    string GetPageUrl(int page)
+    {
+        return $"/san-pham-giam-gia?page={page}";
+    }
+}
+
+<!-- Breadcrumb -->
+<section class="breadcrumb-section">
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="/"><i class="fas fa-home"></i> Trang chủ</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Sản phẩm giảm giá</span>
+        </nav>
+    </div>
+</section>
+
+<div class="container">
+    <div class="page-content">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-widget">
+                <h3 class="widget-title">Danh mục sản phẩm</h3>
+                <ul class="category-list">
+                    <li>
+                        <a href="/san-pham">
+                            <i class="fas fa-th-large"></i> Tất cả sản phẩm
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/san-pham-ban-chay">
+                            <i class="fas fa-fire"></i> Sản phẩm bán chạy
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/san-pham-giam-gia" class="active">
+                            <i class="fas fa-tags"></i> Sản phẩm giảm giá
+                        </a>
+                    </li>
+                    @if (ViewBag.NhomSpList != null)
+                    {
+                        foreach (var nhom in ViewBag.NhomSpList)
+                        {
+                            <li>
+                                <a href="/san-pham?nhomsp=@nhom.Manhomsp">
+                                    <i class="fas fa-cube"></i> @nhom.Tennhomsp
+                                </a>
+                            </li>
+                        }
+                    }
+                </ul>
+            </div>
+
+            <!-- Banner -->
+            <div class="sidebar-widget" style="background: linear-gradient(135deg, #dc3545, #fd7e14); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                <i class="fas fa-percent" style="font-size: 40px; margin-bottom: 15px;"></i>
+                <h4 style="margin-bottom: 10px;">Siêu Sale</h4>
+                <p style="font-size: 14px; opacity: 0.9;">Giảm giá lên đến 50% cho các sản phẩm nội thất cao cấp!</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #dc3545, #fd7e14); color: white; border-radius: 10px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-tags" style="font-size: 40px;"></i>
+                    <div>
+                        <h2 style="margin: 0;">Sản phẩm giảm giá</h2>
+                        <p style="margin: 5px 0 0; opacity: 0.9;">Ưu đãi đặc biệt - Tiết kiệm đến 50%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 15px; background: var(--gray-light); border-radius: 10px;">
+                <div>
+                    Hiển thị <strong>@Model.Count()</strong> / <strong>@ViewBag.TotalItems</strong> sản phẩm đang giảm giá
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid">
+                @foreach (var product in Model)
+                {
+                    var isOutOfStock = product.Soluongton <= 0;
+                    <div class="product-card @(isOutOfStock ? "out-of-stock" : "")">
+                        <div class="product-image">
+                            <span class="product-badge badge-sale" style="font-size: 14px; padding: 8px 12px;">-@product.PhanTramGiam%</span>
+                            @if (isOutOfStock)
+                            {
+                                <span class="stock-badge out">Hết hàng</span>
+                            }
+                            <img src="@GetFirstImage(product.Hinhanh)" alt="@product.Tensp" @(isOutOfStock ? "style=opacity:0.6;" : "") />
+                            <div class="product-actions">
+                                <a href="/san-pham/@product.Masp" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                                @if (!isOutOfStock)
+                                {
+                                    <a href="#" onclick="addToCart('@product.Masp'); return false;" title="Thêm vào giỏ"><i class="fas fa-shopping-cart"></i></a>
+                                }
+                                <a href="#" title="Yêu thích"><i class="fas fa-heart"></i></a>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-category">@(product.ManhomspNavigation?.Tennhomsp ?? "Nội thất")</div>
+                            <h3 class="product-name"><a href="/san-pham/@product.Masp">@product.Tensp</a></h3>
+                            <div class="product-price">
+                                <span class="old-price">@(product.GiaGoc?.ToString("N0") ?? "0") ₫</span>
+                                <span class="current-price sale-price">@(product.Giaban?.ToString("N0") ?? "0") ₫</span>
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <span style="background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px; font-size: 12px;">
+                                    Tiết kiệm @(((product.GiaGoc ?? 0) - (product.Giaban ?? 0)).ToString("N0")) ₫
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-tags" style="font-size: 60px; color: #ddd; margin-bottom: 20px;"></i>
+                    <h3>Chưa có sản phẩm giảm giá</h3>
+                    <p style="color: #666;">Hãy quay lại sau để xem các chương trình khuyến mãi mới</p>
+                    <a href="/san-pham" class="btn btn-primary" style="margin-top: 15px;">Xem tất cả sản phẩm</a>
+                </div>
+            }
+
+            <!-- Pagination -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav class="pagination">
+                    @if (ViewBag.CurrentPage > 1)
+                    {
+                        <a href="@GetPageUrl(ViewBag.CurrentPage - 1)"><i class="fas fa-chevron-left"></i></a>
+                    }
+                    
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                    {
+                        if (i == ViewBag.CurrentPage)
+                        {
+                            <span class="active">@i</span>
+                        }
+                        else
+                        {
+                            <a href="@GetPageUrl(i)">@i</a>
+                        }
+                    }
+                    
+                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                    {
+                        <a href="@GetPageUrl(ViewBag.CurrentPage + 1)"><i class="fas fa-chevron-right"></i></a>
+                    }
+                </nav>
+            }
+        </div>
+    </div>
+</div>

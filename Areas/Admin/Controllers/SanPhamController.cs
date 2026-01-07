@@ -47,6 +47,19 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
             return View(sanPhams);
         }
 
+        // GET: Admin/SanPham/ChiTiet/5 - Cho nhân viên xem chi tiết sản phẩm
+        [SkipAdminOnlyFilter]
+        [AdminAuthFilter]
+        public IActionResult ChiTiet(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+            
+            var sanPham = _sanPhamBLL.GetById(id);
+            if (sanPham == null) return NotFound();
+            
+            return View(sanPham);
+        }
+
         // GET: Admin/SanPham
         public IActionResult Index(string? search, string? nhomSp, string? vatLieu)
         {

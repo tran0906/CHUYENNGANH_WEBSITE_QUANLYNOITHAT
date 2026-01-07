@@ -1,17 +1,14 @@
+// FILE: DAL/SanPhamDAL.cs - Tầng truy cập dữ liệu cho Sản phẩm (CRUD với SQL Server)
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho SanPham - Mô hình 3 lớp
-    /// </summary>
     public class SanPhamDAL
     {
-        /// <summary>
-        /// Lấy tất cả sản phẩm
-        /// </summary>
+        // Lấy tất cả sản phẩm
         public List<SanPham> GetAll()
         {
             string query = @"SELECT sp.*, nsp.TENNHOMSP as Tennhomsp, vl.TENVL as Tenvl 
@@ -24,9 +21,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(dt);
         }
 
-        /// <summary>
-        /// Tìm kiếm sản phẩm theo điều kiện
-        /// </summary>
+        // Tìm kiếm sản phẩm theo điều kiện
         public List<SanPham> Search(string? search, string? nhomSp, string? vatLieu)
         {
             string query = @"SELECT sp.*, nsp.TENNHOMSP as Tennhomsp, vl.TENVL as Tenvl 
@@ -58,9 +53,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(dt);
         }
 
-        /// <summary>
-        /// Lấy sản phẩm theo mã
-        /// </summary>
+        // Lấy sản phẩm theo mã
         public SanPham? GetById(string maSp)
         {
             string query = @"SELECT sp.*, nsp.TENNHOMSP as Tennhomsp, vl.TENVL as Tenvl 
@@ -74,9 +67,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(dt).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Thêm sản phẩm mới
-        /// </summary>
+        // Thêm sản phẩm mới
         public int Insert(SanPham sp)
         {
             string query = @"INSERT INTO SAN_PHAM (MASP, TENSP, MOTA, GIABAN, SOLUONGTON, HINHANH, MANHOMSP, MAVL)
@@ -95,9 +86,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
-        /// <summary>
-        /// Cập nhật sản phẩm
-        /// </summary>
+        // Cập nhật sản phẩm
         public int Update(SanPham sp)
         {
             string query = @"UPDATE SAN_PHAM SET 
@@ -119,9 +108,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
-        /// <summary>
-        /// Xóa sản phẩm
-        /// </summary>
+        // Xóa sản phẩm
         public int Delete(string maSp)
         {
             string query = "DELETE FROM SAN_PHAM WHERE MASP = @MaSp";
@@ -129,9 +116,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
-        /// <summary>
-        /// Kiểm tra sản phẩm tồn tại
-        /// </summary>
+        // Kiểm tra sản phẩm tồn tại
         public bool Exists(string maSp)
         {
             string query = "SELECT COUNT(*) FROM SAN_PHAM WHERE MASP = @MaSp";
@@ -139,18 +124,14 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
-        /// <summary>
-        /// Đếm tổng số sản phẩm
-        /// </summary>
+        // Đếm tổng số sản phẩm
         public int Count()
         {
             string query = "SELECT COUNT(*) FROM SAN_PHAM";
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query));
         }
 
-        /// <summary>
-        /// Lấy danh sách mã sản phẩm đang trong đợt quảng bá kèm % giảm giá
-        /// </summary>
+        // Lấy danh sách SP đang khuyến mãi kèm % giảm
         public Dictionary<string, int> GetProductsInPromotionWithDiscount()
         {
             try
@@ -181,17 +162,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             }
         }
 
-        /// <summary>
-        /// Lấy danh sách mã sản phẩm đang trong đợt quảng bá (khuyến mãi)
-        /// </summary>
-        public HashSet<string> GetProductsInPromotion()
-        {
-            return GetProductsInPromotionWithDiscount().Keys.ToHashSet();
-        }
-
-        /// <summary>
-        /// Chuyển DataTable thành List
-        /// </summary>
+        // Chuyển DataTable thành List<SanPham>
         private List<SanPham> MapDataTableToList(DataTable dt)
         {
             var list = new List<SanPham>();

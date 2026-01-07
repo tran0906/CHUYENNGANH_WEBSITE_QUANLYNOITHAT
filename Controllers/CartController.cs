@@ -1,3 +1,5 @@
+// FILE: CartController.cs - Xử lý giỏ hàng và thanh toán
+
 using Microsoft.AspNetCore.Mvc;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.BLL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
@@ -6,6 +8,7 @@ using System.Text.Json;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
 {
+    // Class lưu thông tin sản phẩm trong giỏ hàng
     public class CartItem
     {
         public string Masp { get; set; } = string.Empty;
@@ -13,11 +16,12 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         public string? Hinhanh { get; set; }
         public decimal Giaban { get; set; }
         public int Soluong { get; set; }
-        public decimal Thanhtien => Giaban * Soluong;
+        public decimal Thanhtien => Giaban * Soluong; // Tự tính thành tiền
     }
 
     public class CartController : Controller
     {
+        // Khai báo các BLL để gọi tầng nghiệp vụ
         private readonly SanPhamBLL _sanPhamBLL = new SanPhamBLL();
         private readonly KhachHangBLL _khachHangBLL = new KhachHangBLL();
         private readonly DonHangBLL _donHangBLL = new DonHangBLL();
@@ -32,6 +36,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             _momoService = new MoMoService(configuration);
         }
 
+        // Lấy giỏ hàng từ Session hoặc Cookie
         private List<CartItem> GetCartItems()
         {
             var cartJson = HttpContext.Session.GetString(CartSessionKey);
@@ -50,6 +55,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return new List<CartItem>();
         }
 
+        // Lưu giỏ hàng vào Session và Cookie
         private void SaveCartItems(List<CartItem> items)
         {
             var json = JsonSerializer.Serialize(items);
@@ -66,6 +72,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             Response.Cookies.Append(CartCookieKey, json, cookieOptions);
         }
 
+        // GET /gio-hang - Hiển thị trang giỏ hàng
         [Route("gio-hang")]
         public IActionResult Index()
         {
@@ -91,6 +98,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return View(cartItems);
         }
 
+        // POST /gio-hang/them - Thêm sản phẩm vào giỏ
         [HttpPost]
         [Route("gio-hang/them")]
         public IActionResult AddToCart(string productId, int quantity = 1)
@@ -137,11 +145,25 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                     foreach (var img in images)
                     {
                         var trimmed = img.Trim();
-                        if (!string.IsNullOrEmpty(trimmed) && (trimmed.StartsWith("/") || trimmed.StartsWith("http")))
+                        if (string.IsNullOrEmpty(trimmed)) continue;
+                        
+                        // Nếu đã có đường dẫn đầy đủ
+                        if (trimmed.StartsWith("/") || trimmed.StartsWith("http"))
                         {
                             firstImage = trimmed;
                             break;
                         }
+                        
+                        // Nếu chỉ có tên file, thêm đường dẫn thư mục products
+                        if (!trimmed.Contains("/"))
+                        {
+                            firstImage = "/images/products/" + trimmed;
+                            break;
+                        }
+                        
+                        // Trường hợp khác, thêm / ở đầu
+                        firstImage = "/" + trimmed;
+                        break;
                     }
                 }
                 
@@ -168,6 +190,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             });
         }
 
+        // POST /gio-hang/cap-nhat - Cập nhật số lượng sản phẩm
         [HttpPost]
         [Route("gio-hang/cap-nhat")]
         public IActionResult UpdateCart(string productId, int quantity)
@@ -211,6 +234,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             });
         }
 
+        // POST /gio-hang/xoa - Xóa sản phẩm khỏi giỏ
         [HttpPost]
         [Route("gio-hang/xoa")]
         public IActionResult RemoveFromCart(string productId)
@@ -232,6 +256,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             });
         }
 
+        // POST /gio-hang/xoa-tat-ca - Xóa toàn bộ giỏ hàng
         [HttpPost]
         [Route("gio-hang/xoa-tat-ca")]
         public IActionResult ClearCart()
@@ -240,6 +265,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return Json(new { success = true, message = "Đã xóa toàn bộ giỏ hàng" });
         }
 
+        // GET /thanh-toan - Hiển thị trang thanh toán
         [Route("thanh-toan")]
         public IActionResult Checkout()
         {
@@ -278,6 +304,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return View(cartItems);
         }
 
+        // POST /dat-hang - Xử lý đặt hàng (COD hoặc MoMo)
         [HttpPost]
         [Route("dat-hang")]
         public async Task<IActionResult> PlaceOrder(string? ghichu, string? paymentMethod, string? diachigiaohang)
@@ -445,6 +472,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             }
         }
 
+        // GET /dat-hang-thanh-cong - Hiển thị trang đặt hàng thành công
         [Route("dat-hang-thanh-cong")]
         public IActionResult OrderSuccess(string? orderId)
         {
@@ -465,9 +493,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return View(order);
         }
 
-        /// <summary>
-        /// MoMo redirect về sau khi thanh toán
-        /// </summary>
+        // GET /thanh-toan/momo-return - MoMo redirect về sau khi thanh toán
         [Route("thanh-toan/momo-return")]
         public IActionResult MoMoReturn(
             string? partnerCode, string? orderId, string? requestId,
@@ -476,7 +502,12 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             string? payType, long responseTime, string? extraData, string? signature)
         {
             // Log để debug
-            System.Diagnostics.Debug.WriteLine($"MoMo Return - orderId: {orderId}, resultCode: {resultCode}, transId: {transId}");
+            Console.WriteLine($"=== MoMo Return ===");
+            Console.WriteLine($"orderId: {orderId}");
+            Console.WriteLine($"resultCode: {resultCode}");
+            Console.WriteLine($"transId: {transId}");
+            Console.WriteLine($"amount: {amount}");
+            Console.WriteLine($"message: {message}");
             
             // Kiểm tra orderId có tồn tại không
             if (string.IsNullOrEmpty(orderId))
@@ -485,12 +516,18 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 return RedirectToAction("Index", "Home");
             }
             
+            var order = _donHangBLL.GetById(orderId);
+            if (order == null)
+            {
+                TempData["Error"] = "Đơn hàng không tồn tại";
+                return RedirectToAction("Index", "Home");
+            }
+            
             // Kiểm tra kết quả thanh toán
             if (resultCode == 0)
             {
-                // Thanh toán thành công - cập nhật đơn hàng
-                var order = _donHangBLL.GetById(orderId);
-                if (order != null && order.Trangthai == "Chờ thanh toán")
+                // Thanh toán thành công - cập nhật đơn hàng nếu chưa được xử lý
+                if (order.Trangthai == "Chờ thanh toán")
                 {
                     // Cập nhật trạng thái đơn hàng
                     order.Trangthai = "Đã xác nhận";
@@ -502,7 +539,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                     {
                         Mathanhtoan = _thanhToanBLL.GenerateNewId(),
                         Madonhang = orderId,
-                        Userid = order.Makh, // Mã khách hàng
+                        Userid = order.Makh,
                         Sotien = amount,
                         Phuongthuc = "MoMo",
                         Ngaythanhtoan = DateTime.Now
@@ -520,23 +557,36 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                             _sanPhamBLL.Update(product);
                         }
                     }
-
-                    TempData["Success"] = $"Thanh toán MoMo thành công! Mã giao dịch: {transId}";
+                    
+                    Console.WriteLine($"Đã cập nhật đơn hàng {orderId} thành công");
                 }
+
+                TempData["Success"] = $"Thanh toán MoMo thành công! Mã giao dịch: {transId}";
             }
             else
             {
-                // Thanh toán thất bại
-                TempData["Error"] = $"Thanh toán MoMo thất bại: {message}";
+                // Thanh toán thất bại hoặc bị hủy
+                string errorMsg = resultCode switch
+                {
+                    1001 => "Giao dịch đã bị hủy",
+                    1002 => "Giao dịch thất bại do lỗi từ nhà phát hành thẻ",
+                    1003 => "Giao dịch bị từ chối bởi MoMo",
+                    1004 => "Giao dịch thất bại do số tiền vượt quá hạn mức",
+                    1005 => "Giao dịch thất bại do URL hoặc QR code đã hết hạn",
+                    1006 => "Giao dịch thất bại do người dùng từ chối xác nhận",
+                    1007 => "Giao dịch bị từ chối do tài khoản không đủ số dư",
+                    _ => message ?? "Giao dịch không thành công"
+                };
+                
+                TempData["Error"] = $"Thanh toán MoMo thất bại: {errorMsg}";
+                Console.WriteLine($"MoMo thất bại - resultCode: {resultCode}, message: {errorMsg}");
             }
 
-            // Redirect trực tiếp đến trang OrderSuccess với orderId
-            return Redirect($"/dat-hang-thanh-cong?orderId={orderId}");
+            // Redirect đến trang OrderSuccess với orderId
+            return RedirectToAction("OrderSuccess", new { orderId = orderId });
         }
 
-        /// <summary>
-        /// MoMo IPN callback (server-to-server)
-        /// </summary>
+        // POST /thanh-toan/momo-ipn - MoMo gọi callback khi thanh toán xong
         [HttpPost]
         [Route("thanh-toan/momo-ipn")]
         public IActionResult MoMoIpn([FromBody] MoMoIpnRequest request)
@@ -593,6 +643,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             }
         }
 
+        // GET /gio-hang/so-luong - Lấy số lượng sản phẩm trong giỏ
         [HttpGet]
         [Route("gio-hang/so-luong")]
         public IActionResult GetCartCount()
@@ -601,9 +652,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return Json(new { count = cartItems.Sum(i => i.Soluong) });
         }
 
-        /// <summary>
-        /// Lấy thông tin tồn kho của sản phẩm
-        /// </summary>
+        // GET /gio-hang/ton-kho/{id} - Lấy số lượng tồn kho của sản phẩm
         [HttpGet]
         [Route("gio-hang/ton-kho/{productId}")]
         public IActionResult GetStock(string productId)

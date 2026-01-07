@@ -1,14 +1,14 @@
+// FILE: DAL/NhaCungCapDAL.cs - Truy cập dữ liệu bảng NHA_CUNG_CAP
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho NhaCungCap - Mô hình 3 lớp
-    /// </summary>
     public class NhaCungCapDAL
     {
+        // Lấy tất cả nhà cung cấp
         public List<NhaCungCap> GetAll()
         {
             string query = "SELECT * FROM NHA_CUNG_CAP ORDER BY MANCC";

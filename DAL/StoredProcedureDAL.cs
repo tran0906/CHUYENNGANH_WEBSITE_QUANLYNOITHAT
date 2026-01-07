@@ -1,3 +1,4 @@
+// FILE: DAL/StoredProcedureDAL.cs - Gọi các Stored Procedures từ SQL Server
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;

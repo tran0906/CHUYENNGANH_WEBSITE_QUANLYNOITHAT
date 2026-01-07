@@ -1,14 +1,14 @@
+// FILE: DAL/ThanhToanDAL.cs - Truy cập dữ liệu bảng THANH_TOAN
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho ThanhToan - Mô hình 3 lớp
-    /// </summary>
     public class ThanhToanDAL
     {
+        // Lấy tất cả bản ghi thanh toán
         public List<ThanhToan> GetAll()
         {
             string query = @"SELECT tt.*, u.HoTen as TenNguoiTao, dh.NGAYDAT as Ngaydat
@@ -92,19 +92,6 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             if (result == null || result == DBNull.Value) return "TT001";
             int num = int.Parse(result.ToString()!.Substring(2)) + 1;
             return $"TT{num:D3}";
-        }
-
-        /// <summary>
-        /// Tính tổng doanh thu theo ngày từ bảng THANH_TOAN
-        /// </summary>
-        public decimal GetDoanhThuNgay(DateTime ngay)
-        {
-            string query = @"SELECT ISNULL(SUM(SOTIEN), 0) 
-                            FROM THANH_TOAN 
-                            WHERE CAST(NGAYTHANHTOAN AS DATE) = @Ngay";
-            SqlParameter[] parameters = { new SqlParameter("@Ngay", ngay.Date) };
-            var result = SqlConnectionHelper.ExecuteScalar(query, parameters);
-            return result != null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
         }
 
         private List<ThanhToan> MapDataTableToList(DataTable dt)

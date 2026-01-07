@@ -1,21 +1,18 @@
+// FILE: BLL/SanPhamBLL.cs - Tầng nghiệp vụ cho Sản phẩm (validate, tính giá khuyến mãi)
+
 using DOANCHUYENNGANH_WEB_QLNOITHAT.DAL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
 {
-    /// <summary>
-    /// Business Logic Layer cho SanPham - Mô hình 3 lớp
-    /// </summary>
     public class SanPhamBLL
     {
-        private readonly SanPhamDAL _dal = new SanPhamDAL();
+        private readonly SanPhamDAL _dal = new SanPhamDAL(); // Gọi tầng DAL
         private readonly QuangBaDAL _quangBaDAL = new QuangBaDAL();
 
         public List<SanPham> GetAll() => _dal.GetAll();
         
-        /// <summary>
-        /// Lấy tất cả sản phẩm kèm thông tin giảm giá (nếu đang trong đợt quảng bá)
-        /// </summary>
+        // Lấy tất cả SP kèm giá khuyến mãi (nếu có)
         public List<SanPham> GetAllWithPromotion()
         {
             var products = _dal.GetAll();
@@ -33,9 +30,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
             return products;
         }
         
-        /// <summary>
-        /// Lấy sản phẩm theo mã kèm thông tin giảm giá
-        /// </summary>
+        // Lấy SP theo mã kèm giá khuyến mãi
         public SanPham? GetByIdWithPromotion(string maSp)
         {
             var sp = _dal.GetById(maSp);

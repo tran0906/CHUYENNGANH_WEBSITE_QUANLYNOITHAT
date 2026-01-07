@@ -4,11 +4,10 @@ using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho QuanBaSp - Mô hình 3 lớp
-    /// </summary>
+    // Data Access Layer cho QuanBaSp - Mô hình 3 lớp
     public class QuanBaSpDAL
     {
+        // Lấy tất cả đợt quảng bá
         public List<QuanBaSp> GetAll()
         {
             string query = @"SELECT qb.*, u.HoTen as TenNguoiTao
@@ -18,6 +17,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query));
         }
 
+        // Lấy đợt quảng bá theo mã
         public QuanBaSp? GetById(string ma)
         {
             string query = @"SELECT qb.*, u.HoTen as TenNguoiTao
@@ -28,6 +28,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query, parameters)).FirstOrDefault();
         }
 
+        // Thêm đợt quảng bá mới
         public int Insert(QuanBaSp obj)
         {
             string query = @"INSERT INTO QUAN_BA_SP (MADOTGIAMGIA, USERID, NGAYBATDAU, NGAYKETTHUC, MANVCHON, PHANTRAMGIAM) 
@@ -43,6 +44,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Cập nhật đợt quảng bá
         public int Update(QuanBaSp obj)
         {
             string query = @"UPDATE QUAN_BA_SP SET USERID=@Userid, NGAYBATDAU=@Ngaybatdau, 
@@ -58,6 +60,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Xóa đợt quảng bá
         public int Delete(string ma)
         {
             string query = "DELETE FROM QUAN_BA_SP WHERE MADOTGIAMGIA=@Ma";
@@ -65,6 +68,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Kiểm tra đợt quảng bá tồn tại
         public bool Exists(string ma)
         {
             string query = "SELECT COUNT(*) FROM QUAN_BA_SP WHERE MADOTGIAMGIA=@Ma";
@@ -72,6 +76,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
+        // Chuyển DataTable thành List<QuanBaSp>
         private List<QuanBaSp> MapDataTableToList(DataTable dt)
         {
             var list = new List<QuanBaSp>();

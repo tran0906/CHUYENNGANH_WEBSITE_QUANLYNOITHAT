@@ -1,6 +1,6 @@
 @model IEnumerable<DOANCHUYENNGANH_WEB_QLNOITHAT.Models.SanPham>
 @{
-    ViewData["Title"] = "Sản phẩm";
+    ViewData["Title"] = "Sản phẩm bán chạy";
 }
 
 @functions {
@@ -14,15 +14,12 @@
             var trimmed = img.Trim();
             if (string.IsNullOrEmpty(trimmed)) continue;
             
-            // Nếu đã có đường dẫn đầy đủ
             if (trimmed.StartsWith("/") || trimmed.StartsWith("http"))
                 return trimmed;
             
-            // Nếu chỉ có tên file, thêm đường dẫn thư mục products
             if (!trimmed.Contains("/"))
                 return "/images/products/" + trimmed;
             
-            // Trường hợp khác, thêm / ở đầu
             return "/" + trimmed;
         }
         return "/images/no-image.jpg";
@@ -30,18 +27,7 @@
 
     string GetPageUrl(int page)
     {
-        var queryParams = new List<string> { $"page={page}" };
-        if (!string.IsNullOrEmpty(ViewBag.CurrentNhomSp))
-            queryParams.Add($"nhomsp={ViewBag.CurrentNhomSp}");
-        if (!string.IsNullOrEmpty(ViewBag.CurrentSearch))
-            queryParams.Add($"search={ViewBag.CurrentSearch}");
-        if (!string.IsNullOrEmpty(ViewBag.CurrentSort))
-            queryParams.Add($"sort={ViewBag.CurrentSort}");
-        if (ViewBag.MinPrice != null)
-            queryParams.Add($"minPrice={ViewBag.MinPrice}");
-        if (ViewBag.MaxPrice != null)
-            queryParams.Add($"maxPrice={ViewBag.MaxPrice}");
-        return "/san-pham?" + string.Join("&", queryParams);
+        return $"/san-pham-ban-chay?page={page}";
     }
 }
 
@@ -51,7 +37,7 @@
         <nav class="breadcrumb">
             <a href="/"><i class="fas fa-home"></i> Trang chủ</a>
             <i class="fas fa-chevron-right"></i>
-            <span>Sản phẩm</span>
+            <span>Sản phẩm bán chạy</span>
         </nav>
     </div>
 </section>
@@ -62,11 +48,16 @@
         <aside class="sidebar">
             <!-- Nhóm sản phẩm -->
             <div class="sidebar-widget">
-                <h3 class="widget-title">Nhóm sản phẩm</h3>
+                <h3 class="widget-title">Danh mục sản phẩm</h3>
                 <ul class="category-list">
                     <li>
-                        <a href="/san-pham" class="@(string.IsNullOrEmpty(ViewBag.CurrentNhomSp) ? "active" : "")">
+                        <a href="/san-pham">
                             <i class="fas fa-th-large"></i> Tất cả sản phẩm
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/san-pham-ban-chay" class="active">
+                            <i class="fas fa-fire"></i> Sản phẩm bán chạy
                         </a>
                     </li>
                     @if (ViewBag.NhomSpList != null)
@@ -90,9 +81,8 @@
                                     break;
                                 }
                             }
-                            var isActive = ViewBag.CurrentNhomSp == nhom.Manhomsp;
                             <li>
-                                <a href="/san-pham?nhomsp=@nhom.Manhomsp" class="@(isActive ? "active" : "")">
+                                <a href="/san-pham?nhomsp=@nhom.Manhomsp">
                                     <i class="fas @icon"></i> @nhom.Tennhomsp
                                 </a>
                             </li>
@@ -101,86 +91,59 @@
                 </ul>
             </div>
 
-            <!-- Price Filter -->
-            <div class="sidebar-widget">
-                <h3 class="widget-title">Lọc theo giá</h3>
-                <form class="price-filter" action="/san-pham" method="get">
-                    @if (!string.IsNullOrEmpty(ViewBag.CurrentNhomSp))
-                    {
-                        <input type="hidden" name="nhomsp" value="@ViewBag.CurrentNhomSp" />
-                    }
-                    @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch))
-                    {
-                        <input type="hidden" name="search" value="@ViewBag.CurrentSearch" />
-                    }
-                    <div class="price-range">
-                        <input type="number" name="minPrice" placeholder="Từ" value="@ViewBag.MinPrice" />
-                        <input type="number" name="maxPrice" placeholder="Đến" value="@ViewBag.MaxPrice" />
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Lọc giá</button>
-                </form>
-            </div>
-
-            <!-- Hot Products -->
-            <div class="sidebar-widget">
-                <h3 class="widget-title">Sản phẩm hot</h3>
-                <div class="hot-products">
-                    @foreach (var product in Model.Take(3))
-                    {
-                        <div style="display: flex; gap: 10px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
-                            <img src="@GetFirstImage(product.Hinhanh)" alt="@product.Tensp" style="width: 70px; height: 70px; object-fit: cover; border-radius: 5px;" />
-                            <div>
-                                <a href="/san-pham/@product.Masp" style="font-size: 14px; font-weight: 500; color: #333;">@product.Tensp</a>
-                                <div style="color: var(--primary-color); font-weight: 600; margin-top: 5px;">@(product.Giaban?.ToString("N0") ?? "0") ₫</div>
-                            </div>
-                        </div>
-                    }
-                </div>
+            <!-- Banner -->
+            <div class="sidebar-widget" style="background: linear-gradient(135deg, #8B4513, #D2691E); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                <i class="fas fa-fire" style="font-size: 40px; margin-bottom: 15px;"></i>
+                <h4 style="margin-bottom: 10px;">Sản phẩm HOT</h4>
+                <p style="font-size: 14px; opacity: 0.9;">Những sản phẩm được khách hàng yêu thích và mua nhiều nhất!</p>
             </div>
         </aside>
 
         <!-- Main Content -->
         <div class="main-content">
-            @if (!string.IsNullOrEmpty(ViewBag.CurrentNhomSpName) || !string.IsNullOrEmpty(ViewBag.CurrentSearch))
-            {
-                <div style="margin-bottom: 15px; padding: 12px 15px; background: linear-gradient(135deg, #8B4513, #D2691E); color: white; border-radius: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <i class="fas fa-filter"></i>
-                    @if (!string.IsNullOrEmpty(ViewBag.CurrentNhomSpName))
-                    {
-                        <span>Danh mục: <strong>@ViewBag.CurrentNhomSpName</strong></span>
-                    }
-                    @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch))
-                    {
-                        <span>| Từ khóa: <strong>"@ViewBag.CurrentSearch"</strong></span>
-                    }
-                    <a href="/san-pham" style="margin-left: auto; color: white; font-size: 13px;"><i class="fas fa-times"></i> Xóa bộ lọc</a>
+            <!-- Header -->
+            <div style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #dc3545, #fd7e14); color: white; border-radius: 10px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-fire" style="font-size: 40px;"></i>
+                    <div>
+                        <h2 style="margin: 0;">Sản phẩm bán chạy</h2>
+                        <p style="margin: 5px 0 0; opacity: 0.9;">Top sản phẩm được khách hàng tin tưởng và lựa chọn nhiều nhất</p>
+                    </div>
                 </div>
-            }
+            </div>
+
             <!-- Toolbar -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 15px; background: var(--gray-light); border-radius: 10px;">
                 <div>
-                    Hiển thị <strong>@Model.Count()</strong> / <strong>@ViewBag.TotalItems</strong> sản phẩm
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <label>Sắp xếp:</label>
-                    <select onchange="sortProducts(this.value)" style="padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px;" id="sortSelect">
-                        <option value="newest">Mới nhất</option>
-                        <option value="price-asc">Giá: Thấp đến cao</option>
-                        <option value="price-desc">Giá: Cao đến thấp</option>
-                        <option value="name-asc">Tên: A-Z</option>
-                        <option value="name-desc">Tên: Z-A</option>
-                    </select>
-                    <script>document.getElementById('sortSelect').value = '@(ViewBag.CurrentSort ?? "newest")';</script>
+                    Hiển thị <strong>@Model.Count()</strong> / <strong>@ViewBag.TotalItems</strong> sản phẩm bán chạy
                 </div>
             </div>
 
             <!-- Products Grid -->
             <div class="products-grid">
+                @{ int rank = ((ViewBag.CurrentPage - 1) * 12) + 1; }
                 @foreach (var product in Model)
                 {
                     var isOutOfStock = product.Soluongton <= 0;
-                    <div class="product-card @(isOutOfStock ? "out-of-stock" : "")">
+                    <div class="product-card @(isOutOfStock ? "out-of-stock" : "")" style="position: relative;">
+                        <!-- Ranking Badge -->
+                        @if (rank <= 3)
+                        {
+                            var badgeColor = rank == 1 ? "#FFD700" : (rank == 2 ? "#C0C0C0" : "#CD7F32");
+                            var badgeIcon = rank == 1 ? "fa-crown" : "fa-medal";
+                            <div style="position: absolute; top: 10px; left: 10px; z-index: 10; background: @badgeColor; color: #333; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                <i class="fas @badgeIcon" style="font-size: 16px;"></i>
+                            </div>
+                        }
+                        else if (rank <= 10)
+                        {
+                            <div style="position: absolute; top: 10px; left: 10px; z-index: 10; background: #dc3545; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">
+                                @rank
+                            </div>
+                        }
+                        
                         <div class="product-image">
+                            @* Chỉ hiển thị badge giảm giá nếu đang giảm giá *@
                             @if (product.DangGiamGia)
                             {
                                 <span class="product-badge badge-sale">-@product.PhanTramGiam%</span>
@@ -195,10 +158,6 @@
                                 @if (!isOutOfStock)
                                 {
                                     <a href="#" onclick="addToCart('@product.Masp'); return false;" title="Thêm vào giỏ"><i class="fas fa-shopping-cart"></i></a>
-                                }
-                                else
-                                {
-                                    <a href="#" onclick="notifyWhenAvailable('@product.Masp'); return false;" title="Thông báo khi có hàng"><i class="fas fa-bell"></i></a>
                                 }
                                 <a href="#" title="Yêu thích"><i class="fas fa-heart"></i></a>
                             </div>
@@ -215,6 +174,7 @@
                             </div>
                         </div>
                     </div>
+                    rank++;
                 }
             </div>
 
@@ -222,8 +182,9 @@
             {
                 <div style="text-align: center; padding: 50px;">
                     <i class="fas fa-box-open" style="font-size: 60px; color: #ddd; margin-bottom: 20px;"></i>
-                    <h3>Không tìm thấy sản phẩm</h3>
-                    <p style="color: #666;">Vui lòng thử lại với từ khóa khác</p>
+                    <h3>Chưa có sản phẩm bán chạy</h3>
+                    <p style="color: #666;">Hãy quay lại sau để xem các sản phẩm được yêu thích nhất</p>
+                    <a href="/san-pham" class="btn btn-primary" style="margin-top: 15px;">Xem tất cả sản phẩm</a>
                 </div>
             }
 
@@ -257,33 +218,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-<script>
-    function sortProducts(value) {
-        var url = new URL(window.location.href);
-        if (value) {
-            url.searchParams.set('sort', value);
-        } else {
-            url.searchParams.delete('sort');
-        }
-        url.searchParams.set('page', '1');
-        window.location.href = url.toString();
-    }
-
-    function notifyWhenAvailable(productId) {
-        var email = prompt('Nhập email để nhận thông báo khi sản phẩm có hàng:');
-        if (email && email.trim()) {
-            // Validate email format
-            var emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
-            if (!emailRegex.test(email)) {
-                showToast('Email không hợp lệ!', 'error');
-                return;
-            }
-            // Lưu thông tin (có thể gửi lên server sau)
-            localStorage.setItem('notify_' + productId, email);
-            showToast('Chúng tôi sẽ thông báo khi sản phẩm có hàng!', 'success');
-        }
-    }
-</script>
-}

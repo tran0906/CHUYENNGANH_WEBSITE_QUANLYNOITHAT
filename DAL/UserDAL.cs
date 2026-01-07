@@ -1,14 +1,14 @@
+// FILE: DAL/UserDAL.cs - Truy cập dữ liệu bảng [User] (nhân viên/admin)
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho User - Mô hình 3 lớp
-    /// </summary>
     public class UserDAL
     {
+        // Lấy tất cả user
         public List<User> GetAll()
         {
             string query = "SELECT * FROM [User] ORDER BY UserId";
@@ -22,9 +22,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query, parameters)).FirstOrDefault();
         }
 
-        /// <summary>
-        /// Đăng nhập - kiểm tra tên đăng nhập và mật khẩu
-        /// </summary>
+        // Đăng nhập - kiểm tra tên đăng nhập và mật khẩu
         public User? Login(string tenUser, string matKhau)
         {
             string query = "SELECT * FROM [User] WHERE TenUser = @TenUser AND MatKhau = @MatKhau";
@@ -63,9 +61,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
-        /// <summary>
-        /// Cập nhật profile (không đổi mật khẩu nếu để trống)
-        /// </summary>
+        // Cập nhật profile (không đổi mật khẩu nếu để trống)
         public int UpdateProfile(string userId, string? hoTen, string? tenUser, string? matKhauMoi = null)
         {
             string query;
@@ -107,9 +103,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
-        /// <summary>
-        /// Kiểm tra TenUser đã tồn tại chưa
-        /// </summary>
+        // Kiểm tra TenUser đã tồn tại chưa
         public bool ExistsByTenUser(string tenUser, string? excludeUserId = null)
         {
             string query;
@@ -131,9 +125,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
-        /// <summary>
-        /// Tìm kiếm và lọc User
-        /// </summary>
+        // Tìm kiếm và lọc User
         public List<User> Search(string? searchName, string? searchUser, string? vaiTro)
         {
             var conditions = new List<string>();
@@ -163,9 +155,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(SqlConnectionHelper.ExecuteQuery(query, paramList.ToArray()));
         }
 
-        /// <summary>
-        /// Lấy danh sách vai trò distinct
-        /// </summary>
+        // Lấy danh sách vai trò distinct
         public List<string> GetDistinctVaiTro()
         {
             string query = "SELECT DISTINCT VaiTro FROM [User] WHERE VaiTro IS NOT NULL ORDER BY VaiTro";
@@ -189,20 +179,6 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
         public int CountThanhToan(string userId)
         {
             string query = "SELECT COUNT(*) FROM THANH_TOAN WHERE USERID = @UserId";
-            SqlParameter[] parameters = { new SqlParameter("@UserId", userId) };
-            return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters));
-        }
-
-        public int CountVanChuyen(string userId)
-        {
-            string query = "SELECT COUNT(*) FROM VAN_CHUYEN WHERE USERID = @UserId";
-            SqlParameter[] parameters = { new SqlParameter("@UserId", userId) };
-            return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters));
-        }
-
-        public int CountPhieuXuatKho(string userId)
-        {
-            string query = "SELECT COUNT(*) FROM PHIEU_XUAT_KHO WHERE USERID = @UserId";
             SqlParameter[] parameters = { new SqlParameter("@UserId", userId) };
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters));
         }

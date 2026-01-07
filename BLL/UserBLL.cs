@@ -116,11 +116,6 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
         public List<User> Search(string? searchName, string? searchUser, string? vaiTro)
             => _dal.Search(searchName, searchUser, vaiTro);
         public List<string> GetDistinctVaiTro() => _dal.GetDistinctVaiTro();
-
-        public (int SoDonHang, int SoThanhToan, int SoVanChuyen, int SoPhieuXuat) GetUserStats(string userId)
-            => (_dal.CountDonHang(userId), _dal.CountThanhToan(userId), 
-                _dal.CountVanChuyen(userId), _dal.CountPhieuXuatKho(userId));
-
         public bool HasRelatedData(string userId) => _dal.HasRelatedData(userId);
 
         public (bool Success, string Message, string? HoTen) ResetPassword(string userId)

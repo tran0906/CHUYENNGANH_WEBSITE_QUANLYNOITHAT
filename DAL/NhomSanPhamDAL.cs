@@ -1,14 +1,14 @@
+// FILE: DAL/NhomSanPhamDAL.cs - Truy cập dữ liệu bảng NHOM_SAN_PHAM
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho NhomSanPham - Mô hình 3 lớp
-    /// </summary>
     public class NhomSanPhamDAL
     {
+        // Lấy tất cả nhóm sản phẩm
         public List<NhomSanPham> GetAll()
         {
             string query = "SELECT * FROM NHOM_SAN_PHAM ORDER BY MANHOMSP";

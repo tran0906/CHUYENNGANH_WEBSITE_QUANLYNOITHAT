@@ -80,4 +80,93 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="/js/validation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            
+            // Validate Mã người dùng
+            const userId = document.querySelector('[name="UserId"]');
+            userId.addEventListener('blur', function() {
+                const result = Validator.isValidCode(this.value, 'Mã người dùng');
+                if (!result.valid) Validator.showError(this, result.message);
+                else Validator.showSuccess(this);
+            });
+            userId.addEventListener('input', function() {
+                this.value = this.value.replace(/[^a-zA-Z0-9_-]/g, '').toUpperCase();
+            });
+            
+            // Validate Tên đăng nhập
+            const tenUser = document.querySelector('[name="TenUser"]');
+            tenUser.addEventListener('blur', function() {
+                if (Validator.isEmpty(this.value)) {
+                    Validator.showError(this, 'Tên đăng nhập không được để trống');
+                } else if (this.value.length < 3 || this.value.length > 50) {
+                    Validator.showError(this, 'Tên đăng nhập từ 3-50 ký tự');
+                } else if (!/^[a-zA-Z0-9_]+$/.test(this.value)) {
+                    Validator.showError(this, 'Chỉ chứa chữ, số và dấu gạch dưới');
+                } else {
+                    Validator.showSuccess(this);
+                }
+            });
+            tenUser.addEventListener('input', function() {
+                this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '');
+            });
+            
+            // Validate Họ tên
+            const hoTen = document.querySelector('[name="HoTen"]');
+            hoTen.addEventListener('blur', function() {
+                const result = Validator.isValidName(this.value);
+                if (!result.valid) Validator.showError(this, result.message);
+                else Validator.showSuccess(this);
+            });
+            
+            // Validate Mật khẩu
+            const matKhau = document.querySelector('[name="MatKhau"]');
+            matKhau.addEventListener('blur', function() {
+                if (Validator.isEmpty(this.value)) {
+                    Validator.showError(this, 'Mật khẩu không được để trống');
+                } else if (this.value.length < 6) {
+                    Validator.showError(this, 'Mật khẩu tối thiểu 6 ký tự');
+                } else {
+                    Validator.showSuccess(this);
+                }
+            });
+            
+            // Validate Vai trò
+            const vaiTro = document.querySelector('[name="VaiTro"]');
+            vaiTro.addEventListener('change', function() {
+                if (!this.value) {
+                    Validator.showError(this, 'Vui lòng chọn vai trò');
+                } else {
+                    Validator.showSuccess(this);
+                }
+            });
+            
+            // Submit validation
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+                
+                // Trigger blur events để validate
+                [userId, tenUser, hoTen, matKhau].forEach(input => {
+                    input.dispatchEvent(new Event('blur'));
+                    if (input.classList.contains('is-invalid')) isValid = false;
+                });
+                
+                if (!vaiTro.value) {
+                    Validator.showError(vaiTro, 'Vui lòng chọn vai trò');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    const firstError = form.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                }
+            });
+        });
+    </script>
 }

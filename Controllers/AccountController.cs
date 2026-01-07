@@ -12,9 +12,10 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         private readonly CtDonhangBLL _ctDonhangBLL = new CtDonhangBLL();
         private const string RememberMeCookieKey = "RememberMe";
 
-        // GET: Account/Login
+        // GET: Account/Login Hiển thị trang đăng nhập
         public IActionResult Login(string? message)
         {
+             // Nếu đã đăng nhập rồi → chuyển về trang chủ
             if (HttpContext.Session.GetString("CustomerId") != null)
             {
                 return RedirectToAction("Index", "Home");
@@ -25,13 +26,15 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             {
                 try
                 {
+                     // Đọc thông tin từ cookie
                     var loginData = JsonSerializer.Deserialize<RememberMeData>(cookieValue);
+                    // Kiểm tra thông tin còn hợp lệ không
                     if (loginData != null && !string.IsNullOrEmpty(loginData.CustomerId))
                     {
                         var khachHang = _khachHangBLL.GetById(loginData.CustomerId);
                         if (khachHang != null && khachHang.Sdtkh == loginData.Phone)
                         {
-                            SetLoginSession(khachHang);
+                            SetLoginSession(khachHang); // Tự động đăng nhập
                             return RedirectToAction("Index", "Home");
                         }
                     }
@@ -49,32 +52,35 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return View();
         }
 
-        // POST: Account/Login
+        // POST: Account/Login Xử lý đăng nhập
         [HttpPost]
         public IActionResult Login(string phone, string password, bool rememberMe = false)
         {
+             // Validate đầu vào
             if (string.IsNullOrEmpty(phone))
             {
                 TempData["Error"] = "Vui lòng nhập số điện thoại";
                 return View();
             }
-
+             
             if (string.IsNullOrEmpty(password))
             {
+                 
                 TempData["Error"] = "Vui lòng nhập mật khẩu";
                 return View();
             }
-
+            // Gọi BLL kiểm tra đăng nhập
             var (success, message, khachHang) = _khachHangBLL.Login(phone, password);
             
             if (!success || khachHang == null)
             {
+                // "Sai mật khẩu" hoặc "Tài khoản không tồn tại"
                 TempData["Error"] = message;
                 return View();
             }
-
+            // Đăng nhập thành công → Lưu Session
             SetLoginSession(khachHang);
-
+            // Nếu chọn "Ghi nhớ đăng nhập" → Lưu Cookie 7 ngày
             if (rememberMe)
             {
                 SaveRememberMeCookie(khachHang);
@@ -83,13 +89,14 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        // Lưu thông tin đăng nhập vào Session
         private void SetLoginSession(KhachHang khachHang)
         {
             HttpContext.Session.SetString("CustomerId", khachHang.Makh);
             HttpContext.Session.SetString("CustomerName", khachHang.Hotenkh ?? "");
             HttpContext.Session.SetString("CustomerPhone", khachHang.Sdtkh ?? "");
         }
-
+        // Lưu cookie "Ghi nhớ đăng nhập" 7 ngày
         private void SaveRememberMeCookie(KhachHang khachHang)
         {
             var loginData = new RememberMeData
@@ -102,8 +109,8 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             var cookieOptions = new CookieOptions
             {
                 Expires = DateTime.Now.AddDays(7),
-                HttpOnly = true,
-                Secure = true,
+                HttpOnly = true, // Không cho JavaScript đọc (bảo mật)
+                Secure = true,   // Chỉ gửi qua HTTPS
                 SameSite = SameSiteMode.Lax,
                 IsEssential = true
             };
@@ -118,9 +125,10 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             public DateTime ExpireDate { get; set; }
         }
 
-        // GET: Account/Register
+        // GET: Account/Register Hiển thị form đăng ký
         public IActionResult Register()
         {
+             // Nếu đã đăng nhập → về trang chủ
             if (HttpContext.Session.GetString("CustomerId") != null)
             {
                 return RedirectToAction("Index", "Home");
@@ -128,16 +136,17 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return View();
         }
 
-        // POST: Account/Register
+        // POST: Account/Register Xử lý đăng ký
         [HttpPost]
         public IActionResult Register(string hoTen, string soDienThoai, string diaChi, string matKhau, string xacNhanMatKhau)
         {
+            // Validate họ tên
             if (string.IsNullOrWhiteSpace(hoTen))
             {
                 TempData["Error"] = "Vui lòng nhập họ tên";
                 return View();
             }
-
+             // Validate số điện thoại ( 10 số)
             if (string.IsNullOrWhiteSpace(soDienThoai) || soDienThoai.Length < 10)
             {
                 TempData["Error"] = "Số điện thoại không hợp lệ";
@@ -149,19 +158,19 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 TempData["Error"] = "Vui lòng nhập địa chỉ";
                 return View();
             }
-
+            // Validate mật khẩu (ít nhất 6 ký tự)
             if (string.IsNullOrWhiteSpace(matKhau) || matKhau.Length < 6)
             {
                 TempData["Error"] = "Mật khẩu phải có ít nhất 6 ký tự";
                 return View();
             }
-
+             // Kiểm tra mật khẩu xác nhận
             if (matKhau != xacNhanMatKhau)
             {
                 TempData["Error"] = "Mật khẩu xác nhận không khớp";
                 return View();
             }
-
+            // Tạo đối tượng khách hàng
             var khachHang = new KhachHang
             {
                 Hotenkh = hoTen,
@@ -169,7 +178,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 Diachikh = diaChi,
                 Matkhau = matKhau
             };
-
+            // Gọi BLL đăng ký (BLL sẽ kiểm tra SĐT đã tồn tại chưa)
             var (success, message) = _khachHangBLL.Register(khachHang);
             
             if (success)
@@ -178,19 +187,20 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 return RedirectToAction("Login");
             }
 
-            TempData["Error"] = message;
+            TempData["Error"] = message; // "Số điện thoại đã được đăng ký"
             return View();
         }
 
-        // GET: Account/Profile
+        // GET: Account/Profile Xem hồ sơ
         public IActionResult Profile()
         {
+            // Kiểm tra đăng nhập
             var customerId = HttpContext.Session.GetString("CustomerId");
             if (string.IsNullOrEmpty(customerId))
             {
                 return RedirectToAction("Login");
             }
-
+             // Lấy thông tin khách hàng từ DB
             var khachHang = _khachHangBLL.GetById(customerId);
             if (khachHang == null)
             {
@@ -200,10 +210,11 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return View(khachHang);
         }
 
-        // POST: Account/Profile
+        // POST: Account/Profile Cập nhật hồ sơ
         [HttpPost]
         public IActionResult Profile(string makh, string hoTen, string diaChi)
         {
+            // Kiểm tra đăng nhập + quyền sở hữu
             var customerId = HttpContext.Session.GetString("CustomerId");
             if (string.IsNullOrEmpty(customerId) || customerId != makh)
             {
@@ -215,16 +226,18 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 TempData["Error"] = "Vui lòng nhập họ tên";
                 return View(_khachHangBLL.GetById(customerId));
             }
-
+             // Lấy thông tin hiện tại
             var existing = _khachHangBLL.GetById(customerId);
             if (existing != null)
             {
+                // Cập nhật thông tin mới
                 existing.Hotenkh = hoTen;
                 existing.Diachikh = diaChi;
 
                 var (success, message) = _khachHangBLL.Update(existing);
                 if (success)
                 {
+                    // Cập nhật Session với tên mới
                     HttpContext.Session.SetString("CustomerName", existing.Hotenkh ?? "");
                     TempData["Success"] = "Cập nhật thông tin thành công";
                 }
@@ -238,7 +251,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             return View(_khachHangBLL.GetById(customerId));
         }
 
-        // GET: Account/Orders
+        // GET: Account/Orders Danh sách đơn hàng
         public IActionResult Orders()
         {
             var customerId = HttpContext.Session.GetString("CustomerId");
@@ -248,9 +261,10 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             }
 
             ViewBag.Customer = _khachHangBLL.GetById(customerId);
+            // Lấy tất cả đơn hàng của khách
             var donHangs = _donHangBLL.GetByKhachHang(customerId);
 
-            // Lấy chi tiết cho mỗi đơn hàng
+            // Lấy chi tiết cho mỗi đơn hàng (để hiển thị số SP, tổng tiền)
             foreach (var dh in donHangs)
             {
                 dh.CtDonhangs = _ctDonhangBLL.GetByDonHang(dh.Madonhang);
@@ -269,11 +283,12 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             }
 
             var donHang = _donHangBLL.GetById(id);
+              // Kiểm tra đơn hàng có thuộc về khách này không (bảo mật)
             if (donHang == null || donHang.Makh != customerId)
             {
                 return NotFound();
             }
-
+            // Lấy chi tiết sản phẩm trong đơn
             donHang.CtDonhangs = _ctDonhangBLL.GetByDonHang(id);
             return View(donHang);
         }
@@ -306,25 +321,25 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             {
                 return RedirectToAction("Login");
             }
-
+            // Kiểm tra mật khẩu hiện tại
             if (khachHang.Matkhau != currentPassword)
             {
                 TempData["Error"] = "Mật khẩu hiện tại không đúng";
                 return RedirectToAction("ChangePassword");
             }
-
+             // Validate mật khẩu mới
             if (string.IsNullOrEmpty(newPassword) || newPassword.Length < 6)
             {
                 TempData["Error"] = "Mật khẩu mới phải có ít nhất 6 ký tự";
                 return RedirectToAction("ChangePassword");
             }
-
+            // Kiểm tra xác nhận
             if (newPassword != confirmPassword)
             {
                 TempData["Error"] = "Mật khẩu xác nhận không khớp";
                 return RedirectToAction("ChangePassword");
             }
-
+            // Cập nhật mật khẩu mới
             khachHang.Matkhau = newPassword;
             var (success, message) = _khachHangBLL.Update(khachHang);
 
@@ -362,7 +377,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
 
                 // Chuẩn hóa số điện thoại (loại bỏ khoảng trắng, dấu gạch)
                 sdtkh = sdtkh.Trim().Replace(" ", "").Replace("-", "").Replace(".", "");
-
+                // Kiểm tra SĐT có trong hệ thống không
                 var allKhachHang = _khachHangBLL.GetAll();
                 var khachHang = allKhachHang.FirstOrDefault(k => k.Sdtkh == sdtkh);
                 
@@ -372,12 +387,13 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                     ViewBag.Step = 1;
                     return View("ForgotPassword");
                 }
-
+                // Tạo mã OTP 6 số ngẫu nhiên
                 var otp = new Random().Next(100000, 999999).ToString();
+                // Lưu OTP vào Session (hết hạn sau 5 phút)
                 HttpContext.Session.SetString("ResetOTP", otp);
                 HttpContext.Session.SetString("ResetPhone", sdtkh);
                 HttpContext.Session.SetString("OTPExpiry", DateTime.Now.AddMinutes(5).ToString());
-
+                // Hiển thị OTP cho user (demo - thực tế sẽ gửi SMS)
                 ViewBag.Step = 2;
                 ViewBag.OTPCode = otp;
                 ViewBag.Phone = sdtkh;
@@ -404,7 +420,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             {
                 return RedirectToAction("ForgotPassword");
             }
-
+            // Kiểm tra OTP hết hạn chưa
             if (DateTime.TryParse(expiryStr, out DateTime expiry) && DateTime.Now > expiry)
             {
                 ViewBag.Error = "Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.";
@@ -413,7 +429,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 ViewBag.OTPCode = savedOTP;
                 return View("ForgotPassword");
             }
-
+            // Kiểm tra OTP đúng không
             if (otp != savedOTP)
             {
                 ViewBag.Error = "Mã OTP không đúng. Vui lòng kiểm tra lại.";
@@ -422,7 +438,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 ViewBag.OTPCode = savedOTP;
                 return View("ForgotPassword");
             }
-
+             // OTP đúng → Cho phép đặt mật khẩu mới
             HttpContext.Session.SetString("OTPVerified", "true");
             ViewBag.Step = 3;
             return View("ForgotPassword");
@@ -545,7 +561,9 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         // GET: Account/Logout
         public IActionResult Logout()
         {
+            // Xóa toàn bộ Session
             HttpContext.Session.Clear();
+            // Xóa cookie "Ghi nhớ đăng nhập"
             if (Request.Cookies.ContainsKey(RememberMeCookieKey))
             {
                 Response.Cookies.Delete(RememberMeCookieKey);

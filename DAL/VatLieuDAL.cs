@@ -1,14 +1,14 @@
+// FILE: DAL/VatLieuDAL.cs - Truy cập dữ liệu bảng VAT_LIEU
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho VatLieu - Mô hình 3 lớp
-    /// </summary>
     public class VatLieuDAL
     {
+        // Lấy tất cả vật liệu
         public List<VatLieu> GetAll()
         {
             string query = "SELECT * FROM VAT_LIEU ORDER BY MAVL";

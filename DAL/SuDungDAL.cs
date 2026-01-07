@@ -4,11 +4,10 @@ using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho SuDung (bảng liên kết) - Mô hình 3 lớp
-    /// </summary>
+    // Data Access Layer cho SuDung (bảng liên kết) - Mô hình 3 lớp
     public class SuDungDAL
     {
+        // Lấy danh sách sản phẩm theo mục đích sử dụng
         public List<SanPham> GetSanPhamByMdsd(string mamdsd)
         {
             string query = @"SELECT sp.*, nsp.TENNHOMSP 
@@ -20,6 +19,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapSanPhamListWithNhom(SqlConnectionHelper.ExecuteQuery(query, parameters));
         }
 
+        // Kiểm tra liên kết SP-mục đích sử dụng tồn tại
         public bool Exists(string mamdsd, string masp)
         {
             string query = "SELECT COUNT(*) FROM SUDUNG WHERE MAMDSD = @Mamdsd AND MASP = @Masp";
@@ -30,6 +30,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
+        // Thêm liên kết SP-mục đích sử dụng
         public int Insert(string mamdsd, string masp)
         {
             string query = "INSERT INTO SUDUNG (MAMDSD, MASP) VALUES (@Mamdsd, @Masp)";
@@ -40,6 +41,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
+        // Xóa liên kết SP-mục đích sử dụng
         public int Delete(string mamdsd, string masp)
         {
             string query = "DELETE FROM SUDUNG WHERE MAMDSD = @Mamdsd AND MASP = @Masp";
@@ -50,24 +52,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
-        private List<SanPham> MapSanPhamList(DataTable dt)
-        {
-            var list = new List<SanPham>();
-            foreach (DataRow row in dt.Rows)
-            {
-                list.Add(new SanPham
-                {
-                    Masp = row["MASP"].ToString() ?? "",
-                    Tensp = row["TENSP"] != DBNull.Value ? row["TENSP"].ToString() : null,
-                    Mota = row["MOTA"] != DBNull.Value ? row["MOTA"].ToString() : null,
-                    Giaban = row["GIABAN"] != DBNull.Value ? Convert.ToDecimal(row["GIABAN"]) : null,
-                    Soluongton = row["SOLUONGTON"] != DBNull.Value ? Convert.ToInt32(row["SOLUONGTON"]) : null,
-                    Hinhanh = row["HINHANH"] != DBNull.Value ? row["HINHANH"].ToString() : null
-                });
-            }
-            return list;
-        }
-
+        // Chuyển DataTable thành List<SanPham> (có thông tin nhóm SP)
         private List<SanPham> MapSanPhamListWithNhom(DataTable dt)
         {
             var list = new List<SanPham>();

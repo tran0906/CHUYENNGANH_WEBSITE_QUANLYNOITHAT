@@ -1,14 +1,14 @@
+// FILE: DAL/VanChuyenDAL.cs - Truy cập dữ liệu bảng VAN_CHUYEN
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho VanChuyen - Mô hình 3 lớp
-    /// </summary>
     public class VanChuyenDAL
     {
+        // Lấy tất cả bản ghi vận chuyển
         public List<VanChuyen> GetAll()
         {
             string query = @"SELECT vc.*, u.HoTen as TenNguoiTao, dh.NGAYDAT as Ngaydat

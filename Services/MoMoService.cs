@@ -1,9 +1,12 @@
+// FILE: Services/MoMoService.cs - Tích hợp cổng thanh toán MoMo
+
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Services
 {
+    // Cấu hình MoMo từ appsettings.json
     public class MoMoConfig
     {
         public string PartnerCode { get; set; } = string.Empty;
@@ -15,6 +18,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Services
         public string RequestType { get; set; } = "payWithMethod";
     }
 
+    // Request gửi lên MoMo để tạo thanh toán
     public class MoMoCreatePaymentRequest
     {
         public string partnerCode { get; set; } = string.Empty;
@@ -30,6 +34,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Services
         public string signature { get; set; } = string.Empty;
     }
 
+    // Response từ MoMo trả về
     public class MoMoCreatePaymentResponse
     {
         public string partnerCode { get; set; } = string.Empty;
@@ -43,6 +48,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Services
         public string shortLink { get; set; } = string.Empty;
     }
 
+    // Request MoMo gọi callback (IPN) khi thanh toán xong
     public class MoMoIpnRequest
     {
         public string partnerCode { get; set; } = string.Empty;
@@ -80,9 +86,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Services
             _httpClient = new HttpClient();
         }
 
-        /// <summary>
-        /// Tạo URL thanh toán MoMo
-        /// </summary>
+        // Tạo URL thanh toán MoMo - trả về payUrl để redirect
         public async Task<(bool Success, string PayUrl, string Message)> CreatePaymentAsync(
             string orderId, 
             decimal amount, 
@@ -150,9 +154,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Services
             }
         }
 
-        /// <summary>
-        /// Xác thực chữ ký từ MoMo callback (IPN/Return)
-        /// </summary>
+        // Xác thực chữ ký từ MoMo callback
         public bool VerifySignature(MoMoIpnRequest request)
         {
             var rawSignature = $"accessKey={_config.AccessKey}" +
@@ -173,9 +175,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Services
             return computedSignature == request.signature;
         }
 
-        /// <summary>
-        /// Tính HMAC SHA256
-        /// </summary>
+        // Tính chữ ký HMAC SHA256 để gửi/xác thực với MoMo
         private string ComputeHmacSha256(string data, string key)
         {
             using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));

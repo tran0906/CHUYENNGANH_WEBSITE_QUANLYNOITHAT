@@ -3,7 +3,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Quản lý cung cấp</h2>
-    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+    <span class="text-muted small"><i class="bi bi-info-circle"></i> Dữ liệu được tạo tự động khi thêm sản phẩm</span>
 </div>
 
 @if (TempData["Success"] != null)
@@ -58,8 +58,7 @@
                         <td>@item.MaspNavigation?.Tensp</td>
                         <td>@item.Soluongsp</td>
                         <td>
-                            <a asp-action="Edit" asp-route-mancc="@item.Mancc" asp-route-masp="@item.Masp" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                            <a asp-action="Delete" asp-route-mancc="@item.Mancc" asp-route-masp="@item.Masp" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                            <a asp-action="Edit" asp-route-mancc="@item.Mancc" asp-route-masp="@item.Masp" class="btn btn-sm btn-warning" title="Sửa số lượng"><i class="bi bi-pencil"></i></a>
                         </td>
                     </tr>
                 }

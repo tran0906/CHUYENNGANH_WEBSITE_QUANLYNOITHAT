@@ -1,14 +1,14 @@
+// FILE: DAL/CtDonhangDAL.cs - Truy cập dữ liệu bảng CT_DONHANG (chi tiết đơn hàng)
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// Data Access Layer cho CtDonhang - Mô hình 3 lớp
-    /// </summary>
     public class CtDonhangDAL
     {
+        // Lấy tất cả chi tiết đơn hàng
         public List<CtDonhang> GetAll()
         {
             string query = @"SELECT ct.*, sp.TENSP as Tensp, dh.NGAYDAT as Ngaydat 

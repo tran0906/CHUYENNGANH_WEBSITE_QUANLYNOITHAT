@@ -1,7 +1,6 @@
 ﻿@model dynamic
 @{
     ViewData["Title"] = "Trang chủ";
-    var promotedProducts = ViewBag.PromotedProducts as Dictionary<string, int> ?? new Dictionary<string, int>();
 }
 
 @functions {
@@ -9,12 +8,19 @@
     {
         if (string.IsNullOrEmpty(hinhanh)) return "/images/no-image.jpg";
         var images = hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries);
-        // Tìm hình đầu tiên hợp lệ (bắt đầu bằng / hoặc http)
+        
         foreach (var img in images)
         {
             var trimmed = img.Trim();
-            if (!string.IsNullOrEmpty(trimmed) && (trimmed.StartsWith("/") || trimmed.StartsWith("http")))
+            if (string.IsNullOrEmpty(trimmed)) continue;
+            
+            if (trimmed.StartsWith("/") || trimmed.StartsWith("http"))
                 return trimmed;
+            
+            if (!trimmed.Contains("/"))
+                return "/images/products/" + trimmed;
+            
+            return "/" + trimmed;
         }
         return "/images/no-image.jpg";
     }
@@ -31,37 +37,22 @@
     </div>
 </section>
 
-
-
-<!-- Featured Products -->
+<!-- SẢN PHẨM BÁN CHẠY -->
 <section class="section" style="background: var(--gray-light);">
     <div class="container">
         <div class="section-title">
-            <h2>Sản phẩm nổi bật</h2>
-            <p>Những sản phẩm được yêu thích nhất</p>
+            <h2><i class="fas fa-fire" style="color: #dc3545;"></i> Sản phẩm bán chạy</h2>
+            <p>Những sản phẩm được khách hàng yêu thích và mua nhiều nhất</p>
         </div>
         <div class="products-grid">
             @if (ViewBag.FeaturedProducts != null)
             {
                 foreach (var product in ViewBag.FeaturedProducts)
                 {
-                    string masp = product.Masp;
-                    bool isPromoted = promotedProducts.ContainsKey(masp);
-                    int discount = isPromoted ? promotedProducts[masp] : 0;
-                    decimal giaGoc = product.Giaban ?? 0;
-                    decimal giaGiam = giaGoc * (100 - discount) / 100;
-                    
                     <div class="product-card">
                         <div class="product-image">
-                            <img src="@GetFirstImage(product.Hinhanh)" alt="@product.Tensp" />
-                            @if (isPromoted)
-                            {
-                                <span class="product-badge badge-sale">-@discount%</span>
-                            }
-                            else
-                            {
-                                <span class="product-badge badge-hot">HOT</span>
-                            }
+                            <img src="@GetFirstImage((string)product.Hinhanh)" alt="@product.Tensp" />
+                            <span class="product-badge badge-hot">HOT</span>
                             <div class="product-actions">
                                 <a href="/san-pham/@product.Masp" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
                                 <a href="#" onclick="addToCart('@product.Masp')" title="Thêm vào giỏ"><i class="fas fa-shopping-cart"></i></a>
@@ -72,15 +63,7 @@
                             <div class="product-category">@(product.ManhomspNavigation?.Tennhomsp ?? "Nội thất")</div>
                             <h3 class="product-name"><a href="/san-pham/@product.Masp">@product.Tensp</a></h3>
                             <div class="product-price">
-                                @if (isPromoted)
-                                {
-                                    <span class="old-price">@giaGoc.ToString("N0") ₫</span>
-                                    <span class="current-price sale-price">@giaGiam.ToString("N0") ₫</span>
-                                }
-                                else
-                                {
-                                    <span class="current-price">@giaGoc.ToString("N0") ₫</span>
-                                }
+                                <span class="current-price">@(((decimal?)product.Giaban)?.ToString("N0") ?? "0") ₫</span>
                             </div>
                         </div>
                     </div>
@@ -88,49 +71,72 @@
             }
         </div>
         <div class="text-center mt-3">
-            <a href="/san-pham" class="btn btn-primary">Xem tất cả sản phẩm</a>
+            <a href="/san-pham-ban-chay" class="btn btn-primary"><i class="fas fa-fire"></i> Xem tất cả sản phẩm bán chạy</a>
         </div>
     </div>
 </section>
 
-<!-- Banner Section -->
-<section class="banner-section">
+<!-- SẢN PHẨM GIẢM GIÁ -->
+@if (ViewBag.SaleProducts != null && ((IEnumerable<dynamic>)ViewBag.SaleProducts).Any())
+{
+<section class="section" style="background: linear-gradient(135deg, #dc3545, #fd7e14); padding: 40px 0;">
     <div class="container">
-        <h2>Ưu đãi đặc biệt - Giảm đến 30%</h2>
-        <p>Áp dụng cho tất cả sản phẩm trang trí nội thất cao cấp. Chỉ trong tháng này!</p>
-        <a href="/san-pham?sale=true" class="btn btn-secondary">Mua ngay</a>
+        <div class="section-title" style="color: white;">
+            <h2 style="color: white;"><i class="fas fa-tags"></i> Sản phẩm giảm giá</h2>
+            <p style="color: rgba(255,255,255,0.9);">Ưu đãi đặc biệt - Tiết kiệm đến 50%</p>
+        </div>
+        <div class="products-grid">
+            @foreach (var product in ViewBag.SaleProducts)
+            {
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="@GetFirstImage((string)product.Hinhanh)" alt="@product.Tensp" />
+                        <span class="product-badge badge-sale" style="font-size: 14px; padding: 8px 12px;">-@product.PhanTramGiam%</span>
+                        <div class="product-actions">
+                            <a href="/san-pham/@product.Masp" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                            <a href="#" onclick="addToCart('@product.Masp')" title="Thêm vào giỏ"><i class="fas fa-shopping-cart"></i></a>
+                            <a href="#" title="Yêu thích"><i class="fas fa-heart"></i></a>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-category">@(product.ManhomspNavigation?.Tennhomsp ?? "Nội thất")</div>
+                        <h3 class="product-name"><a href="/san-pham/@product.Masp">@product.Tensp</a></h3>
+                        <div class="product-price">
+                            <span class="old-price">@(((decimal?)product.GiaGoc)?.ToString("N0") ?? "0") ₫</span>
+                            <span class="current-price sale-price">@(((decimal?)product.Giaban)?.ToString("N0") ?? "0") ₫</span>
+                        </div>
+                        <div style="margin-top: 5px;">
+                            <span style="background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px; font-size: 12px;">
+                                Tiết kiệm @((((decimal?)product.GiaGoc ?? 0) - ((decimal?)product.Giaban ?? 0)).ToString("N0")) ₫
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="text-center mt-3">
+            <a href="/san-pham-giam-gia" class="btn btn-secondary" style="background: white; color: #dc3545; border: none;"><i class="fas fa-tags"></i> Xem tất cả sản phẩm giảm giá</a>
+        </div>
     </div>
 </section>
+}
 
-<!-- New Products -->
+<!-- SẢN PHẨM MỚI -->
 <section class="section">
     <div class="container">
         <div class="section-title">
-            <h2>Sản phẩm mới</h2>
-            <p>Cập nhật những sản phẩm mới nhất</p>
+            <h2><i class="fas fa-sparkles" style="color: #28a745;"></i> Sản phẩm mới</h2>
+            <p>Cập nhật những sản phẩm mới nhất vừa về kho</p>
         </div>
         <div class="products-grid">
             @if (ViewBag.NewProducts != null)
             {
                 foreach (var product in ViewBag.NewProducts)
                 {
-                    string masp = product.Masp;
-                    bool isPromoted = promotedProducts.ContainsKey(masp);
-                    int discount = isPromoted ? promotedProducts[masp] : 0;
-                    decimal giaGoc = product.Giaban ?? 0;
-                    decimal giaGiam = giaGoc * (100 - discount) / 100;
-                    
                     <div class="product-card">
                         <div class="product-image">
-                            <img src="@GetFirstImage(product.Hinhanh)" alt="@product.Tensp" />
-                            @if (isPromoted)
-                            {
-                                <span class="product-badge badge-sale">-@discount%</span>
-                            }
-                            else
-                            {
-                                <span class="product-badge badge-new">NEW</span>
-                            }
+                            <img src="@GetFirstImage((string)product.Hinhanh)" alt="@product.Tensp" />
+                            <span class="product-badge badge-new">NEW</span>
                             <div class="product-actions">
                                 <a href="/san-pham/@product.Masp" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
                                 <a href="#" onclick="addToCart('@product.Masp')" title="Thêm vào giỏ"><i class="fas fa-shopping-cart"></i></a>
@@ -141,20 +147,15 @@
                             <div class="product-category">@(product.ManhomspNavigation?.Tennhomsp ?? "Nội thất")</div>
                             <h3 class="product-name"><a href="/san-pham/@product.Masp">@product.Tensp</a></h3>
                             <div class="product-price">
-                                @if (isPromoted)
-                                {
-                                    <span class="old-price">@giaGoc.ToString("N0") ₫</span>
-                                    <span class="current-price sale-price">@giaGiam.ToString("N0") ₫</span>
-                                }
-                                else
-                                {
-                                    <span class="current-price">@giaGoc.ToString("N0") ₫</span>
-                                }
+                                <span class="current-price">@(((decimal?)product.Giaban)?.ToString("N0") ?? "0") ₫</span>
                             </div>
                         </div>
                     </div>
                 }
             }
+        </div>
+        <div class="text-center mt-3">
+            <a href="/san-pham" class="btn btn-primary"><i class="fas fa-th-large"></i> Xem tất cả sản phẩm</a>
         </div>
     </div>
 </section>
@@ -179,20 +180,6 @@
         </div>
     </div>
 </section>
-
-<!-- News Section - Tạm ẩn khi chưa có hình
-<section class="section">
-    <div class="container">
-        <div class="section-title">
-            <h2>Tin tức & Mẹo hay</h2>
-            <p>Cập nhật những thông tin mới nhất về trang trí nội thất</p>
-        </div>
-        <div class="news-grid">
-            Thêm hình vào wwwroot/images/news/ để hiển thị
-        </div>
-    </div>
-</section>
--->
 
 <!-- Features Bar -->
 <section class="features-bar">
@@ -227,5 +214,3 @@
         </div>
     </div>
 </section>
-
-

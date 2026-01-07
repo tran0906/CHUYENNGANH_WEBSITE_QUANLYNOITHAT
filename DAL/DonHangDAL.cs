@@ -1,3 +1,5 @@
+// FILE: DAL/DonHangDAL.cs - Truy cập dữ liệu bảng DON_HANG
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
@@ -6,6 +8,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
     public class DonHangDAL
     {
+        // Lấy tất cả đơn hàng kèm tên khách hàng
         public List<DonHang> GetAll()
         {
             string query = @"SELECT dh.*, kh.HOTENKH as Hotenkh

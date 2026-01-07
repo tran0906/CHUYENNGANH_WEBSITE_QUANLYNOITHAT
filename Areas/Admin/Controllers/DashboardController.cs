@@ -26,17 +26,19 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
             // Doanh thu = tổng tiền các đơn hàng đã hoàn thành
             ViewBag.TongDoanhThu = _donHangBLL.GetTongDoanhThu();
             
-            // Doanh thu hôm nay - tính từ bảng THANH_TOAN
-            ViewBag.DoanhThuHomNay = _thanhToanBLL.GetDoanhThuNgay(DateTime.Today);
-            
-            ViewBag.DonHangMoi = _donHangBLL.CountByTrangThai("Chờ xử lý") + 
+            // Thống kê đơn hàng theo trạng thái cho biểu đồ
+            ViewBag.DonChoXuLy = _donHangBLL.CountByTrangThai("Chờ xử lý") + 
                                 _donHangBLL.CountByTrangThai("Chờ xác nhận") +
-                                _donHangBLL.CountByTrangThai("Chờ thanh toán");
+                                _donHangBLL.CountByTrangThai("Chờ thanh toán") +
+                                _donHangBLL.CountByTrangThai("Đã xác nhận") +
+                                _donHangBLL.CountByTrangThai("Đang xử lý");
+            ViewBag.DonDangGiao = _donHangBLL.CountByTrangThai("Đang giao");
+            ViewBag.DonHoanThanh = _donHangBLL.CountByTrangThai("Hoàn thành") + 
+                                  _donHangBLL.CountByTrangThai("Đã giao");
+            ViewBag.DonDaHuy = _donHangBLL.CountByTrangThai("Đã hủy");
             
-            ViewBag.DonHangGanDay = _donHangBLL.GetAll()
-                .OrderByDescending(d => d.Ngaydat)
-                .Take(5)
-                .ToList();
+            // Đơn hàng gần đây kèm tổng tiền
+            ViewBag.DonHangGanDay = GetDonHangGanDayWithTotal(5);
             
             // Top sản phẩm bán chạy - query trực tiếp (chỉ tính đơn hoàn thành)
             ViewBag.TopSanPhamBanChay = GetTopSanPhamBanChay(5);
@@ -58,6 +60,23 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
                              WHERE dh.TRANGTHAI = N'Hoàn thành'
                              GROUP BY sp.MASP, sp.TENSP
                              ORDER BY TongSoLuong DESC";
+            return SqlConnectionHelper.ExecuteQuery(query);
+        }
+
+        /// <summary>
+        /// Lấy đơn hàng gần đây kèm tổng tiền
+        /// </summary>
+        private DataTable GetDonHangGanDayWithTotal(int top)
+        {
+            string query = $@"SELECT TOP {top} 
+                             dh.MADONHANG, dh.NGAYDAT, dh.TRANGTHAI,
+                             kh.HOTENKH,
+                             ISNULL(SUM(ct.THANHTIEN), 0) as TongTien
+                             FROM DON_HANG dh
+                             LEFT JOIN KHACH_HANG kh ON dh.MAKH = kh.MAKH
+                             LEFT JOIN CT_DONHANG ct ON dh.MADONHANG = ct.MADONHANG
+                             GROUP BY dh.MADONHANG, dh.NGAYDAT, dh.TRANGTHAI, kh.HOTENKH
+                             ORDER BY dh.NGAYDAT DESC";
             return SqlConnectionHelper.ExecuteQuery(query);
         }
     }

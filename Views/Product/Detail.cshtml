@@ -1,13 +1,21 @@
 @model DOANCHUYENNGANH_WEB_QLNOITHAT.Models.SanPham
 @{
     ViewData["Title"] = Model.Tensp;
-    // Tách nhiều hình từ chuỗi (phân cách bởi ;) - chỉ lấy đường dẫn hợp lệ
-    var images = string.IsNullOrEmpty(Model.Hinhanh) 
-        ? new[] { "/images/no-image.jpg" } 
+    // Tách nhiều hình từ chuỗi (phân cách bởi ;) - xử lý đường dẫn
+    var rawImages = string.IsNullOrEmpty(Model.Hinhanh) 
+        ? new string[0] 
         : Model.Hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries)
             .Select(x => x.Trim())
-            .Where(x => !string.IsNullOrEmpty(x) && (x.StartsWith("/") || x.StartsWith("http")))
+            .Where(x => !string.IsNullOrEmpty(x))
             .ToArray();
+    
+    // Xử lý đường dẫn cho từng hình
+    var images = rawImages.Select(img => {
+        if (img.StartsWith("/") || img.StartsWith("http")) return img;
+        if (!img.Contains("/")) return "/images/products/" + img;
+        return "/" + img;
+    }).ToArray();
+    
     if (images.Length == 0) images = new[] { "/images/no-image.jpg" };
     var mainImage = images[0];
 }
@@ -17,11 +25,22 @@
     {
         if (string.IsNullOrEmpty(hinhanh)) return "/images/no-image.jpg";
         var imgs = hinhanh.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        
         foreach (var img in imgs)
         {
             var trimmed = img.Trim();
-            if (!string.IsNullOrEmpty(trimmed) && (trimmed.StartsWith("/") || trimmed.StartsWith("http")))
+            if (string.IsNullOrEmpty(trimmed)) continue;
+            
+            // Nếu đã có đường dẫn đầy đủ
+            if (trimmed.StartsWith("/") || trimmed.StartsWith("http"))
                 return trimmed;
+            
+            // Nếu chỉ có tên file, thêm đường dẫn thư mục products
+            if (!trimmed.Contains("/"))
+                return "/images/products/" + trimmed;
+            
+            // Trường hợp khác, thêm / ở đầu
+            return "/" + trimmed;
         }
         return "/images/no-image.jpg";
     }
