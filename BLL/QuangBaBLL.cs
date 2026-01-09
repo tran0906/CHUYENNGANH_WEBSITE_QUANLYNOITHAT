@@ -1,11 +1,12 @@
+// FILE: BLL/QuangBaBLL.cs
+// TẦNG BLL - Xử lý nghiệp vụ quan hệ Quảng bá (SP - Đợt giảm giá)
+// LUỒNG: Controller → BLL → DAL → Database
+
 using DOANCHUYENNGANH_WEB_QLNOITHAT.DAL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
 {
-    /// <summary>
-    /// BLL cho quan hệ QuangBa (SanPham - QuanBaSp)
-    /// </summary>
     public class QuangBaBLL
     {
         private readonly QuangBaDAL _dal = new QuangBaDAL();

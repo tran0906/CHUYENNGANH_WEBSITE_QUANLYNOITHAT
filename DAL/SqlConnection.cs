@@ -1,4 +1,6 @@
-// FILE: DAL/SqlConnection.cs - Lớp kết nối và thao tác với SQL Server
+// FILE: DAL/SqlConnection.cs
+// LỚP KẾT NỐI SQL SERVER - Cung cấp các phương thức thực thi SQL chung
+// Tất cả DAL đều gọi qua lớp này để thao tác với database
 
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -7,45 +9,44 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
     public class SqlConnectionHelper
     {
-        // Chuỗi kết nối đến SQL Server (Server, Database, Authentication)
+        // Chuỗi kết nối SQL Server
         private static string connectionString = @"Server=LAPTOP-R442T6OB\MSSQLSERVER2025;Database=WEB_NOITHAT;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true";
 
-        // Property để lấy/gán ConnectionString
         public static string ConnectionString
         {
             get { return connectionString; }
             set { connectionString = value; }
         }
 
-        // Tạo kết nối mới đến SQL Server
+        // Tạo connection mới
         public static SqlConnection GetConnection()
         {
             SqlConnection conn = new SqlConnection(connectionString);
             return conn;
         }
 
-        // Thực thi SELECT - Trả về DataTable chứa kết quả
+        // Thực thi SELECT - Trả về DataTable
         public static DataTable ExecuteQuery(string query, SqlParameter[]? parameters = null)
         {
             DataTable dt = new DataTable();
             using (SqlConnection conn = GetConnection())
             {
-                conn.Open(); // Mở kết nối
+                conn.Open();
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     if (parameters != null)
-                        cmd.Parameters.AddRange(parameters); // Thêm tham số
+                        cmd.Parameters.AddRange(parameters);
 
                     using (SqlDataAdapter da = new SqlDataAdapter(cmd))
                     {
-                        da.Fill(dt); // Đổ dữ liệu vào DataTable
+                        da.Fill(dt);
                     }
                 }
-            } // Tự động đóng kết nối khi ra khỏi using
+            } // Tự động đóng connection
             return dt;
         }
 
-        // Thực thi INSERT/UPDATE/DELETE - Trả về số dòng bị ảnh hưởng
+        // Thực thi INSERT/UPDATE/DELETE - Trả về số dòng ảnh hưởng
         public static int ExecuteNonQuery(string query, SqlParameter[]? parameters = null)
         {
             using (SqlConnection conn = GetConnection())
@@ -56,12 +57,12 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
                     if (parameters != null)
                         cmd.Parameters.AddRange(parameters);
 
-                    return cmd.ExecuteNonQuery(); // Trả về số dòng thay đổi
+                    return cmd.ExecuteNonQuery();
                 }
             }
         }
 
-        // Thực thi COUNT/MAX/MIN/SUM - Trả về 1 giá trị đơn
+        // Thực thi COUNT/MAX/MIN - Trả về 1 giá trị
         public static object? ExecuteScalar(string query, SqlParameter[]? parameters = null)
         {
             using (SqlConnection conn = GetConnection())
@@ -72,7 +73,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
                     if (parameters != null)
                         cmd.Parameters.AddRange(parameters);
 
-                    return cmd.ExecuteScalar(); // Trả về giá trị đầu tiên
+                    return cmd.ExecuteScalar();
                 }
             }
         }

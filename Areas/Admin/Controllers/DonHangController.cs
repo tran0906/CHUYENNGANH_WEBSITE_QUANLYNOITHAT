@@ -22,7 +22,20 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
 
         public IActionResult Index(string? searchMa, string? trangThai)
         {
-            var donHangs = _donHangBLL.Search(searchMa, null, trangThai, null, null);
+            List<DonHang> donHangs;
+            
+            // Nếu lọc "Hoàn thành" thì lấy cả "Đã giao" và "Hoàn thành"
+            if (trangThai == "Hoàn thành")
+            {
+                var daGiao = _donHangBLL.Search(searchMa, null, "Đã giao", null, null);
+                var hoanThanh = _donHangBLL.Search(searchMa, null, "Hoàn thành", null, null);
+                donHangs = daGiao.Concat(hoanThanh).OrderByDescending(x => x.Ngaydat).ToList();
+            }
+            else
+            {
+                donHangs = _donHangBLL.Search(searchMa, null, trangThai, null, null);
+            }
+            
             ViewBag.SearchMa = searchMa;
             ViewBag.TrangThai = trangThai;
             return View(donHangs);
@@ -160,122 +173,6 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Areas.Admin.Controllers
         }
 
         #region Sử dụng Stored Procedures
-
-        // POST: Hủy đơn hàng (dùng sp_HuyDonHang - hoàn lại tồn kho)
-        // Chỉ Admin mới có quyền hủy đơn hàng
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult HuyDonHang(string id)
-        {
-            // Kiểm tra quyền Admin
-            var vaiTro = HttpContext.Session.GetString("AdminVaiTro");
-            var adminRoles = new[] { "Admin", "QuanLy", "Quản trị hệ thống" };
-            
-            if (!adminRoles.Contains(vaiTro))
-            {
-                TempData["Error"] = "Bạn không có quyền hủy đơn hàng. Chỉ Admin mới có quyền này!";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-            
-            // Lấy thông tin đơn hàng để kiểm tra
-            var donHang = _donHangBLL.GetById(id);
-            if (donHang == null)
-            {
-                TempData["Error"] = "Đơn hàng không tồn tại";
-                return RedirectToAction(nameof(Index));
-            }
-            
-            // Kiểm tra đơn hàng đã hoàn thành chưa - không cho hủy
-            if (donHang.Trangthai == "Hoàn thành")
-            {
-                TempData["Error"] = "Không thể hủy đơn hàng đã hoàn thành!";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-            
-            // Lấy thông tin người hủy (Admin hiện tại)
-            var currentUserId = HttpContext.Session.GetString("AdminUserId");
-            var currentUserName = HttpContext.Session.GetString("AdminHoTen");
-            
-            // Kiểm tra đơn hàng MoMo/Chuyển khoản đã thanh toán chưa
-            bool isMoMoPaid = donHang.Ghichu?.Contains("[MOMO ĐÃ THANH TOÁN") == true ||
-                              donHang.Ghichu?.Contains("[MOMO IPN") == true;
-            bool isMoMoOrder = donHang.Ghichu?.Contains("[MOMO") == true;
-            bool isChuyenKhoanOrder = donHang.Ghichu?.Contains("[CHUYỂN KHOẢN") == true;
-            
-            // Đơn hàng "Chờ thanh toán" = chưa trừ tồn kho (MoMo/Chuyển khoản chưa thanh toán)
-            bool isChoThanhToan = donHang.Trangthai == "Chờ thanh toán";
-            bool stockNotDeducted = isChoThanhToan && (isMoMoOrder || isChuyenKhoanOrder);
-            
-            // Ghi chú thông tin hủy đơn
-            var cancelNote = $"[HỦY BỞI: {currentUserName} - {DateTime.Now:dd/MM/yyyy HH:mm}]";
-            
-            // Nếu đơn hàng đã được nhân viên khác xử lý, ghi thêm thông tin
-            if (!string.IsNullOrEmpty(donHang.Nguoiduyetid) && donHang.Nguoiduyetid != currentUserId)
-            {
-                var nguoiDuyet = _userBLL.GetById(donHang.Nguoiduyetid);
-                if (nguoiDuyet != null)
-                {
-                    cancelNote = $"[HỦY BỞI: {currentUserName} - Đơn hàng do {nguoiDuyet.HoTen} xử lý - {DateTime.Now:dd/MM/yyyy HH:mm}]";
-                }
-            }
-            
-            // Nếu đơn MoMo đã thanh toán → Ghi chú cần hoàn tiền
-            if (isMoMoPaid)
-            {
-                cancelNote += " [CẦN HOÀN TIỀN MOMO]";
-            }
-            
-            bool success;
-            string message;
-            
-            if (stockNotDeducted)
-            {
-                // Đơn hàng chưa trừ tồn kho → Chỉ cập nhật trạng thái, KHÔNG hoàn tồn kho
-                donHang.Trangthai = "Đã hủy";
-                donHang.Ghichu = (donHang.Ghichu ?? "") + " " + cancelNote;
-                (success, message) = _donHangBLL.Update(donHang);
-                
-                if (success)
-                {
-                    TempData["Success"] = "Đã hủy đơn hàng! (Đơn chưa thanh toán - không cần hoàn tồn kho)";
-                }
-                else
-                {
-                    TempData["Error"] = message;
-                }
-            }
-            else
-            {
-                // Đơn hàng đã trừ tồn kho → Gọi SP hoàn tồn kho
-                (success, message) = _spBLL.HuyDonHang(id);
-                
-                if (success)
-                {
-                    // Cập nhật ghi chú hủy đơn
-                    donHang = _donHangBLL.GetById(id); // Lấy lại sau khi SP cập nhật
-                    if (donHang != null)
-                    {
-                        donHang.Ghichu = (donHang.Ghichu ?? "") + " " + cancelNote;
-                        _donHangBLL.Update(donHang);
-                    }
-                    
-                    if (isMoMoPaid)
-                    {
-                        TempData["Warning"] = "Đã hủy đơn hàng và hoàn tồn kho! ⚠️ ĐƠN HÀNG NÀY ĐÃ THANH TOÁN MOMO - CẦN HOÀN TIỀN CHO KHÁCH HÀNG!";
-                    }
-                    else
-                    {
-                        TempData["Success"] = "Đã hủy đơn hàng và hoàn lại tồn kho thành công!";
-                    }
-                }
-                else
-                {
-                    TempData["Error"] = message;
-                }
-            }
-                
-            return RedirectToAction(nameof(Details), new { id });
-        }
 
         // POST: Xác nhận thanh toán (dùng sp_NV_XacNhanThanhToan) + Trừ tồn kho cho đơn chuyển khoản
         [HttpPost]

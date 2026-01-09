@@ -1,3 +1,7 @@
+// FILE: Controllers/ProductController.cs
+// TẦNG CONTROLLER - Xử lý danh sách sản phẩm, chi tiết SP, tìm kiếm, lọc
+// LUỒNG: User → Controller → BLL → DAL → Database
+
 using Microsoft.AspNetCore.Mvc;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.BLL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;

@@ -1,10 +1,13 @@
+// FILE: DAL/SuDungDAL.cs
+// TẦNG DAL - Truy cập dữ liệu bảng SUDUNG (MDSD - SP)
+// LUỒNG: BLL → DAL → SqlConnectionHelper → Database
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    // Data Access Layer cho SuDung (bảng liên kết) - Mô hình 3 lớp
     public class SuDungDAL
     {
         // Lấy danh sách sản phẩm theo mục đích sử dụng

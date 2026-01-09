@@ -92,8 +92,8 @@
         </a>
     </div>
     <div class="col">
-        <a href="?trangThai=Đã giao" class="text-decoration-none">
-            <div class="status-card delivered @(currentFilter == "Đã giao" ? "border-3 border-success" : "")">
+        <a href="?trangThai=Hoàn thành" class="text-decoration-none">
+            <div class="status-card delivered @(currentFilter == "Hoàn thành" || currentFilter == "Đã giao" ? "border-3 border-success" : "")">
                 <h3>@daGiao</h3>
                 <small><i class="bi bi-house-check"></i> Hoàn thành</small>
             </div>

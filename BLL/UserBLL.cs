@@ -1,11 +1,12 @@
+// FILE: BLL/UserBLL.cs
+// TẦNG BLL - Xử lý nghiệp vụ User/Nhân viên (đăng nhập admin, phân quyền)
+// LUỒNG: Controller → BLL → DAL → Database
+
 using DOANCHUYENNGANH_WEB_QLNOITHAT.DAL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
 {
-    /// <summary>
-    /// Business Logic Layer cho User - Mô hình 3 lớp
-    /// </summary>
     public class UserBLL
     {
         private readonly UserDAL _dal = new UserDAL();

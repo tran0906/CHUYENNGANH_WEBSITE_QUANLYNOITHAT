@@ -1,3 +1,7 @@
+// FILE: BLL/NhomSanPhamBLL.cs
+// TẦNG BLL - Xử lý nghiệp vụ Nhóm sản phẩm
+// LUỒNG: Controller → BLL → DAL → Database
+
 using DOANCHUYENNGANH_WEB_QLNOITHAT.DAL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 

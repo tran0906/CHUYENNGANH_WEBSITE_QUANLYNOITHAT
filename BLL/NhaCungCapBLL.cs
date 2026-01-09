@@ -1,3 +1,7 @@
+// FILE: BLL/NhaCungCapBLL.cs
+// TẦNG BLL - Xử lý nghiệp vụ Nhà cung cấp
+// LUỒNG: Controller → BLL → DAL → Database
+
 using DOANCHUYENNGANH_WEB_QLNOITHAT.DAL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 

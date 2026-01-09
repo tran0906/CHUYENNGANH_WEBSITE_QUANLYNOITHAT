@@ -191,60 +191,30 @@
             
             <p class="mb-2"><strong>Đơn hàng chuyển khoản</strong> - Chờ khách thanh toán</p>
             <p class="mb-3">Số tiền cần nhận: <strong class="text-danger">@tienDatCocTT.ToString("N0") đ</strong></p>
-            <div class="d-flex gap-2">
-                <form asp-action="XacNhanThanhToan" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.Madonhang" />
-                    <button type="submit" class="btn btn-success"><i class="bi bi-check"></i> Xác nhận đã nhận tiền</button>
-                </form>
-                @if (isAdmin)
-                {
-                    <form asp-action="HuyDonHang" method="post" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng?');">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Madonhang" />
-                        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x"></i> Hủy đơn</button>
-                    </form>
-                }
-            </div>
+            <form asp-action="XacNhanThanhToan" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Madonhang" />
+                <button type="submit" class="btn btn-success"><i class="bi bi-check"></i> Xác nhận đã nhận tiền</button>
+            </form>
         }
         else if (Model.Trangthai == "Chờ xác nhận")
         {
             <p class="mb-3">Xác nhận đơn hàng từ khách hàng</p>
-            <div class="d-flex gap-2">
-                <form asp-action="UpdateTrangThai" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.Madonhang" />
-                    <input type="hidden" name="trangThai" value="Đã xác nhận" />
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Xác nhận đơn hàng</button>
-                </form>
-                @if (isAdmin)
-                {
-                    <form asp-action="HuyDonHang" method="post" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng?');">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Madonhang" />
-                        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x"></i> Hủy đơn</button>
-                    </form>
-                }
-            </div>
+            <form asp-action="UpdateTrangThai" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Madonhang" />
+                <input type="hidden" name="trangThai" value="Đã xác nhận" />
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Xác nhận đơn hàng</button>
+            </form>
         }
         else if (Model.Trangthai == "Đã xác nhận")
         {
             <p class="mb-3">Xuất kho chuẩn bị hàng</p>
-            <div class="d-flex gap-2">
-                <form asp-action="XuatKho" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.Madonhang" />
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-box"></i> Xuất kho</button>
-                </form>
-                @if (isAdmin)
-                {
-                    <form asp-action="HuyDonHang" method="post" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng?');">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Madonhang" />
-                        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x"></i> Hủy đơn</button>
-                    </form>
-                }
-            </div>
+            <form asp-action="XuatKho" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Madonhang" />
+                <button type="submit" class="btn btn-primary"><i class="bi bi-box"></i> Xuất kho</button>
+            </form>
         }
         else if (Model.Trangthai == "Đang xử lý")
         {
@@ -269,22 +239,7 @@
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-truck"></i> Giao vận chuyển</button>
                 </div>
-                @if (isAdmin)
-                {
-                    <div class="col-auto">
-                        <button type="button" class="btn btn-outline-danger" onclick="if(confirm('Hủy đơn?')) document.getElementById('formHuy').submit();">
-                            <i class="bi bi-x"></i> Hủy
-                        </button>
-                    </div>
-                }
             </form>
-            @if (isAdmin)
-            {
-                <form id="formHuy" asp-action="HuyDonHang" method="post" style="display:none;">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.Madonhang" />
-                </form>
-            }
         }
         else if (Model.Trangthai == "Đang giao")
         {

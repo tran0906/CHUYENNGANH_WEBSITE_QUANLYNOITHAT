@@ -1,3 +1,7 @@
+// FILE: Controllers/HomeController.cs
+// TẦNG CONTROLLER - Xử lý trang chủ, giới thiệu, liên hệ
+// LUỒNG: User → Controller → BLL → DAL → Database
+
 using System.Diagnostics;
 using System.Data;
 using Microsoft.AspNetCore.Mvc;

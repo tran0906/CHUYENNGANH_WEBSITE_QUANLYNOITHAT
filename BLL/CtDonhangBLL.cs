@@ -1,3 +1,7 @@
+// FILE: BLL/CtDonhangBLL.cs
+// TẦNG BLL - Xử lý nghiệp vụ Chi tiết đơn hàng
+// LUỒNG: Controller → BLL → DAL → Database
+
 using DOANCHUYENNGANH_WEB_QLNOITHAT.DAL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 

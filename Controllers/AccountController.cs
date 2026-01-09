@@ -1,3 +1,7 @@
+// FILE: Controllers/AccountController.cs
+// TẦNG CONTROLLER - Xử lý đăng nhập, đăng ký, quản lý tài khoản khách hàng
+// LUỒNG: User → Controller → BLL → DAL → Database
+
 using Microsoft.AspNetCore.Mvc;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.BLL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;

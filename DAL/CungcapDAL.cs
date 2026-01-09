@@ -1,10 +1,13 @@
+// FILE: DAL/CungcapDAL.cs
+// TẦNG DAL - Truy cập dữ liệu bảng CUNGCAP (NCC - SP)
+// LUỒNG: BLL → DAL → SqlConnectionHelper → Database
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    // Data Access Layer cho Cungcap - Mô hình 3 lớp
     public class CungcapDAL
     {
         // Lấy tất cả thông tin cung cấp

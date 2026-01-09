@@ -1,10 +1,13 @@
+// FILE: DAL/QuanBaSpDAL.cs
+// TẦNG DAL - Truy cập dữ liệu bảng QUAN_BA_SP (đợt giảm giá)
+// LUỒNG: BLL → DAL → SqlConnectionHelper → Database
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    // Data Access Layer cho QuanBaSp - Mô hình 3 lớp
     public class QuanBaSpDAL
     {
         // Lấy tất cả đợt quảng bá

@@ -1,10 +1,13 @@
+// FILE: DAL/MucDichSuDungDAL.cs
+// TẦNG DAL - Truy cập dữ liệu bảng MUC_DICH_SU_DUNG
+// LUỒNG: BLL → DAL → SqlConnectionHelper → Database
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    // Data Access Layer cho MucDichSuDung - Mô hình 3 lớp
     public class MucDichSuDungDAL
     {
         // Lấy tất cả mục đích sử dụng

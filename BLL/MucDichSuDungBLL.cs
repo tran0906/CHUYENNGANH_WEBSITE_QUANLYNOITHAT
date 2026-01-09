@@ -1,3 +1,7 @@
+// FILE: BLL/MucDichSuDungBLL.cs
+// TẦNG BLL - Xử lý nghiệp vụ Mục đích sử dụng
+// LUỒNG: Controller → BLL → DAL → Database
+
 using DOANCHUYENNGANH_WEB_QLNOITHAT.DAL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 

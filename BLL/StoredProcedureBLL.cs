@@ -1,12 +1,13 @@
+// FILE: BLL/StoredProcedureBLL.cs
+// TẦNG BLL - Gọi các Stored Procedures (đặt hàng, hủy đơn, thống kê...)
+// LUỒNG: Controller → BLL → DAL → Stored Procedure
+
 using System.Data;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.DAL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
 {
-    /// <summary>
-    /// BLL gọi các Stored Procedures - xử lý nghiệp vụ phức tạp
-    /// </summary>
     public class StoredProcedureBLL
     {
         private readonly StoredProcedureDAL _spDal = new StoredProcedureDAL();

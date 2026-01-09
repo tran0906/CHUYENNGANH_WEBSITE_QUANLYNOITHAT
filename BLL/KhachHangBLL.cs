@@ -1,3 +1,7 @@
+// FILE: BLL/KhachHangBLL.cs
+// TẦNG BLL - Xử lý nghiệp vụ Khách hàng (đăng ký, đăng nhập, CRUD)
+// LUỒNG: Controller → BLL → DAL → Database
+
 using DOANCHUYENNGANH_WEB_QLNOITHAT.DAL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 

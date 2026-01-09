@@ -1,4 +1,6 @@
-// FILE: DAL/SanPhamDAL.cs - Tầng truy cập dữ liệu cho Sản phẩm (CRUD với SQL Server)
+// FILE: DAL/SanPhamDAL.cs
+// TẦNG DAL - Kết nối và thao tác trực tiếp với SQL Server
+// LUỒNG: BLL → DAL → SqlConnectionHelper → Database
 
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -8,7 +10,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
     public class SanPhamDAL
     {
-        // Lấy tất cả sản phẩm
+        // Lấy tất cả SP (JOIN lấy tên nhóm SP và vật liệu)
         public List<SanPham> GetAll()
         {
             string query = @"SELECT sp.*, nsp.TENNHOMSP as Tennhomsp, vl.TENVL as Tenvl 
@@ -17,11 +19,11 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
                             LEFT JOIN VAT_LIEU vl ON sp.MAVL = vl.MAVL
                             ORDER BY sp.MASP";
             
-            DataTable dt = SqlConnectionHelper.ExecuteQuery(query);
+            DataTable dt = SqlConnectionHelper.ExecuteQuery(query); // Gọi helper thực thi SQL
             return MapDataTableToList(dt);
         }
 
-        // Tìm kiếm sản phẩm theo điều kiện
+        // Tìm kiếm SP theo điều kiện (dùng SqlParameter tránh SQL Injection)
         public List<SanPham> Search(string? search, string? nhomSp, string? vatLieu)
         {
             string query = @"SELECT sp.*, nsp.TENNHOMSP as Tennhomsp, vl.TENVL as Tenvl 
@@ -53,7 +55,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(dt);
         }
 
-        // Lấy sản phẩm theo mã
+        // Lấy SP theo mã
         public SanPham? GetById(string maSp)
         {
             string query = @"SELECT sp.*, nsp.TENNHOMSP as Tennhomsp, vl.TENVL as Tenvl 
@@ -67,7 +69,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return MapDataTableToList(dt).FirstOrDefault();
         }
 
-        // Thêm sản phẩm mới
+        // Thêm SP mới (dùng SqlParameter truyền giá trị an toàn)
         public int Insert(SanPham sp)
         {
             string query = @"INSERT INTO SAN_PHAM (MASP, TENSP, MOTA, GIABAN, SOLUONGTON, HINHANH, MANHOMSP, MAVL)
@@ -83,10 +85,10 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
                 new SqlParameter("@Manhomsp", (object?)sp.Manhomsp ?? DBNull.Value),
                 new SqlParameter("@Mavl", (object?)sp.Mavl ?? DBNull.Value)
             };
-            return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
+            return SqlConnectionHelper.ExecuteNonQuery(query, parameters); // Trả về số dòng thêm
         }
 
-        // Cập nhật sản phẩm
+        // Cập nhật SP
         public int Update(SanPham sp)
         {
             string query = @"UPDATE SAN_PHAM SET 
@@ -108,7 +110,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
-        // Xóa sản phẩm
+        // Xóa SP
         public int Delete(string maSp)
         {
             string query = "DELETE FROM SAN_PHAM WHERE MASP = @MaSp";
@@ -116,7 +118,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return SqlConnectionHelper.ExecuteNonQuery(query, parameters);
         }
 
-        // Kiểm tra sản phẩm tồn tại
+        // Kiểm tra SP tồn tại
         public bool Exists(string maSp)
         {
             string query = "SELECT COUNT(*) FROM SAN_PHAM WHERE MASP = @MaSp";
@@ -124,14 +126,14 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query, parameters)) > 0;
         }
 
-        // Đếm tổng số sản phẩm
+        // Đếm tổng số SP
         public int Count()
         {
             string query = "SELECT COUNT(*) FROM SAN_PHAM";
             return Convert.ToInt32(SqlConnectionHelper.ExecuteScalar(query));
         }
 
-        // Lấy danh sách SP đang khuyến mãi kèm % giảm
+        // Lấy DS SP đang khuyến mãi kèm % giảm
         public Dictionary<string, int> GetProductsInPromotionWithDiscount()
         {
             try

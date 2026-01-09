@@ -1,13 +1,13 @@
-// FILE: DAL/StoredProcedureDAL.cs - Gọi các Stored Procedures từ SQL Server
+// FILE: DAL/StoredProcedureDAL.cs
+// TẦNG DAL - Gọi các Stored Procedures từ SQL Server
+// LUỒNG: BLL → DAL → SqlConnectionHelper.ExecuteStoredProcedure → Database
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    /// <summary>
-    /// DAL gọi các Stored Procedures - Mô hình 3 lớp
-    /// </summary>
     public class StoredProcedureDAL
     {
         #region Đặt hàng - sp_DatHang

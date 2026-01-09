@@ -1,11 +1,12 @@
+// FILE: BLL/SuDungBLL.cs
+// TẦNG BLL - Xử lý nghiệp vụ quan hệ Sử dụng (MDSD - SP)
+// LUỒNG: Controller → BLL → DAL → Database
+
 using DOANCHUYENNGANH_WEB_QLNOITHAT.DAL;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.BLL
 {
-    /// <summary>
-    /// BLL cho quan hệ SuDung (MucDichSuDung - SanPham)
-    /// </summary>
     public class SuDungBLL
     {
         private readonly SuDungDAL _dal = new SuDungDAL();

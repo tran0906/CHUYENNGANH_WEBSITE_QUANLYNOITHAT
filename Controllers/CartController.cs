@@ -268,14 +268,16 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         // GET /thanh-toan - Hiển thị trang thanh toán
         [Route("thanh-toan")]
         public IActionResult Checkout()
+
         {
+            //kiểm tra đăng nhập 
             var customerId = HttpContext.Session.GetString("CustomerId");
             if (string.IsNullOrEmpty(customerId))
             {
                 TempData["ReturnUrl"] = "/thanh-toan";
                 return RedirectToAction("Login", "Account");
             }
-
+            //kiểm tra giỏ hàng
             var cartItems = GetCartItems();
             if (!cartItems.Any())
             {
@@ -298,9 +300,10 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
             {
                 SaveCartItems(cartItems);
             }
-
+            //lấy thông tin từ database 
             ViewBag.TotalAmount = cartItems.Sum(i => i.Thanhtien);
             ViewBag.Customer = _khachHangBLL.GetById(customerId);
+            //trả về view
             return View(cartItems);
         }
 
@@ -311,6 +314,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
         {
             try
             {
+                //validate kiểm tra đăng nhập giỏ hang đại chỉ 
                 var customerId = HttpContext.Session.GetString("CustomerId");
                 if (string.IsNullOrEmpty(customerId))
                 {
@@ -333,7 +337,8 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
 
                 // Tính tổng tiền
                 var totalAmount = cartItems.Sum(i => i.Thanhtien);
-                var requireDeposit = totalAmount >= 2000000; // Đơn >= 2 triệu yêu cầu đặt cọc qua MoMo
+                var requireDeposit = totalAmount >= 2000000; 
+                // Đơn >= 2 triệu yêu cầu đặt cọc qua MoMo
                 var isMoMo = paymentMethod == "momo";
                 
                 // Xác định trạng thái và ghi chú thanh toán
@@ -379,7 +384,7 @@ namespace DOANCHUYENNGANH_WEB_QLNOITHAT.Controllers
                 {
                     fullNote += $" [GHI CHÚ: {ghichu}]";
                 }
-
+                //tạo mã đơn hàng mới
                 var newOrderId = _donHangBLL.GenerateNewId();
 
                 var order = new DonHang

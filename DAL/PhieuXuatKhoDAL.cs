@@ -1,10 +1,13 @@
+// FILE: DAL/PhieuXuatKhoDAL.cs
+// TẦNG DAL - Truy cập dữ liệu bảng PHIEU_XUAT_KHO
+// LUỒNG: BLL → DAL → SqlConnectionHelper → Database
+
 using System.Data;
 using Microsoft.Data.SqlClient;
 using DOANCHUYENNGANH_WEB_QLNOITHAT.Models;
 
 namespace DOANCHUYENNGANH_WEB_QLNOITHAT.DAL
 {
-    // Data Access Layer cho PhieuXuatKho - Mô hình 3 lớp
     public class PhieuXuatKhoDAL
     {
         // Lấy tất cả phiếu xuất kho
